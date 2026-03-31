@@ -63,35 +63,40 @@ def cadastro():
 
             conexao = ConexaoBD()
 
-            # Verifica se o e-mail já está cadastrado
+            # Verifica se já existe
             sql_verifica = "SELECT id_cliente FROM clientes_tt WHERE email = %s"
             existente = conexao.select(sql_verifica, (email,))
             if existente:
                 conexao.close()
-                return render_template('cadastro.html', erro="E-mail já cadastrado. Faça login.")
+                return render_template('cadastro.html', erro="E-mail já cadastrado.")
 
-            # Insere novo cliente com senha criptografada
+            # Inserir cliente
             hash_senha = generate_password_hash(senha)
-            sql = """
+            sql_insert = """
                 INSERT INTO clientes_tt (nome, email, senha, telefone, criado_em)
                 VALUES (%s, %s, %s, %s, NOW())
             """
-            conexao.insert(sql, (nome, email, hash_senha, telefone))
+            conexao.insert(sql_insert, (nome, email, hash_senha, telefone))
+
+            # 🔥 BUSCAR ID DO CLIENTE
+            sql_busca = "SELECT id_cliente FROM clientes_tt WHERE email = %s"
+            usuario = conexao.select(sql_busca, (email,))
             conexao.close()
 
-            print(f"✅ Novo cliente cadastrado: {nome} ({email})")
-
-            # Cria sessão
+            # 🔥 SALVAR NA SESSION (CORREÇÃO PRINCIPAL)
             session['usuario_logado'] = True
             session['usuario_nome'] = nome
+            session['usuario_id'] = usuario[0][0]
+
+            print(f"✅ Cliente cadastrado: {nome}")
 
             return redirect(url_for('produto.renderizar_produtos'))
 
         return render_template('cadastro.html')
 
     except Exception as err:
-        print(f"❌ Erro ao cadastrar cliente: {err}")
-        return render_template('cadastro.html', erro="Erro ao cadastrar. Tente novamente mais tarde.")
+        print(f"❌ Erro no cadastro: {err}")
+        return render_template('cadastro.html', erro="Erro ao cadastrar.")
 
 # ------------------- RENDERIZAÇÃO DE PÁGINAS -------------------       
 
@@ -120,90 +125,88 @@ def consultar_categorias_produtos():
 @rotas_produto.get("/techtrade/produtos/registros")
 def consultar_produtos():
     """Retorna a lista de produtos"""
-    try:
-        conexao_bd = ConexaoBD()
-        retorno_bd = conexao_bd.select("""
-            SELECT 
-                p.id_produto,
-                p.nome,
-                p.descricao,
-                c.nome AS categoria,
-                p.preco,
-                p.estoque,
-                p.criado_em,
-                p.criado_por,
-                p.imagem,
-                p.verificado,
-                p.verificado_por,
-                p.verificado_em,
-                p.verificacao_obs
-            FROM produtos_tt p
-            LEFT JOIN categorias_produtos_tt c ON p.categoria_id = c.id_categoria
-            ORDER BY p.id_produto DESC
-        """)
-        conexao_bd.close()
+    # try:
+    conexao_bd = ConexaoBD()
+    retorno_bd = conexao_bd.select("""
+        SELECT 
+            p.id_produto,
+            p.nome,
+            p.descricao,
+            c.nome AS categoria,
+            p.preco,
+            p.estoque,
+            p.criado_em,
+            p.criado_por,
+            p.imagem,
+            p.verificado,
+            p.verificado_por,
+            p.verificado_em
+        FROM produtos_tt p
+        LEFT JOIN categorias_produtos_tt c ON p.categoria_id = c.id_categoria
+        ORDER BY p.id_produto DESC
+    """)
+    conexao_bd.close()
 
-        # --- Funções auxiliares ---
-        def formata_data(data):
-            if isinstance(data, datetime):
-                return data.strftime('%d/%m/%Y')
-            return str(data) if data else ""
+    # --- Funções auxiliares ---
+    def formata_data(data):
+        if isinstance(data, datetime):
+            return data.strftime('%d/%m/%Y')
+        return str(data) if data else ""
 
-        def safe_float(x):
+    def safe_float(x):
+        try:
+            return float(x) if x is not None else 0.0
+        except (TypeError, ValueError):
+            return 0.0
+
+    def safe_int(x):
+        try:
+            return int(x) if x is not None else 0
+        except (TypeError, ValueError):
             try:
-                return float(x) if x is not None else 0.0
-            except (TypeError, ValueError):
-                return 0.0
+                return int(float(x))
+            except Exception:
+                return 0
 
-        def safe_int(x):
-            try:
-                return int(x) if x is not None else 0
-            except (TypeError, ValueError):
-                try:
-                    return int(float(x))
-                except Exception:
-                    return 0
+    # Imagens de placeholder por categoria
+    def get_placeholder_image(categoria):
+        placeholders = {
+            'Celulares': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+            'Computadores': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+            'Tablets': 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+            'Periféricos': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+            'Acessórios': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+            'Games': 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'
+        }
+        return placeholders.get(categoria, 'https://images.unsplash.com/photo-1556656793-08538906a9f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80')
 
-        # Imagens de placeholder por categoria
-        def get_placeholder_image(categoria):
-            placeholders = {
-                'Celulares': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'Computadores': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'Tablets': 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'Periféricos': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'Acessórios': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'Games': 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'
-            }
-            return placeholders.get(categoria, 'https://images.unsplash.com/photo-1556656793-08538906a9f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80')
+    # --- Monta o JSON final ---
+    json_produtos = []
+    for row in retorno_bd:
+        imagem = f"/static/tech_trade_imagens/{row[8]}" if row[8] else get_placeholder_image(row[3])
+        
+        json_produtos.append({
+            "id_produto": row[0],
+            "nome": row[1] or "",
+            "descricao": row[2] or "",
+            "categoria": row[3] or "",
+            "preco": round(safe_float(row[4]), 2),
+            "preco_formatado": f"{safe_float(row[4]):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
+            "estoque": safe_int(row[5]),
+            "disponivel": safe_int(row[5]) > 0,
+            "criado_em": formata_data(row[6]),
+            "criado_por": row[7] or "",
+            "imagem": imagem,
+            "verificado": row[9] if len(row) > 9 else True,
+            "verificado_por": row[10] or "",
+            "verificado_em": formata_data(row[11]) if row[11] else ""
+        })
 
-        # --- Monta o JSON final ---
-        json_produtos = []
-        for row in retorno_bd:
-            imagem = f"/static/tech_trade_imagens/{row[8]}" if row[8] else get_placeholder_image(row[3])
-            
-            json_produtos.append({
-                "id_produto": row[0],
-                "nome": row[1] or "",
-                "descricao": row[2] or "",
-                "categoria": row[3] or "",
-                "preco": round(safe_float(row[4]), 2),
-                "preco_formatado": f"{safe_float(row[4]):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
-                "estoque": safe_int(row[5]),
-                "disponivel": safe_int(row[5]) > 0,
-                "criado_em": formata_data(row[6]),
-                "criado_por": row[7] or "",
-                "imagem": imagem,
-                "verificado": row[9] if len(row) > 9 else True,
-                "verificado_por": row[10] or "",
-                "verificado_em": formata_data(row[11]) if row[11] else "",
-                "verificacao_obs": row[12] or ""
-            })
+    return jsonify({"json_produtos": json_produtos})
 
-        return jsonify({"json_produtos": json_produtos})
-
-    except Exception as err:
-        erro = str(err).replace("'", '"')
-        return jsonify({"erro": erro}), 500
+    # except Exception as err:
+    #     erro = str(err).replace("'", '"')
+    #     return jsonify({"erro": erro}), 500
 
 @rotas_produto.route('/techtrade/produtos/verificar', methods=['POST'])
 def verificar_produto():
@@ -366,104 +369,104 @@ def cadastro_vendedor():
 
 @rotas_produto.route("/techtrade/produtos/checkout/<int:id_produto>", methods=["GET", "POST"])
 def checkout(id_produto):
-    try:
-        conexao = ConexaoBD()
-        
-        # Buscar produto
-        sql_produto = """
-            SELECT 
-                p.id_produto,
-                p.nome,
-                p.descricao,
-                p.preco,
-                p.estoque,
-                p.imagem,
-                p.verificado,
-                p.criado_por,
-                p.criado_por_id
-            FROM produtos_tt p
-            WHERE p.id_produto = %s
-        """
-        resultado = conexao.select(sql_produto, (id_produto,))
-        
-        if not resultado or len(resultado) == 0:
-            conexao.close()
-            abort(404, "Produto não encontrado")
-
-        # Extrair dados do produto
-        p = resultado[0]
-        produto = {
-            "id_produto": p[0],
-            "nome": p[1],
-            "descricao": p[2],
-            "preco": float(p[3]),
-            "estoque": int(p[4]),
-            "imagem": f"/static/tech_trade_imagens/{p[5]}" if p[5] else "/static/tech_trade_imagens/default.jpg",
-            "verificado": bool(p[6]),
-            "vendedor": p[7] or "Vendedor não informado",
-            "vendedor_id": p[8]
-        }
-
-        if request.method == "POST":
-            metodo = request.form.get("metodo")
-            endereco = request.form.get("endereco", "")
-            observacoes = request.form.get("observacoes", "")
-            
-            if not metodo:
-                conexao.close()
-                return "Método de pagamento não selecionado.", 400
-
-            # Registrar compra usando o novo sistema completo
-            try:
-                dados_compra = {
-                    "id_produto": id_produto,
-                    "metodo_pagamento": metodo,
-                    "endereco_entrega": endereco,
-                    "observacoes": observacoes
-                }
-
-                # Fechar conexão atual antes de fazer a requisição
-                conexao.close()
-                
-                # Fazer requisição para a nova rota de compra completa
-                import requests
-                from flask import url_for
-                
-                # Criar uma requisição interna para a nova rota
-                with rotas_produto.test_client() as client:
-                    response = client.post(
-                        '/techtrade/produtos/finalizar_compra_completa',
-                        json=dados_compra,
-                        headers={'Content-Type': 'application/json'}
-                    )
-                    
-                    if response.status_code == 201:
-                        data = response.get_json()
-                        mensagem = f"Compra do produto '{produto['nome']}' realizada com sucesso via {metodo}!"
-                        return render_template("confirmacao.html", 
-                                             mensagem=mensagem, 
-                                             produto=produto,
-                                             metodo=metodo,
-                                             now=datetime.now())
-                    else:
-                        erro = response.get_json().get('erro', 'Erro ao processar compra')
-                        return f"Erro: {erro}", 400
-
-            except Exception as e:
-                print(f"❌ Erro ao registrar compra: {e}")
-                if 'conexao' in locals():
-                    conexao.close()
-                return f"Erro ao processar compra: {str(e)}", 500
-
-        # GET request - mostrar página de checkout
+    # try:
+    conexao = ConexaoBD()
+    
+    # Buscar produto
+    sql_produto = """
+        SELECT 
+            p.id_produto,
+            p.nome,
+            p.descricao,
+            p.preco,
+            p.estoque,
+            p.imagem,
+            p.verificado,
+            p.criado_por,
+            p.criado_por_id
+        FROM produtos_tt p
+        WHERE p.id_produto = %s
+    """
+    resultado = conexao.select(sql_produto, (id_produto,))
+    
+    if not resultado or len(resultado) == 0:
         conexao.close()
-        return render_template("checkout.html", produto=produto)
+        abort(404, "Produto não encontrado")
 
-    except Exception as err:
-        print(f"❌ Erro no checkout: {err}")
-        if 'conexao' in locals():
+    # Extrair dados do produto
+    p = resultado[0]
+    produto = {
+        "id_produto": p[0],
+        "nome": p[1],
+        "descricao": p[2],
+        "preco": float(p[3]),
+        "estoque": int(p[4]),
+        "imagem": f"/static/tech_trade_imagens/{p[5]}" if p[5] else "/static/tech_trade_imagens/default.jpg",
+        "verificado": bool(p[6]),
+        "vendedor": p[7] or "Vendedor não informado",
+        "vendedor_id": p[8]
+    }
+
+    if request.method == "POST":
+        metodo = request.form.get("metodo")
+        endereco = request.form.get("endereco", "")
+        observacoes = request.form.get("observacoes", "")
+        
+        if not metodo:
             conexao.close()
-        abort(500)
+            return "Método de pagamento não selecionado.", 400
+
+        # Registrar compra usando o novo sistema completo
+        try:
+            dados_compra = {
+                "id_produto": id_produto,
+                "metodo_pagamento": metodo,
+                "endereco_entrega": endereco,
+                "observacoes": observacoes
+            }
+
+            # Fechar conexão atual antes de fazer a requisição
+            conexao.close()
+            
+            # Fazer requisição para a nova rota de compra completa
+            import requests
+            from flask import url_for
+            
+            # Criar uma requisição interna para a nova rota
+            with rotas_produto.test_client() as client:
+                response = client.post(
+                    '/techtrade/produtos/finalizar_compra_completa',
+                    json=dados_compra,
+                    headers={'Content-Type': 'application/json'}
+                )
+                
+                if response.status_code == 201:
+                    data = response.get_json()
+                    mensagem = f"Compra do produto '{produto['nome']}' realizada com sucesso via {metodo}!"
+                    return render_template("confirmacao.html", 
+                                            mensagem=mensagem, 
+                                            produto=produto,
+                                            metodo=metodo,
+                                            now=datetime.now())
+                else:
+                    erro = response.get_json().get('erro', 'Erro ao processar compra')
+                    return f"Erro: {erro}", 400
+
+        except Exception as e:
+            print(f"❌ Erro ao registrar compra: {e}")
+            if 'conexao' in locals():
+                conexao.close()
+            return f"Erro ao processar compra: {str(e)}", 500
+
+    # GET request - mostrar página de checkout
+    conexao.close()
+    return render_template("checkout.html", produto=produto)
+
+    # except Exception as err:
+    #     print(f"❌ Erro no checkout: {err}")
+    #     if 'conexao' in locals():
+    #         conexao.close()
+    #     abort(500)
 
 # ------------------- LISTAR NOTIFICAÇÕES DO VENDEDOR -------------------
 
@@ -1229,9 +1232,6 @@ def criar_tabela_vendas():
     
     except Exception as e:
         return f"Erro ao criar tabela: {e}"
-
-
-
 
 @rotas_produto.route('/criar_tabelas_notificacoes')
 def criar_tabelas_notificacoes():
