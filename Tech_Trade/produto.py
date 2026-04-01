@@ -97,7 +97,137 @@ def cadastro():
     except Exception as err:
         print(f"❌ Erro no cadastro: {err}")
         return render_template('cadastro.html', erro="Erro ao cadastrar.")
+# ------------------- RECUPERAÇÃO DE SENHA -------------------
 
+@rotas_produto.route('/esqueceu_senha', methods=['GET', 'POST'])
+def esqueceu_senha():
+    """Página para solicitar recuperação de senha"""
+    try:
+        if request.method == 'POST':
+            email = request.form.get('email')
+            
+            if not email:
+                return render_template('esqueceu_senha.html', erro="Por favor, informe seu e-mail.")
+            
+            conexao = ConexaoBD()
+            
+            # Verificar se o e-mail existe
+            sql = "SELECT id_cliente, nome FROM clientes_tt WHERE email = %s"
+            usuario = conexao.select(sql, (email,))
+            
+            if usuario:
+                # Gerar token único para recuperação
+                import secrets
+                import hashlib
+                from datetime import datetime, timedelta
+                
+                token = secrets.token_urlsafe(32)
+                token_hash = hashlib.sha256(token.encode()).hexdigest()
+                expiracao = datetime.now() + timedelta(hours=1)
+                
+                # Salvar token no banco
+                sql_token = """
+                    INSERT INTO recuperacao_senha_tt (id_cliente, token, expiracao)
+                    VALUES (%s, %s, %s)
+                """
+                conexao.insert(sql_token, (usuario[0][0], token_hash, expiracao))
+                
+                # Gerar link de recuperação
+                link_recuperacao = url_for('produto.redefinir_senha', token=token, _external=True)
+                
+                print(f"🔐 Link de recuperação para {usuario[0][1]}: {link_recuperacao}")
+                
+                # FECHAR CONEXÃO ANTES DE RENDERIZAR
+                conexao.close()
+                
+                # RETORNAR APENAS O LINK DE DEBUG (SEM MENSAGEM DE SUCESSO)
+                return render_template('esqueceu_senha.html', 
+                                     link_debug=link_recuperacao)
+            else:
+                conexao.close()
+                # Por segurança, não informe se o e-mail não existe
+                return render_template('esqueceu_senha.html', 
+                                     mensagem="Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.")
+        
+        return render_template('esqueceu_senha.html')
+    
+    except Exception as err:
+        print(f"❌ Erro na recuperação de senha: {err}")
+        return render_template('esqueceu_senha.html', erro="Erro ao processar solicitação.")
+
+@rotas_produto.route('/redefinir_senha/<token>', methods=['GET', 'POST'])
+def redefinir_senha(token):
+    """Página para redefinir a senha usando o token"""
+    try:
+        import hashlib
+        from datetime import datetime
+        
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        
+        conexao = ConexaoBD()
+        
+        # Verificar se o token é válido e não expirou
+        sql = """
+            SELECT r.id_cliente, c.nome, r.expiracao
+            FROM recuperacao_senha_tt r
+            JOIN clientes_tt c ON r.id_cliente = c.id_cliente
+            WHERE r.token = %s AND r.usado = 0
+        """
+        recuperacao = conexao.select(sql, (token_hash,))
+        
+        if not recuperacao:
+            conexao.close()
+            return render_template('redefinir_senha.html', 
+                                 erro="Token inválido ou já utilizado.")
+        
+        id_cliente = recuperacao[0][0]
+        nome_cliente = recuperacao[0][1]
+        expiracao = recuperacao[0][2]
+        
+        # Verificar se o token expirou
+        if datetime.now() > expiracao:
+            conexao.close()
+            return render_template('redefinir_senha.html', 
+                                 erro="Token expirado. Solicite uma nova recuperação.")
+        
+        if request.method == 'POST':
+            nova_senha = request.form.get('nova_senha')
+            confirmar_senha = request.form.get('confirmar_senha')
+            
+            if not nova_senha or not confirmar_senha:
+                return render_template('redefinir_senha.html', 
+                                     token=token,
+                                     erro="Preencha todos os campos.")
+            
+            if nova_senha != confirmar_senha:
+                return render_template('redefinir_senha.html', 
+                                     token=token,
+                                     erro="As senhas não conferem.")
+            
+            # Atualizar a senha
+            hash_senha = generate_password_hash(nova_senha)
+            sql_update = "UPDATE clientes_tt SET senha = %s WHERE id_cliente = %s"
+            conexao.insert(sql_update, (hash_senha, id_cliente))
+            
+            # Marcar token como usado
+            sql_usar_token = "UPDATE recuperacao_senha_tt SET usado = 1 WHERE token = %s"
+            conexao.insert(sql_usar_token, (token_hash,))
+            
+            conexao.close()
+            
+            return render_template('redefinir_senha.html', 
+                                 mensagem="Senha redefinida com sucesso!",
+                                 sucesso=True)
+        
+        conexao.close()
+        
+        return render_template('redefinir_senha.html', 
+                             token=token,
+                             nome_cliente=nome_cliente)
+    
+    except Exception as err:
+        print(f"❌ Erro ao redefinir senha: {err}")
+        return render_template('redefinir_senha.html', erro="Erro ao processar solicitação.")
 # ------------------- RENDERIZAÇÃO DE PÁGINAS -------------------       
 
 @rotas_produto.route("/produtos")
