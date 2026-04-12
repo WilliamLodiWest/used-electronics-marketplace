@@ -1,468 +1,126 @@
-{% extends "index.html" %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Suporte</title>
+    
+    <!-- Bootstrap 5 CSS (para os modais e cards do suporte) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (para os ícones do suporte) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS unificado -->
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/index_login.css') }}">
+</head>
+<body>
 
-{% block title %}Suporte ao Comprador - TechTrade{% endblock %}
-
-{% block content %}
-<div class="container py-5" style="margin-top: 100px;">
-
-    <!-- Cabeçalho -->
-    <div class="row mb-5">
-        <div class="col-12 text-center">
-            <h1 class="display-5 fw-bold text-primary mb-3">Central de Ajuda - Suporte ao Comprador</h1>
-            <p class="lead text-muted">Tire todas as suas dúvidas e aproveite ao máximo nossa plataforma</p>
-        </div>
-    </div>
-
-    <!-- Cards de Ajuda -->
-    <div class="row g-4">
-        <!-- Como Comprar -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalComoComprar">
-                <div class="card-body text-center p-4">
-                    <div class="help-icon mb-3">
-                        <i class="fas fa-shopping-cart fa-2x text-primary"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">Como Comprar</h5>
-                    <p class="card-text text-muted">Guia completo para realizar suas compras com segurança e aproveitar todas as vantagens.</p>
-                    <button class="btn btn-outline-primary mt-3">Ver Guia Completo</button>
+    <!-- ==================== TELA DE SUPORTE COMPRADOR ==================== -->
+    <div id="supportScreen" class="suporte-container">
+        <div class="container py-5">
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    <h1 class="display-5 fw-bold text-primary mb-3">Central de Ajuda - Suporte ao Comprador</h1>
+                    <p class="lead text-muted">Tire todas as suas dúvidas e aproveite ao máximo nossa plataforma</p>
+                    <a href="{{ url_for('produto.login') }}" class="btn btn-outline-secondary mt-3">← Voltar para o Login</a>
                 </div>
             </div>
-        </div>
 
-        <!-- Segurança -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalSeguranca">
-                <div class="card-body text-center p-4">
-                    <div class="help-icon mb-3">
-                        <i class="fas fa-shield-alt fa-2x text-success"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">Segurança</h5>
-                    <p class="card-text text-muted">Entenda nossas políticas de segurança, garantias e proteção de informações.</p>
-                    <button class="btn btn-outline-success mt-3">Saber Mais</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Entregas -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalEntregas">
-                <div class="card-body text-center p-4">
-                    <div class="help-icon mb-3">
-                        <i class="fas fa-shipping-fast fa-2x text-info"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">Entregas</h5>
-                    <p class="card-text text-muted">Informações sobre prazos, rastreamento e políticas de envio para todo Brasil.</p>
-                    <button class="btn btn-outline-info mt-3">Ver Detalhes</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Trocas e Devoluções -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalDevolucoes">
-                <div class="card-body text-center p-4">
-                    <div class="help-icon mb-3">
-                        <i class="fas fa-exchange-alt fa-2x text-warning"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">Trocas e Devoluções</h5>
-                    <p class="card-text text-muted">Saiba como solicitar trocas ou devoluções e nossa política de satisfação.</p>
-                    <button class="btn btn-outline-warning mt-3">Ver Política</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pagamentos -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalPagamentos">
-                <div class="card-body text-center p-4">
-                    <div class="help-icon mb-3">
-                        <i class="fas fa-credit-card fa-2x text-danger"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">Pagamentos</h5>
-                    <p class="card-text text-muted">Formas de pagamento aceitas, parcelamento e segurança nas transações.</p>
-                    <button class="btn btn-outline-danger mt-3">Ver Opções</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Perguntas Frequentes -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalFAQ">
-                <div class="card-body text-center p-4">
-                    <div class="help-icon mb-3">
-                        <i class="fas fa-question-circle fa-2x text-secondary"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">Perguntas Frequentes</h5>
-                    <p class="card-text text-muted">Respostas para as dúvidas mais comuns sobre nossa plataforma.</p>
-                    <button class="btn btn-outline-secondary mt-3">Ver FAQ</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Como Comprar -->
-<div class="modal fade" id="modalComoComprar" tabindex="-1" aria-labelledby="modalComoComprarLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalComoComprarLabel">
-                    <i class="fas fa-shopping-cart me-2"></i>Como Comprar
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-primary">Passo a Passo</h6>
-                        <ol class="list-group list-group-numbered">
-                            <li class="list-group-item border-0">Crie sua conta ou faça login</li>
-                            <li class="list-group-item border-0">Navegue pelos produtos</li>
-                            <li class="list-group-item border-0">Clique em "Comprar"</li>
-                            <li class="list-group-item border-0">Preencha o endereço de entrega</li>
-                            <li class="list-group-item border-0">Escolha a forma de pagamento</li>
-                            <li class="list-group-item border-0">Confirme a compra</li>
-                        </ol>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-primary">Dicas Importantes</h6>
-                        <ul class="list-group">
-                            <li class="list-group-item border-0">
-                                <i class="fas fa-check text-success me-2"></i>Verifique as fotos do produto
-                            </li>
-                            <li class="list-group-item border-0">
-                                <i class="fas fa-check text-success me-2"></i>Leia a descrição completa
-                            </li>
-                            <li class="list-group-item border-0">
-                                <i class="fas fa-check text-success me-2"></i>Confirme o endereço de entrega
-                            </li>
-                            <li class="list-group-item border-0">
-                                <i class="fas fa-check text-success me-2"></i>Salve o comprovante
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="mt-4 p-3 bg-light rounded">
-                    <h6 class="fw-bold text-primary mb-3">Precisa de Ajuda?</h6>
-                    <p class="mb-2">Entre em contato com nosso suporte:</p>
-                    <p class="mb-1"><i class="fas fa-envelope me-2"></i>suporte@techtrade.com</p>
-                    <p class="mb-0"><i class="fas fa-phone me-2"></i>(11) 9999-9999</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Segurança -->
-<div class="modal fade" id="modalSeguranca" tabindex="-1" aria-labelledby="modalSegurancaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="modalSegurancaLabel">
-                    <i class="fas fa-shield-alt me-2"></i>Segurança
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-success">
-                    <i class="fas fa-lock me-2"></i>
-                    <strong>Compra 100% Segura</strong> - Todas as transações são protegidas
-                </div>
-                
-                <h6 class="fw-bold text-success">Nossas Garantias</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-start mb-3">
-                            <i class="fas fa-user-shield text-success me-3 mt-1"></i>
-                            <div>
-                                <strong>Proteção de Dados</strong>
-                                <p class="mb-0 small">Seus dados pessoais são criptografados e protegidos</p>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-start mb-3">
-                            <i class="fas fa-money-bill-wave text-success me-3 mt-1"></i>
-                            <div>
-                                <strong>Transações Seguras</strong>
-                                <p class="mb-0 small">Pagamentos processados com tecnologia SSL</p>
-                            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalComoComprar">
+                        <div class="card-body text-center p-4">
+                            <div class="help-icon mb-3"><i class="fas fa-shopping-cart fa-2x text-primary"></i></div>
+                            <h5 class="card-title fw-bold">Como Comprar</h5>
+                            <p class="card-text text-muted">Guia completo para realizar suas compras com segurança e aproveitar todas as vantagens.</p>
+                            <button class="btn btn-outline-primary mt-3">Ver Guia Completo</button>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-start mb-3">
-                            <i class="fas fa-box text-success me-3 mt-1"></i>
-                            <div>
-                                <strong>Produtos Verificados</strong>
-                                <p class="mb-0 small">Todos os produtos passam por verificação de qualidade</p>
-                            </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalSeguranca">
+                        <div class="card-body text-center p-4">
+                            <div class="help-icon mb-3"><i class="fas fa-shield-alt fa-2x text-success"></i></div>
+                            <h5 class="card-title fw-bold">Segurança</h5>
+                            <p class="card-text text-muted">Entenda nossas políticas de segurança, garantias e proteção de informações.</p>
+                            <button class="btn btn-outline-success mt-3">Saber Mais</button>
                         </div>
-                        <div class="d-flex align-items-start mb-3">
-                            <i class="fas fa-headset text-success me-3 mt-1"></i>
-                            <div>
-                                <strong>Suporte 24/7</strong>
-                                <p class="mb-0 small">Equipe disponível para ajudar em qualquer problema</p>
-                            </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalEntregas">
+                        <div class="card-body text-center p-4">
+                            <div class="help-icon mb-3"><i class="fas fa-shipping-fast fa-2x text-info"></i></div>
+                            <h5 class="card-title fw-bold">Entregas</h5>
+                            <p class="card-text text-muted">Informações sobre prazos, rastreamento e políticas de envio para todo Brasil.</p>
+                            <button class="btn btn-outline-info mt-3">Ver Detalhes</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalDevolucoes">
+                        <div class="card-body text-center p-4">
+                            <div class="help-icon mb-3"><i class="fas fa-exchange-alt fa-2x text-warning"></i></div>
+                            <h5 class="card-title fw-bold">Trocas e Devoluções</h5>
+                            <p class="card-text text-muted">Saiba como solicitar trocas ou devoluções e nossa política de satisfação.</p>
+                            <button class="btn btn-outline-warning mt-3">Ver Política</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalPagamentos">
+                        <div class="card-body text-center p-4">
+                            <div class="help-icon mb-3"><i class="fas fa-credit-card fa-2x text-danger"></i></div>
+                            <h5 class="card-title fw-bold">Pagamentos</h5>
+                            <p class="card-text text-muted">Formas de pagamento aceitas, parcelamento e segurança nas transações.</p>
+                            <button class="btn btn-outline-danger mt-3">Ver Opções</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card help-card h-100 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#modalFAQ">
+                        <div class="card-body text-center p-4">
+                            <div class="help-icon mb-3"><i class="fas fa-question-circle fa-2x text-secondary"></i></div>
+                            <h5 class="card-title fw-bold">Perguntas Frequentes</h5>
+                            <p class="card-text text-muted">Respostas para as dúvidas mais comuns sobre nossa plataforma.</p>
+                            <button class="btn btn-outline-secondary mt-3">Ver FAQ</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Entregas -->
-<div class="modal fade" id="modalEntregas" tabindex="-1" aria-labelledby="modalEntregasLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="modalEntregasLabel">
-                    <i class="fas fa-shipping-fast me-2"></i>Entregas
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <h6 class="fw-bold text-info">Prazos de Entrega</h6>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-info">
-                            <tr>
-                                <th>Região</th>
-                                <th>Prazo</th>
-                                <th>Frete</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Capital e Grande SP</td>
-                                <td>2-3 dias úteis</td>
-                                <td>Grátis</td>
-                            </tr>
-                            <tr>
-                                <td>Interior SP</td>
-                                <td>3-5 dias úteis</td>
-                                <td>Grátis</td>
-                            </tr>
-                            <tr>
-                                <td>Sudeste</td>
-                                <td>4-7 dias úteis</td>
-                                <td>Grátis</td>
-                            </tr>
-                            <tr>
-                                <td>Demais regiões</td>
-                                <td>5-10 dias úteis</td>
-                                <td>Grátis</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <h6 class="fw-bold text-info mt-4">Rastreamento</h6>
-                <p>Após a postagem, você receberá um código de rastreamento por email para acompanhar sua entrega.</p>
-                
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Importante:</strong> O prazo começa a contar após a confirmação do pagamento.
-                </div>
-            </div>
-        </div>
+    <!-- MODAIS DO SUPORTE (Bootstrap) -->
+    <div class="modal fade" id="modalComoComprar" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-shopping-cart me-2"></i>Como Comprar</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><h6 class="fw-bold text-primary">Passo a Passo</h6><ol><li>Crie sua conta ou faça login</li><li>Navegue pelos produtos</li><li>Clique em "Comprar"</li><li>Preencha o endereço de entrega</li><li>Escolha a forma de pagamento</li><li>Confirme a compra</li></ol></div></div></div>
     </div>
-</div>
-
-<!-- Modal Devoluções -->
-<div class="modal fade" id="modalDevolucoes" tabindex="-1" aria-labelledby="modalDevolucoesLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="modalDevolucoesLabel">
-                    <i class="fas fa-exchange-alt me-2"></i>Trocas e Devoluções
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Política de Arrependimento:</strong> 7 dias para desistir da compra
-                </div>
-                
-                <h6 class="fw-bold text-warning">Quando Solicitar Devolução</h6>
-                <ul class="list-group mb-4">
-                    <li class="list-group-item">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Produto com defeito
-                    </li>
-                    <li class="list-group-item">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Produto diferente do anunciado
-                    </li>
-                    <li class="list-group-item">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Arrependimento da compra (em 7 dias)
-                    </li>
-                    <li class="list-group-item">
-                        <i class="fas fa-times text-danger me-2"></i>
-                        Produto sem originalidade (não se aplica)
-                    </li>
-                </ul>
-                
-                <h6 class="fw-bold text-warning">Processo de Devolução</h6>
-                <ol class="list-group list-group-numbered">
-                    <li class="list-group-item border-0">Entre em contato com o suporte</li>
-                    <li class="list-group-item border-0">Descreva o motivo da devolução</li>
-                    <li class="list-group-item border-0">Aguarde a autorização</li>
-                    <li class="list-group-item border-0">Poste o produto</li>
-                    <li class="list-group-item border-0">Receba o reembolso</li>
-                </ol>
-            </div>
-        </div>
+    <div class="modal fade" id="modalSeguranca" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-shield-alt me-2"></i>Segurança</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="alert alert-success"><strong>Compra 100% Segura</strong> - Todas as transações são protegidas</div><p>Seus dados são criptografados e suas transações são seguras.</p></div></div></div>
     </div>
-</div>
-
-<!-- Modal Pagamentos -->
-<div class="modal fade" id="modalPagamentos" tabindex="-1" aria-labelledby="modalPagamentosLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="modalPagamentosLabel">
-                    <i class="fas fa-credit-card me-2"></i>Pagamentos
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-danger">Formas de Pagamento</h6>
-                        <div class="list-group">
-                            <div class="list-group-item border-0">
-                                <i class="fab fa-pix text-primary me-2"></i>
-                                <strong>PIX</strong>
-                                <small class="text-muted d-block">10% de desconto - Pagamento instantâneo</small>
-                            </div>
-                            <div class="list-group-item border-0">
-                                <i class="fas fa-credit-card text-info me-2"></i>
-                                <strong>Cartão de Crédito</strong>
-                                <small class="text-muted d-block">Até 12x sem juros</small>
-                            </div>
-                            <div class="list-group-item border-0">
-                                <i class="fas fa-barcode text-success me-2"></i>
-                                <strong>Boleto Bancário</strong>
-                                <small class="text-muted d-block">Pagamento em 1-2 dias úteis</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-danger">Segurança</h6>
-                        <div class="alert alert-danger">
-                            <i class="fas fa-lock me-2"></i>
-                            Todas as transações são protegidas com criptografia SSL
-                        </div>
-                        <p class="small">Seus dados financeiros nunca são armazenados em nossos servidores.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="modal fade" id="modalEntregas" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-shipping-fast me-2"></i>Entregas</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Prazo de entrega de 2 a 10 dias úteis dependendo da região. Frete grátis para todo Brasil.</p></div></div></div>
     </div>
-</div>
-
-<!-- Modal FAQ -->
-<div class="modal fade" id="modalFAQ" tabindex="-1" aria-labelledby="modalFAQLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title" id="modalFAQLabel">
-                    <i class="fas fa-question-circle me-2"></i>Perguntas Frequentes
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="accordion" id="accordionFAQ">
-                    <!-- Pergunta 1 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                Como faço para rastrear meu pedido?
-                            </button>
-                        </h2>
-                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#accordionFAQ">
-                            <div class="accordion-body">
-                                Após a postagem, você receberá um código de rastreamento por email. Use esse código no site dos Correios ou transportadora para acompanhar sua entrega.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Pergunta 2 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                Posso cancelar minha compra?
-                            </button>
-                        </h2>
-                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
-                            <div class="accordion-body">
-                                Sim, você tem 7 dias para cancelar a compra por arrependimento. Entre em contato com nosso suporte para solicitar o cancelamento.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Pergunta 3 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                O produto veio com defeito, o que fazer?
-                            </button>
-                        </h2>
-                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
-                            <div class="accordion-body">
-                                Entre em contato imediatamente com nosso suporte. Temos política de troca para produtos com defeito em até 30 dias.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Pergunta 4 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                                Quais as formas de pagamento?
-                            </button>
-                        </h2>
-                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
-                            <div class="accordion-body">
-                                Aceitamos PIX (com 10% de desconto), cartão de crédito (até 12x) e boleto bancário.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="modal fade" id="modalDevolucoes" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-warning text-dark"><h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Trocas e Devoluções</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="alert alert-warning"><strong>Política de Arrependimento:</strong> 7 dias para desistir da compra</div><p>Produtos com defeito ou diferentes do anunciado podem ser trocados em até 30 dias.</p></div></div></div>
     </div>
-</div>
+    <div class="modal fade" id="modalPagamentos" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="fas fa-credit-card me-2"></i>Pagamentos</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Aceitamos PIX (10% desconto), Cartão de Crédito (até 12x) e Boleto Bancário.</p></div></div></div>
+    </div>
+    <div class="modal fade" id="modalFAQ" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-secondary text-white"><h5 class="modal-title"><i class="fas fa-question-circle me-2"></i>Perguntas Frequentes</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="accordion"><div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq1">Como faço para rastrear meu pedido?</button></h2><div id="faq1" class="accordion-collapse collapse show"><div class="accordion-body">Você receberá um código de rastreamento por email.</div></div></div></div></div></div></div>
+    </div>
 
-<style>
-.help-card {
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: 2px solid transparent;
-}
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section"><h3>TechTrade</h3><p>O marketplace mais certificado para compra e venda de electrónicos usados.</p></div>
+            <div class="footer-section"><h3>Links Rápidos</h3><ul><li><a href="#">Home</a></li><li><a href="#">Sobre</a></li><li><a href="#">Catálogo</a></li></ul></div>
+            <div class="footer-section"><h3>Para Vendedores</h3><ul><li><a href="#">Cadastrar Produto</a></li><li><a href="#">Central do Vendedor</a></li><li><a href="#">Termos e Condições</a></li></ul></div>
+            <div class="footer-section"><h3>Contato</h3><ul><li>contato@techtrade.com</li><li>(11) 9999-9999</li><li>São Paulo, SP</li></ul></div>
+        </div>
+        <div class="footer-bottom"><p>&copy;  TechTrade. Todos os direitos reservados.</p></div>
+    </footer>
 
-.help-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--bs-primary);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
-
-.help-icon {
-    transition: transform 0.3s ease;
-}
-
-.help-card:hover .help-icon {
-    transform: scale(1.1);
-}
-
-.modal-header {
-    border-bottom: none;
-}
-
-.accordion-button:not(.collapsed) {
-    background-color: #f8f9fa;
-    color: var(--bs-primary);
-}
-</style>
-{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

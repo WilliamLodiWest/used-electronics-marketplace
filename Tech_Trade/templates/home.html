@@ -6,657 +6,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Tech Trade - Compre Eletrônicos com Preço Inteligente</title>
-    <style>
-        :root {
-            --primary-color: #08005b;
-            --secondary-color: #5182ff;
-            --accent-color: #ff6b6b;
-            --light-bg: #f8f9fa;
-            --dark-text: #333;
-            --light-text: #fff;
-            --gray-text: #6c757d;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: var(--light-bg);
-            color: var(--dark-text);
-            line-height: 1.6;
-        }
-        
-        /* Navbar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 5%;
-            background-color: var(--light-bg);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--dark-text);
-            text-decoration: none;
-        }
-        
-        .logo span {
-            color: var(--primary-color);
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-        
-        .nav-links li {
-            margin-left: 2rem;
-        }
-        
-        .nav-links a {
-            text-decoration: none;
-            color: var(--dark-text);
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        .nav-links a:hover, .nav-links a.active {
-            color: var(--primary-color);
-        }
-        
-        .btn-login {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 0.5rem 1.5rem;
-            border-radius: 25px;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-login:hover {
-            background-color: var(--secondary-color);
-            color: var(--light-text);
-        }
-        
-        .menu-mobile {
-            display: none;
-            flex-direction: column;
-            cursor: pointer;
-        }
-        
-        .menu-mobile span {
-            width: 25px;
-            height: 3px;
-            background-color: var(--dark-text);
-            margin: 3px 0;
-            transition: 0.3s;
-        }
-        
-        /* Hero Section - Atualizada */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            position: relative;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            overflow: hidden;
-        }
-
-        .hero-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-            padding: 100px 5% 80px;
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero-text {
-            max-width: 600px;
-        }
-
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 20px;
-            color: #ffffff; /* Branco para contraste */
-        }
-
-        .hero-subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.9); /* Branco semi-transparente */
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 40px;
-        }
-
-        .btn-primary {
-            background: #5182ff;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            font-size: 1rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(81, 130, 255, 0.4);
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 30px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-number {
-            display: block;
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .hero-visual {
-            position: relative;
-            height: 500px;
-        }
-
-        .floating-card {
-            position: absolute;
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .floating-card:hover {
-            transform: translateY(-10px);
-        }
-
-        .floating-card img {
-            width: 150px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-
-        .card-info h4 {
-            color: #2c3e50;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-
-        .card-info p {
-            color: #5182ff;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .card-1 {
-            top: 50px;
-            left: 0;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .card-2 {
-            top: 150px;
-            right: 0;
-            animation: float 6s ease-in-out infinite 2s;
-        }
-
-        .card-3 {
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: float 6s ease-in-out infinite 4s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .hero-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80') center/cover;
-            opacity: 0.1;
-        }
-
-        /* Resto do seu CSS permanece igual... */
-        .sobre {
-            padding: 5rem 5%;
-            background-color: white;
-        }
-        
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: #000000;
-        }
-        
-        .sobre-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 3rem;
-            align-items: center;
-        }
-        
-        .sobre-text {
-            padding-right: 2rem;
-        }
-        
-        .sobre-text h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
-        }
-        
-        .sobre-text p {
-            margin-bottom: 1.5rem;
-            color: var(--gray-text);
-            line-height: 1.8;
-        }
-        
-        .sobre-features {
-            list-style: none;
-        }
-        
-        .sobre-features li {
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .sobre-features li i {
-            color: var(--primary-color);
-            margin-right: 1rem;
-            font-size: 1.2rem;
-        }
-        
-        .sobre-image {
-            text-align: center;
-        }
-        
-        .sobre-image img {
-            max-width: 100%;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Ajuda Section */
-        .ajuda {
-            padding: 5rem 5%;
-            background: linear-gradient(135deg, var(--light-bg) 0%, #ffffff 100%);
-        }
-        
-        .ajuda-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .ajuda-card {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-align: center;
-        }
-        
-        .ajuda-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        }
-        
-        .ajuda-icon {
-            font-size: 3rem;
-            color: var(--primary-color);
-            margin-bottom: 1.5rem;
-        }
-        
-        .ajuda-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #000000;
-        }
-        
-        .ajuda-card p {
-            color: var(--gray-text);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
-        
-        .ajuda-link {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: gap 0.3s;
-        }
-        
-        .ajuda-link:hover {
-            gap: 1rem;
-        }
-        
-        .contact-channels {
-            background: white;
-            border-radius: 15px;
-            padding: 3rem;
-            margin-top: 3rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            text-align: center;
-        }
-        
-        .contact-channels h3 {
-            font-size: 1.8rem;
-            margin-bottom: 2rem;
-            color: #000000;
-        }
-        
-        .channels-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-        }
-        
-        .channel {
-            padding: 1.5rem;
-        }
-        
-        .channel i {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        
-        .channel h4 {
-            margin-bottom: 0.5rem;
-            color: #000000;
-        }
-        
-        .channel p {
-            color: var(--gray-text);
-            margin-bottom: 0.5rem;
-        }
-        
-        .channel a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        /* Footer */
-        .footer {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 4rem 5% 2rem;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .footer-section h4 {
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-        }
-        
-        .footer-section p {
-            margin-bottom: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .footer-section ul {
-            list-style: none;
-        }
-        
-        .footer-section ul li {
-            margin-bottom: 0.8rem;
-        }
-        
-        .footer-section a {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .footer-section a:hover {
-            color: var(--light-text);
-        }
-        
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        
-        .social-links a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            transition: background-color 0.3s;
-        }
-        
-        .social-links a:hover {
-            background-color: var(--secondary-color);
-        }
-        
-        .contact-info p {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .contact-info i {
-            margin-right: 0.8rem;
-            width: 20px;
-        }
-        
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding-top: 2rem;
-            margin-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .footer-links {
-            display: flex;
-            gap: 1.5rem;
-        }
-        
-        /* Responsive */
-        @media (max-width: 992px) {
-            .hero-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            
-            .hero-text {
-                margin-bottom: 3rem;
-            }
-            
-            .hero-visual {
-                height: 400px;
-            }
-            
-            .sobre-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            
-            .sobre-text {
-                padding-right: 0;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .menu-mobile {
-                display: flex;
-            }
-            
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .hero-actions {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .hero-stats {
-                justify-content: center;
-            }
-            
-            .floating-card {
-                width: 200px;
-            }
-            
-            .card-1 {
-                top: 30px;
-                left: 10px;
-            }
-            
-            .card-2 {
-                top: 120px;
-                right: 20px;
-            }
-            
-            .card-3 {
-                bottom: 30px;
-                left: 50px;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .ajuda-card {
-                padding: 2rem;
-            }
-            
-            .contact-channels {
-                padding: 2rem;
-            }
-            
-            .footer-bottom {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .hero {
-                padding: 3rem 5%;
-            }
-            
-            .hero-title {
-                font-size: 2rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1rem;
-            }
-            
-            .floating-card {
-                width: 150px;
-            }
-            
-            .card-info h4 {
-                font-size: 0.9rem;
-            }
-            
-            .card-info p {
-                font-size: 1rem;
-            }
-            
-            .sobre, .ajuda {
-                padding: 3rem 5%;
-            }
-        }
-    </style>
 </head>
-
 <body>
     <nav class="navbar">
-        <!-- Logo -->
         <a href="#" class="logo">Tech<span>Trade</span></a>
-
-        <!-- Links do menu -->
         <ul class="nav-links">
             <li><a href="#" class="active">HOME</a></li>
             <li><a href="#sobre">SOBRE</a></li>
             <li><a href="#ajuda">AJUDA</a></li>
             <li><a href="{{ url_for('produto.login') }}" class="btn-login">LOGIN CLIENTE</a></li>
         </ul>
-
-        <!-- Menu Mobile -->
         <div class="menu-mobile" id="menuMobile">
             <span></span>
             <span></span>
@@ -664,11 +23,9 @@
         </div>
     </nav>
 
-    <!-- Hero Section Atualizada -->
     <section class="hero">
         <div class="hero-content">
             <div class="hero-text">
-                <!-- Mantendo seu título e subtítulo originais -->
                 <h1 class="hero-title">Tecnologia de ponta, com preço inteligente</h1>
                 <p class="hero-subtitle">Encontre os melhores produtos eletrônicos com segurança e garantia</p>
                 <div class="hero-actions">
@@ -702,16 +59,13 @@
         <div class="hero-background"></div>
     </section>
 
-    <!-- Resto do seu conteúdo permanece igual -->
     <section class="sobre" id="sobre">
         <h2 class="section-title">Sobre a TechTrade</h2>
         <div class="sobre-content">
             <div class="sobre-text">
                 <h3>Conectando você às melhores tecnologias</h3>
                 <p>A TechTrade nasceu da paixão por tecnologia e da necessidade de criar um espaço seguro e confiável para compra e venda de produtos eletrônicos. Nossa missão é simplificar o acesso à tecnologia de qualidade, oferecendo preços justos e uma experiência de compra excepcional.</p>
-                
                 <p>Com anos de experiência no mercado, desenvolvemos uma plataforma que prioriza a segurança dos usuários e a qualidade dos produtos. Todos os nossos vendedores passam por um rigoroso processo de verificação para garantir que você tenha a melhor experiência possível.</p>
-                
                 <ul class="sobre-features">
                     <li><i class="fas fa-shield-alt"></i> Compra 100% segura com garantia</li>
                     <li><i class="fas fa-truck"></i> Entrega rápida para todo Brasil</li>
@@ -727,84 +81,6 @@
         </div>
     </section>
 
-
- <!-- Ajuda Section -->
-    <section class="ajuda" id="ajuda">
-        <h2 class="section-title">Central de Ajuda</h2>
-        <div class="ajuda-grid">
-            <div class="ajuda-card">
-                <div class="ajuda-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <h3>Como Comprar</h3>
-                <p>Guia completo para realizar suas compras com segurança e aproveitar todas as vantagens da nossa plataforma.</p>
-                <a href="#" class="ajuda-link">
-                    Ver Guia Completo
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            
-            <div class="ajuda-card">
-                <div class="ajuda-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3>Segurança</h3>
-                <p>Entenda nossas políticas de segurança, garantias e como protegemos suas informações e transações.</p>
-                <a href="#" class="ajuda-link">
-                    Saber Mais
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            
-            <div class="ajuda-card">
-                <div class="ajuda-icon">
-                    <i class="fas fa-truck"></i>
-                </div>
-                <h3>Entregas</h3>
-                <p>Informações sobre prazos de entrega, rastreamento de pedidos e políticas de envio para todo o Brasil.</p>
-                <a href="#" class="ajuda-link">
-                    Ver Detalhes
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            
-            <div class="ajuda-card">
-                <div class="ajuda-icon">
-                    <i class="fas fa-undo"></i>
-                </div>
-                <h3>Devoluções</h3>
-                <p>Saiba como solicitar trocas ou devoluções e conheça nossa política de satisfação garantida.</p>
-                <a href="#" class="ajuda-link">
-                    Ver Política
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            
-            <div class="ajuda-card">
-                <div class="ajuda-icon">
-                    <i class="fas fa-credit-card"></i>
-                </div>
-                <h3>Pagamentos</h3>
-                <p>Formas de pagamento aceitas, parcelamento e informações sobre segurança nas transações.</p>
-                <a href="#" class="ajuda-link">
-                    Ver Opções
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            
-            <div class="ajuda-card">
-                <div class="ajuda-icon">
-                    <i class="fas fa-question-circle"></i>
-                </div>
-                <h3>Perguntas Frequentes</h3>
-                <p>Respostas para as dúvidas mais comuns sobre nossa plataforma e serviços.</p>
-                <a href="#" class="ajuda-link">
-                    Ver FAQ
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-        
         <div class="contact-channels">
             <h3>Fale Conosco</h3>
             <div class="channels-grid">
@@ -815,7 +91,6 @@
                     <p>Seg a Sex: 8h-18h</p>
                     <a href="#">Iniciar Chat</a>
                 </div>
-                
                 <div class="channel">
                     <i class="fas fa-envelope"></i>
                     <h4>E-mail</h4>
@@ -823,7 +98,6 @@
                     <p>suporte@techtrade.com</p>
                     <a href="#">Enviar E-mail</a>
                 </div>
-                
                 <div class="channel">
                     <i class="fas fa-phone"></i>
                     <h4>Telefone</h4>
@@ -831,7 +105,6 @@
                     <p>(11) 4004-1234</p>
                     <a href="#">Ligar Agora</a>
                 </div>
-                
                 <div class="channel">
                     <i class="fas fa-map-marker-alt"></i>
                     <h4>Escritório</h4>
@@ -843,7 +116,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-section">
@@ -856,7 +128,6 @@
                     <a href="#"><i class="fab fa-linkedin"></i></a>
                 </div>
             </div>
-            
             <div class="footer-section">
                 <h4>Links Rápidos</h4>
                 <ul>
@@ -866,7 +137,6 @@
                     <li><a href="{{ url_for('produto.renderizar_produtos') }}">Produtos</a></li>
                 </ul>
             </div>
-            
             <div class="footer-section">
                 <h4>Para Compradores</h4>
                 <ul>
@@ -876,7 +146,6 @@
                     <li><a href="#">Perguntas Frequentes</a></li>
                 </ul>
             </div>
-            
             <div class="footer-section">
                 <h4>Contato</h4>
                 <div class="contact-info">
@@ -888,7 +157,7 @@
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; 2024 TechTrade. Todos os direitos reservados.</p>
+            <p>&copy; 2026 TechTrade. Todos os direitos reservados.</p>
             <div class="footer-links">
                 <a href="#">Política de Privacidade</a>
                 <a href="#">Termos de Uso</a>

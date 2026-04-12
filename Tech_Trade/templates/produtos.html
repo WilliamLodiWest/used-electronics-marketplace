@@ -1,1302 +1,147 @@
-{% extends "index.html" %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos - TechTrade</title>
 
-{% block title %}Produtos - TechTrade{% endblock %}
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/produtos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
 
-{% block content %}
-<!-- Header Produtos -->
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <ul class="nav-links">
+        <li><a href="{{ url_for('produto.home') }}">HOME</a></li>
+        <li><a href="#sobre">SOBRE</a></li>
+        <li><a href="{{ url_for('produto.suporte_comprador') }}">SUPORTE</a></li>
+
+        {% if session.get('usuario_logado') %}
+            <li><a href="#" class="btn-login">{{ session.get('usuario_nome') }}</a></li>
+        {% else %}
+            <li><a href="{{ url_for('produto.login') }}" class="btn-login">LOGIN</a></li>
+        {% endif %}
+    </ul>
+
+    <div class="menu-mobile" id="menuMobile">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</nav>
+
+<!-- HEADER -->
 <section class="produtos-header">
-    <div class="container">
-        <div class="header-content">
-            <h1>Nossos Produtos</h1>
-            <p>Encontre os melhores eletrônicos com preços incríveis</p>
-            
-            <!-- Breadcrumb -->
-            <nav class="breadcrumb">
-                <a href="{{ url_for('produto.home') }}">Home</a>
-                <span class="separator">/</span>
-                <span class="current">Produtos</span>
-            </nav>
-        </div>
+    <div class="container text-center">
+        <h1>Nossos Produtos</h1>
+        <p>Encontre os melhores eletrônicos</p>
     </div>
 </section>
 
-<!-- Main Content -->
+<!-- MAIN -->
 <main class="produtos-main">
-    <div class="container">
-        <div class="produtos-layout">
-            <!-- Sidebar de Filtros -->
-            <aside class="filtros-sidebar">
-                <div class="filtros-header">
-                    <h3>Filtros</h3>
-                    <button class="btn-limpar" id="btnLimparFiltros">Limpar</button>
-                </div>
+<div class="container">
+<div class="produtos-layout">
 
-                <!-- Filtro de Busca -->
-                <div class="filtro-grupo">
-                    <h4>Buscar Produto</h4>
-                    <div class="busca-filtro">
-                        <input type="text" id="buscaProduto" placeholder="Digite o nome do produto...">
-                        <button onclick="filtrarProdutos()">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
+<!-- SIDEBAR COMPLETA -->
+<aside class="filtros-sidebar">
 
-                <!-- Filtro de Categoria -->
-                <div class="filtro-grupo">
-                    <h4>Categorias</h4>
-                    <div class="categorias-lista" id="categoriasLista">
-                        <!-- Categorias carregadas via JavaScript -->
-                    </div>
-                </div>
-
-                <!-- Filtro de Condição -->
-                <div class="filtro-grupo">
-                    <h4>Condição</h4>
-                    <div class="condicoes-lista">
-                        <label class="condicao-item">
-                            <input type="checkbox" name="condicao" value="novo" onchange="filtrarProdutos()">
-                            <span class="checkmark"></span>
-                            Novo
-                            <span class="condicao-count" id="countNovo">0</span>
-                        </label>
-                        <label class="condicao-item">
-                            <input type="checkbox" name="condicao" value="seminovo" onchange="filtrarProdutos()">
-                            <span class="checkmark"></span>
-                            Seminovo
-                            <span class="condicao-count" id="countSeminovo">0</span>
-                        </label>
-                        <label class="condicao-item">
-                            <input type="checkbox" name="condicao" value="usado" onchange="filtrarProdutos()">
-                            <span class="checkmark"></span>
-                            Usado
-                            <span class="condicao-count" id="countUsado">0</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Filtro de Preço -->
-                <div class="filtro-grupo">
-                    <h4>Faixa de Preço</h4>
-                    <div class="preco-filtro">
-                        <div class="preco-inputs">
-                            <input type="number" id="precoMin" placeholder="Mín" min="0">
-                            <span>até</span>
-                            <input type="number" id="precoMax" placeholder="Máx" min="0">
-                        </div>
-                        <button class="btn-aplicar-preco" onclick="filtrarPorPreco()">Aplicar</button>
-                    </div>
-                    <div class="preco-range">
-                        <input type="range" id="rangePreco" min="0" max="10000" value="10000" oninput="atualizarRangePreco()">
-                        <div class="preco-labels">
-                            <span>R$ 0</span>
-                            <span id="valorRangePreco">R$ 10.000</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Conteúdo Principal -->
-            <section class="produtos-content">
-                <!-- Header do Conteúdo -->
-                <div class="content-header">
-                    <div class="resultados-info">
-                        <span id="totalProdutos">Carregando produtos...</span>
-                        <span class="produtos-ordenados" id="produtosOrdenados">Ordenado por: Mais Relevantes</span>
-                    </div>
-                    <div class="ordenacao">
-                        <label for="ordenarPor">Ordenar por:</label>
-                        <select id="ordenarPor" onchange="ordenarProdutos()">
-                            <option value="relevancia">Mais Relevantes</option>
-                            <option value="menor-preco">Menor Preço</option>
-                            <option value="maior-preco">Maior Preço</option>
-                            <option value="mais-vendidos">Mais Vendidos</option>
-                            <option value="melhor-avaliados">Melhor Avaliados</option>
-                            <option value="novos">Mais Novos</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Grid de Produtos -->
-                <div class="produtos-grid" id="gridProdutos">
-                    <!-- Produtos carregados via JavaScript -->
-                    <div class="loading-produtos">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Carregando produtos...</p>
-                    </div>
-                </div>
-
-                <!-- Paginação -->
-                <div class="paginacao" id="paginacao" style="display: none;">
-                    <button class="btn-pagina anterior" onclick="mudarPagina(-1)">
-                        <i class="fas fa-chevron-left"></i>
-                        Anterior
-                    </button>
-                    
-                    <div class="numeros-pagina" id="numerosPagina">
-                        <!-- Números das páginas gerados via JavaScript -->
-                    </div>
-                    
-                    <button class="btn-pagina proximo" onclick="mudarPagina(1)">
-                        Próxima
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-
-                <!-- Seção Vazia -->
-                <div class="sem-resultados" id="semResultados" style="display: none;">
-                    <div class="sem-resultados-content">
-                        <i class="fas fa-search"></i>
-                        <h3>Nenhum produto encontrado</h3>
-                        <p>Tente ajustar os filtros ou buscar com outros termos</p>
-                        <button class="btn-primary" onclick="limparFiltros()">Limpar Filtros</button>
-                    </div>
-                </div>
-            </section>
-        </div>
+    <div class="filtros-header">
+        <h3>Filtros</h3>
+        <button type="button" id="btnLimparFiltros" class="btn-limpar">Limpar</button>
     </div>
+
+    <!-- BUSCA -->
+    <input type="text" id="buscaProduto" placeholder="Buscar produto...">
+
+    <!-- CATEGORIAS -->
+    <h4>Categorias</h4>
+    <div id="categoriasLista"></div>
+
+    <!-- CONDIÇÃO -->
+    <h4>Condição</h4>
+    <label class="filtro-item">Novo <input type="checkbox" name="condicao" value="novo"></label>
+    <label class="filtro-item">Seminovo <input type="checkbox" name="condicao" value="seminovo"></label>
+    <label class="filtro-item">Usado <input type="checkbox" name="condicao" value="usado"></label>
+
+    <!-- PREÇO -->
+    <h4>Preço</h4>
+    <input type="number" id="precoMin" placeholder="Min">
+    <input type="number" id="precoMax" placeholder="Max">
+    <button onclick="filtrarPorPreco()">Aplicar</button>
+
+</aside>
+
+<!-- PRODUTOS -->
+<section class="produtos-content">
+
+    <div id="totalProdutos">Carregando...</div>
+
+    <div id="gridProdutos" class="produtos-grid"></div>
+
+    <div id="paginacao"></div>
+
+    <div id="semResultados" style="display:none;">
+        <h3>Nenhum produto encontrado</h3>
+    </div>
+
 </section>
 
-<!-- Seção de Vantagens -->
-<section class="vantagens-produtos">
-    <div class="container">
-        <div class="vantagens-grid">
-            <div class="vantagem-item">
-                <div class="vantagem-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3>Compra Segura</h3>
-                <p>Garantia de 7 dias e proteção ao comprador</p>
-            </div>
-            <div class="vantagem-item">
-                <div class="vantagem-icon">
-                    <i class="fas fa-shipping-fast"></i>
-                </div>
-                <h3>Entrega Rápida</h3>
-                <p>Receba em até 48h nas principais cidades</p>
-            </div>
-            <div class="vantagem-item">
-                <div class="vantagem-icon">
-                    <i class="fas fa-credit-card"></i>
-                </div>
-                <h3>Parcele em 12x</h3>
-                <p>Pagamento facilitado no cartão de crédito</p>
-            </div>
-            <div class="vantagem-item">
-                <div class="vantagem-icon">
-                    <i class="fas fa-headset"></i>
-                </div>
-                <h3>Suporte 24/7</h3>
-                <p>Atendimento especializado sempre disponível</p>
-            </div>
-        </div>
-    </div>
-</section>
+</div>
+</div>
+</main>
 
-<!-- Modal Detalhes Produto -->
-<div class="modal fade" id="modalDetalhesProduto" tabindex="-1">
+<!-- MODAL DETALHES -->
+<div class="modal fade" id="modalDetalhesProduto">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
+
             <div class="modal-header">
-                <h5 class="modal-title" id="detalhe-nome"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 id="detalhe-nome"></h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <img id="detalhe-imagem" src="" class="img-fluid rounded" alt="">
-                    </div>
-                    <div class="col-md-6">
-                        <p id="detalhe-descricao"></p>
-                        <p><strong>Categoria:</strong> <span id="detalhe-categoria"></span></p>
-                        <p><strong>Preço:</strong> R$ <span id="detalhe-preco"></span></p>
-                        <p><strong>Vendedor:</strong> <span id="detalhe-vendedor"></span></p>
-                        <div id="selo-verificado" class="d-none">
-                            <span class="badge bg-success">✅ Verificado</span>
-                        </div>
-                    </div>
-                </div>
+                <img id="detalhe-imagem" class="img-fluid mb-3">
+                <p id="detalhe-descricao"></p>
+                <p><b>Categoria:</b> <span id="detalhe-categoria"></span></p>
+                <p><b>Preço:</b> R$ <span id="detalhe-preco"></span></p>
+                <p><b>Vendedor:</b> <span id="detalhe-vendedor"></span></p>
             </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-primary" id="btn-comprar">Comprar Agora</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button class="btn btn-primary" id="btn-comprar">Comprar</button>
             </div>
+
         </div>
     </div>
 </div>
 
-<!-- Modal Login Necessário -->
-<div class="modal fade" id="modalLoginNecessario" tabindex="-1">
+<!-- MODAL LOGIN -->
+<div class="modal fade" id="modalLoginNecessario">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Login Necessário</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Você precisa estar logado para comprar produtos.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <a href="{{ url_for('produto.login') }}" class="btn btn-primary">Fazer Login</a>
-            </div>
+        <div class="modal-content p-3">
+            <p>Faça login para continuar</p>
+            <a href="{{ url_for('produto.login') }}" class="btn btn-primary">Login</a>
         </div>
     </div>
 </div>
 
-<style>
-/* Estilos específicos para a página de produtos */
-.produtos-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 100px 0 60px;
-    margin-top: 70px;
-}
-
-.header-content {
-    text-align: center;
-}
-
-.header-content h1 {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    font-weight: 700;
-}
-
-.header-content p {
-    font-size: 1.2rem;
-    opacity: 0.9;
-    margin-bottom: 20px;
-}
-
-.breadcrumb {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-}
-
-.breadcrumb a {
-    color: white;
-    text-decoration: none;
-    opacity: 0.8;
-    transition: opacity 0.3s;
-}
-
-.breadcrumb a:hover {
-    opacity: 1;
-}
-
-.breadcrumb .separator {
-    opacity: 0.6;
-}
-
-.breadcrumb .current {
-    opacity: 1;
-    font-weight: 600;
-}
-
-/* Layout Principal */
-.produtos-layout {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 40px;
-    padding: 60px 0;
-}
-
-/* Sidebar de Filtros */
-.filtros-sidebar {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    height: fit-content;
-    position: sticky;
-    top: 100px;
-}
-
-.filtros-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #f0f0f0;
-}
-
-.filtros-header h3 {
-    color: #2c3e50;
-    margin: 0;
-}
-
-.btn-limpar {
-    background: transparent;
-    border: 1px solid #dc3545;
-    color: #dc3545;
-    padding: 6px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s;
-}
-
-.btn-limpar:hover {
-    background: #dc3545;
-    color: white;
-}
-
-.filtro-grupo {
-    margin-bottom: 30px;
-}
-
-.filtro-grupo h4 {
-    color: #2c3e50;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-}
-
-.busca-filtro {
-    display: flex;
-    gap: 8px;
-}
-
-.busca-filtro input {
-    flex: 1;
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.9rem;
-}
-
-.busca-filtro button {
-    background: #5182ff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.busca-filtro button:hover {
-    background: #3a6de0;
-}
-
-.categorias-lista,
-.condicoes-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.categoria-item,
-.condicao-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    padding: 8px 0;
-    position: relative;
-}
-
-.categoria-item input,
-.condicao-item input {
-    display: none;
-}
-
-.checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #ddd;
-    border-radius: 3px;
-    position: relative;
-    transition: all 0.3s;
-}
-
-.categoria-item input:checked + .checkmark,
-.condicao-item input:checked + .checkmark {
-    background: #5182ff;
-    border-color: #5182ff;
-}
-
-.checkmark:after {
-    content: '';
-    position: absolute;
-    display: none;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
-.categoria-item input:checked + .checkmark:after,
-.condicao-item input:checked + .checkmark:after {
-    display: block;
-}
-
-.categoria-count,
-.condicao-count {
-    margin-left: auto;
-    color: #7f8c8d;
-    font-size: 0.8rem;
-}
-
-.preco-filtro {
-    margin-bottom: 15px;
-}
-
-.preco-inputs {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.preco-inputs input {
-    width: 80px;
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 0.9rem;
-}
-
-.preco-inputs span {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-}
-
-.btn-aplicar-preco {
-    background: #5182ff;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.3s;
-}
-
-.btn-aplicar-preco:hover {
-    background: #3a6de0;
-}
-
-.preco-range input {
-    width: 100%;
-    margin: 10px 0;
-}
-
-.preco-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: #7f8c8d;
-}
-
-/* Conteúdo Principal */
-.produtos-content {
-    min-height: 600px;
-}
-
-.content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.resultados-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.resultados-info span {
-    color: #2c3e50;
-}
-
-.produtos-ordenados {
-    font-size: 0.9rem;
-    color: #7f8c8d;
-}
-
-.ordenacao {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.ordenacao label {
-    color: #2c3e50;
-    font-weight: 500;
-}
-
-.ordenacao select {
-    padding: 8px 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: white;
-    font-size: 0.9rem;
-}
-
-/* Grid de Produtos */
-.produtos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
-    margin-bottom: 50px;
-}
-
-.produto-card {
-    background: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.produto-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-}
-
-.produto-imagem {
-    position: relative;
-    height: 200px;
-    overflow: hidden;
-}
-
-.produto-imagem img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.produto-card:hover .produto-imagem img {
-    transform: scale(1.05);
-}
-
-.produto-badge {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: white;
-    text-transform: uppercase;
-}
-
-.produto-badge.novo {
-    background: #28a745;
-}
-
-.produto-badge.seminovo {
-    background: #ffc107;
-    color: #333;
-}
-
-.produto-badge.usado {
-    background: #6c757d;
-}
-
-.produto-acoes {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.produto-card:hover .produto-acoes {
-    opacity: 1;
-}
-
-.btn-favorito,
-.btn-quickview {
-    background: white;
-    border: none;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.btn-favorito:hover,
-.btn-quickview:hover {
-    background: #5182ff;
-    color: white;
-    transform: scale(1.1);
-}
-
-.produto-info {
-    padding: 20px;
-}
-
-.produto-categoria {
-    color: #5182ff;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-    display: block;
-}
-
-.produto-nome {
-    font-size: 1rem;
-    margin-bottom: 8px;
-    color: #2c3e50;
-    line-height: 1.4;
-    height: 2.8em;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.produto-vendedor {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.8rem;
-    color: #7f8c8d;
-    margin-bottom: 8px;
-}
-
-.produto-avaliacao {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-}
-
-.stars {
-    color: #ffc107;
-    font-size: 0.8rem;
-}
-
-.avaliacao-numero {
-    color: #2c3e50;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.produto-vendas {
-    color: #7f8c8d;
-    font-size: 0.7rem;
-}
-
-.produto-precos {
-    margin-bottom: 15px;
-}
-
-.preco-atual {
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-.produto-footer {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-comprar {
-    flex: 1;
-    background: #5182ff;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    font-size: 0.9rem;
-}
-
-.btn-comprar:hover {
-    background: #3a6de0;
-}
-
-.btn-detalhes {
-    background: transparent;
-    border: 1px solid #ddd;
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.9rem;
-}
-
-.btn-detalhes:hover {
-    border-color: #5182ff;
-    color: #5182ff;
-}
-
-/* Loading */
-.loading-produtos {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 20px;
-}
-
-.loading-produtos i {
-    font-size: 2rem;
-    color: #5182ff;
-    margin-bottom: 15px;
-}
-
-.loading-produtos p {
-    color: #7f8c8d;
-}
-
-/* Paginação */
-.paginacao {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin-top: 40px;
-}
-
-.btn-pagina {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border: 1px solid #ddd;
-    background: white;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.9rem;
-}
-
-.btn-pagina:hover:not(:disabled) {
-    border-color: #5182ff;
-    color: #5182ff;
-}
-
-.btn-pagina:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.numeros-pagina {
-    display: flex;
-    gap: 8px;
-}
-
-.pagina {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.9rem;
-}
-
-.pagina.active,
-.pagina:hover {
-    background: #5182ff;
-    color: white;
-    border-color: #5182ff;
-}
-
-.pontos {
-    display: flex;
-    align-items: center;
-    color: #7f8c8d;
-}
-
-/* Sem Resultados */
-.sem-resultados {
-    text-align: center;
-    padding: 60px 20px;
-}
-
-.sem-resultados-content i {
-    font-size: 4rem;
-    color: #ddd;
-    margin-bottom: 20px;
-}
-
-.sem-resultados-content h3 {
-    color: #2c3e50;
-    margin-bottom: 10px;
-}
-
-.sem-resultados-content p {
-    color: #7f8c8d;
-    margin-bottom: 25px;
-}
-
-/* Seção de Vantagens */
-.vantagens-produtos {
-    padding: 80px 0;
-    background: #f8f9fa;
-}
-
-.vantagens-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-}
-
-.vantagem-item {
-    background: white;
-    padding: 40px 30px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    transition: transform 0.3s ease;
-}
-
-.vantagem-item:hover {
-    transform: translateY(-5px);
-}
-
-.vantagem-icon {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, #5182ff 0%, #7dcdff 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-}
-
-.vantagem-icon i {
-    font-size: 2rem;
-    color: white;
-}
-
-.vantagem-item h3 {
-    margin-bottom: 15px;
-    color: #2c3e50;
-}
-
-.vantagem-item p {
-    color: #7f8c8d;
-    line-height: 1.6;
-}
-
-/* Responsividade */
-@media (max-width: 1024px) {
-    .produtos-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .filtros-sidebar {
-        position: static;
-        margin-bottom: 30px;
-    }
-}
-
-@media (max-width: 768px) {
-    .produtos-header {
-        padding: 80px 0 40px;
-        margin-top: 60px;
-    }
-
-    .header-content h1 {
-        font-size: 2.2rem;
-    }
-
-    .content-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-
-    .produtos-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-}
-
-@media (max-width: 480px) {
-    .produtos-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .produto-footer {
-        flex-direction: column;
-    }
-
-    .paginacao {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .numeros-pagina {
-        order: -1;
-    }
-}
-</style>
-
-<script>
-// Variáveis globais
-let todosProdutos = [];
-let produtosFiltrados = [];
-let paginaAtual = 1;
-const produtosPorPagina = 8;
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
-    carregarTodosProdutos();
-    carregarCategorias();
-    configurarEventListeners();
-});
-
-// Carregar produtos da API
-async function carregarTodosProdutos() {
-    try {
-        const resposta = await fetch('/techtrade/produtos/registros');
-        if (!resposta.ok) throw new Error('Erro ao carregar produtos');
-        
-        const data = await resposta.json();
-        todosProdutos = data.json_produtos || [];
-        
-        // Mapear os produtos para o formato esperado pelo frontend
-        todosProdutos = todosProdutos.map(produto => ({
-            id: produto.id_produto,
-            nome: produto.nome,
-            preco: produto.preco,
-            imagem: produto.imagem,
-            categoria: produto.categoria ? produto.categoria.toLowerCase() : 'outros',
-            descricao: produto.descricao,
-            vendedor: produto.criado_por,
-            verificado: produto.verificado,
-            estoque: produto.estoque,
-            disponivel: produto.disponivel
-        }));
-        
-        produtosFiltrados = [...todosProdutos];
-        atualizarContadores();
-        carregarProdutos();
-        
-    } catch (erro) {
-        console.error('Erro ao carregar produtos:', erro);
-        document.getElementById('gridProdutos').innerHTML = `
-            <div class="sem-resultados-content">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Erro ao carregar produtos</h3>
-                <p>Tente recarregar a página</p>
-                <button class="btn-primary" onclick="carregarTodosProdutos()">Tentar Novamente</button>
-            </div>
-        `;
-    }
-}
-
-// Carregar categorias da API
-async function carregarCategorias() {
-    try {
-        const resposta = await fetch('/techtrade/categorias');
-        if (!resposta.ok) throw new Error('Erro ao carregar categorias');
-        
-        const categorias = await resposta.json();
-        const container = document.getElementById('categoriasLista');
-        
-        container.innerHTML = categorias.map(cat => `
-            <label class="categoria-item">
-                <input type="checkbox" name="categoria" value="${cat[1].toLowerCase()}" onchange="filtrarProdutos()">
-                <span class="checkmark"></span>
-                ${cat[1]}
-                <span class="categoria-count" id="count-${cat[1].toLowerCase()}">0</span>
-            </label>
-        `).join('');
-        
-        atualizarContadores();
-        
-    } catch (erro) {
-        console.error('Erro ao carregar categorias:', erro);
-    }
-}
-
-// Atualizar contadores
-function atualizarContadores() {
-    // Contar produtos por categoria
-    const categorias = [...new Set(todosProdutos.map(p => p.categoria))];
-    categorias.forEach(cat => {
-        const count = todosProdutos.filter(p => p.categoria === cat).length;
-        const element = document.getElementById(`count-${cat}`);
-        if (element) element.textContent = count;
-    });
-    
-    // Atualizar contadores de condição (exemplo)
-    document.getElementById('countNovo').textContent = todosProdutos.filter(p => p.verificado).length;
-    document.getElementById('countSeminovo').textContent = todosProdutos.filter(p => !p.verificado && p.estoque > 0).length;
-    document.getElementById('countUsado').textContent = todosProdutos.filter(p => p.estoque === 0).length;
-}
-
-// Carregar produtos na grid
-function carregarProdutos() {
-    const grid = document.getElementById('gridProdutos');
-    const semResultados = document.getElementById('semResultados');
-    const totalProdutos = document.getElementById('totalProdutos');
-    const paginacao = document.getElementById('paginacao');
-
-    const inicio = (paginaAtual - 1) * produtosPorPagina;
-    const fim = inicio + produtosPorPagina;
-    const produtosPagina = produtosFiltrados.slice(inicio, fim);
-
-    if (produtosFiltrados.length === 0) {
-        grid.style.display = 'none';
-        semResultados.style.display = 'block';
-        paginacao.style.display = 'none';
-        totalProdutos.textContent = 'Nenhum produto encontrado';
-        return;
-    }
-
-    grid.style.display = 'grid';
-    semResultados.style.display = 'none';
-    paginacao.style.display = 'flex';
-    totalProdutos.textContent = `Mostrando ${produtosFiltrados.length} produtos`;
-
-    grid.innerHTML = produtosPagina.map(produto => `
-        <div class="produto-card" data-id="${produto.id}">
-            <div class="produto-imagem">
-                <img src="${produto.imagem}" alt="${produto.nome}" onerror="this.src='https://via.placeholder.com/300x200?text=Imagem+Indispon%C3%ADvel'">
-                <div class="produto-badge ${produto.verificado ? 'novo' : 'seminovo'}">
-                    ${produto.verificado ? 'Verificado' : 'Seminovo'}
-                </div>
-                <div class="produto-acoes">
-                    <button class="btn-favorito" onclick="toggleFavorito(${produto.id})" title="Adicionar aos favoritos">
-                        <i class="far fa-heart"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="produto-info">
-                <span class="produto-categoria">${produto.categoria}</span>
-                <h3 class="produto-nome">${produto.nome}</h3>
-                <div class="produto-vendedor">
-                    <i class="fas fa-store"></i>
-                    ${produto.vendedor}
-                </div>
-                <div class="produto-precos">
-                    <span class="preco-atual">R$ ${typeof produto.preco === 'number' ? produto.preco.toFixed(2) : '0.00'}</span>
-                </div>
-                <div class="produto-footer">
-                    <button class="btn-comprar" onclick="comprarProduto(${produto.id})">
-                        <i class="fas fa-shopping-cart"></i>
-                        Comprar Agora
-                    </button>
-                    <button class="btn-detalhes" onclick="verDetalhes(${produto.id})">
-                        Ver Detalhes
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-    atualizarPaginacao();
-}
-
-// Atualizar paginação
-function atualizarPaginacao() {
-    const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPagina);
-    const numerosPagina = document.getElementById('numerosPagina');
-    
-    let paginasHTML = '';
-    for (let i = 1; i <= totalPaginas; i++) {
-        if (i === 1 || i === totalPaginas || (i >= paginaAtual - 1 && i <= paginaAtual + 1)) {
-            paginasHTML += `<span class="pagina ${i === paginaAtual ? 'active' : ''}" onclick="irParaPagina(${i})">${i}</span>`;
-        } else if (i === paginaAtual - 2 || i === paginaAtual + 2) {
-            paginasHTML += '<span class="pontos">...</span>';
-        }
-    }
-    
-    numerosPagina.innerHTML = paginasHTML;
-}
-
-// Funções de filtro
-function filtrarProdutos() {
-    const busca = document.getElementById('buscaProduto').value.toLowerCase();
-    const categoriasSelecionadas = getValoresSelecionados('categoria');
-    const condicoesSelecionadas = getValoresSelecionados('condicao');
-
-    produtosFiltrados = todosProdutos.filter(produto => {
-        const matchBusca = !busca || 
-            produto.nome.toLowerCase().includes(busca) ||
-            produto.descricao.toLowerCase().includes(busca) ||
-            produto.vendedor.toLowerCase().includes(busca);
-
-        const matchCategoria = categoriasSelecionadas.length === 0 || 
-            categoriasSelecionadas.includes(produto.categoria);
-
-        const matchCondicao = condicoesSelecionadas.length === 0;
-
-        return matchBusca && matchCategoria && matchCondicao;
-    });
-
-    paginaAtual = 1;
-    carregarProdutos();
-}
-
-function filtrarPorPreco() {
-    const precoMin = parseFloat(document.getElementById('precoMin').value) || 0;
-    const precoMax = parseFloat(document.getElementById('precoMax').value) || Infinity;
-
-    produtosFiltrados = todosProdutos.filter(produto => 
-        produto.preco >= precoMin && produto.preco <= precoMax
-    );
-
-    paginaAtual = 1;
-    carregarProdutos();
-}
-
-function ordenarProdutos() {
-    const ordenacao = document.getElementById('ordenarPor').value;
-    const ordenados = document.getElementById('produtosOrdenados');
-
-    switch(ordenacao) {
-        case 'menor-preco':
-            produtosFiltrados.sort((a, b) => a.preco - b.preco);
-            ordenados.textContent = 'Ordenado por: Menor Preço';
-            break;
-        case 'maior-preco':
-            produtosFiltrados.sort((a, b) => b.preco - a.preco);
-            ordenados.textContent = 'Ordenado por: Maior Preço';
-            break;
-        case 'novos':
-            produtosFiltrados.sort((a, b) => b.id - a.id);
-            ordenados.textContent = 'Ordenado por: Mais Novos';
-            break;
-        default:
-            produtosFiltrados.sort((a, b) => a.id - b.id);
-            ordenados.textContent = 'Ordenado por: Mais Relevantes';
-    }
-
-    carregarProdutos();
-}
-
-// Funções auxiliares
-function getValoresSelecionados(nome) {
-    const checkboxes = document.querySelectorAll(`input[name="${nome}"]:checked`);
-    return Array.from(checkboxes).map(cb => cb.value);
-}
-
-function limparFiltros() {
-    document.getElementById('buscaProduto').value = '';
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    document.getElementById('precoMin').value = '';
-    document.getElementById('precoMax').value = '';
-    document.getElementById('rangePreco').value = 10000;
-    document.getElementById('ordenarPor').value = 'relevancia';
-    
-    atualizarRangePreco();
-    produtosFiltrados = [...todosProdutos];
-    paginaAtual = 1;
-    carregarProdutos();
-}
-
-function atualizarRangePreco() {
-    const range = document.getElementById('rangePreco');
-    const valor = document.getElementById('valorRangePreco');
-    valor.textContent = `R$ ${parseInt(range.value).toLocaleString()}`;
-}
-
-function mudarPagina(direcao) {
-    const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPagina);
-    
-    if (direcao === 1 && paginaAtual < totalPaginas) {
-        paginaAtual++;
-    } else if (direcao === -1 && paginaAtual > 1) {
-        paginaAtual--;
-    }
-    
-    carregarProdutos();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function irParaPagina(pagina) {
-    paginaAtual = pagina;
-    carregarProdutos();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function configurarEventListeners() {
-    // Busca por Enter
-    document.getElementById('buscaProduto').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            filtrarProdutos();
-        }
-    });
-
-    // Limpar filtros
-    document.getElementById('btnLimparFiltros').addEventListener('click', limparFiltros);
-}
-
-// Funções de interação
-function toggleFavorito(id) {
-    alert(`Produto ${id} adicionado aos favoritos!`);
-}
-
-function comprarProduto(id) {
-    // Verificar se usuário está logado
-    const usuarioLogado = {{ 'true' if session.get('usuario_logado') else 'false' }};
-    
-    if (!usuarioLogado) {
-        const modal = new bootstrap.Modal(document.getElementById('modalLoginNecessario'));
-        modal.show();
-        return;
-    }
-    
-    window.location.href = `/techtrade/produtos/checkout/${id}`;
-}
-
-function verDetalhes(id) {
-    const produto = todosProdutos.find(p => p.id === id);
-    if (!produto) return;
-
-    // Preencher modal de detalhes
-    document.getElementById('detalhe-nome').textContent = produto.nome;
-    document.getElementById('detalhe-descricao').textContent = produto.descricao;
-    document.getElementById('detalhe-categoria').textContent = produto.categoria;
-    document.getElementById('detalhe-preco').textContent = typeof produto.preco === 'number' ? produto.preco.toFixed(2) : '0.00';
-    document.getElementById('detalhe-vendedor').textContent = produto.vendedor;
-    document.getElementById('detalhe-imagem').src = produto.imagem;
-
-    const selo = document.getElementById('selo-verificado');
-    if (produto.verificado) {
-        selo.classList.remove('d-none');
-    } else {
-        selo.classList.add('d-none');
-    }
-
-    const btnComprar = document.getElementById('btn-comprar');
-    btnComprar.onclick = () => comprarProduto(produto.id);
-
-    const modal = new bootstrap.Modal(document.getElementById('modalDetalhesProduto'));
-    modal.show();
-}
-</script>
-{% endblock %}
+<!-- FOOTER -->
+<footer class="footer text-center">
+    <p>&copy; 2026 TechTrade</p>
+</footer>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/techtrade_produtos.js') }}"></script>
+
+</body>
+</html>

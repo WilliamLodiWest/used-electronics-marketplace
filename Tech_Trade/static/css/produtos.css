@@ -1,0 +1,222 @@
+body {
+    background: #f5f7fb;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* HEADER */
+.produtos-header {
+    background: linear-gradient(135deg, #08005b, #1c2a7a);
+    color: white;
+    padding: 40px 0;
+    text-align: center;
+}
+
+/* LAYOUT */
+.produtos-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 25px;
+    margin-top: 30px;
+}
+
+/* SIDEBAR */
+.filtros-sidebar {
+    background: white;
+    padding: 28px;
+    border-radius: 22px;
+    box-shadow: 0 18px 45px rgba(4, 22, 70, 0.08);
+    border: 1px solid rgba(81, 130, 255, 0.12);
+}
+
+.filtros-sidebar h4 {
+    margin-top: 30px;
+    margin-bottom: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a2a5d;
+}
+
+.filtros-sidebar .filtros-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.filtros-sidebar .filtros-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #08005b;
+}
+
+.filtros-sidebar input,
+.filtros-sidebar button {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid #d8dde8;
+    font-size: 0.95rem;
+}
+
+.filtros-sidebar .filtros-header button {
+    width: auto;
+    min-width: 90px;
+    padding: 8px 14px;
+    background: #5182ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    box-shadow: none;
+    font-size: 0.92rem;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.filtros-sidebar .filtros-header button:hover {
+    background: #3a6de0;
+    transform: translateY(-1px);
+}
+
+.filtros-sidebar input {
+    background: #f6f8ff;
+    color: #1f2645;
+}
+
+.filtros-sidebar .filtro-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px 0;
+}
+
+.filtros-sidebar .filtro-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #5182ff;
+    cursor: pointer;
+}
+
+.filtros-sidebar input:focus {
+    outline: none;
+    border-color: #5182ff;
+    box-shadow: 0 0 0 6px rgba(81, 130, 255, 0.12);
+}
+
+.filtros-sidebar button {
+    background: #5182ff;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.filtros-sidebar .filtros-header button {
+    width: auto !important;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.filtros-sidebar button:hover {
+    background-color: #3a6de0;
+    transform: translateY(-1px);
+}
+
+.filtros-sidebar .filtro-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.filtros-sidebar .filtro-item input {
+    margin: 0;
+    accent-color: #5182ff;
+}
+
+/* GRID */
+.produtos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 20px;
+}
+
+/* CARD */
+.produto-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.produto-card:hover {
+    transform: translateY(-5px);
+}
+
+.produto-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.produto-card h3 {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.produto-card p {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* BOTÕES */
+.btn-detalhes {
+    width: 100%;
+    margin-top: 5px;
+    background: transparent;
+    border: 1px solid #5182ff;
+    color: #5182ff;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.btn-comprar-direto {
+    width: 100%;
+    margin-top: 5px;
+    background: #5182ff;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.btn-comprar-direto:hover {
+    background: #3a6de0;
+}
+
+/* PAGINAÇÃO */
+#paginacao {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagina {
+    margin: 3px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+}
+
+.pagina.active {
+    background: #5182ff;
+    color: white;
+}

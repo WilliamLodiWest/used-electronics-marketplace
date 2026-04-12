@@ -1,333 +1,213 @@
-{% extends "index.html" %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - {{ produto.nome}} - TechTrade</title>
 
-{% block title %}Checkout - {{ produto.nome }}{% endblock %}
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
 
-{% block content %}
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('produto.home') }}">
+            <i class="fas fa-shopping-bag me-2"></i>TechTrade
+        </a>
+    </div>
+</nav>
+
+<!-- MAIN -->
 <div class="container py-4">
     <div class="row">
-        <!-- Produto e Forma de Pagamento -->
+
+        <!-- ESQUERDA -->
         <div class="col-lg-8">
-            <!-- Informações do Produto -->
-            <div class="card shadow-sm mb-4">
+
+            <!-- PRODUTO -->
+            <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">Checkout</h4>
+                    <h4 class="mb-3">Checkout</h4>
+
                     <div class="row align-items-center">
                         <div class="col-md-4">
-                            <img src="{{ produto.imagem }}" class="img-fluid rounded shadow" alt="{{ produto.nome }}" style="max-height: 200px; object-fit: cover;">
+                            <img src="{{ produto.imagem }}" class="img-fluid">
                         </div>
+
                         <div class="col-md-8">
-                            <h5 class="text-primary">{{ produto.nome }}</h5>
-                            <p class="text-muted mb-2">{{ produto.descricao }}</p>
-                            <p class="mb-1"><strong>Vendedor:</strong> {{ produto.vendedor }}</p>
-                            <p class="mb-2"><strong>Preço:</strong> <span class="text-success fw-bold">R$ {{ "%.2f"|format(produto.preco) }}</span></p>
-                            {% if produto.verificado %}
-                            <span class="badge bg-success">
-                                <i class="fas fa-check-circle"></i> Produto Verificado
-                            </span>
-                            {% endif %}
+                            <h5>{{ produto.nome }}</h5>
+                            <p class="text-muted">{{ produto.descricao }}</p>
+                            <p class="fw-bold text-primary">
+                                R$ {{ "%.2f"|format(produto.preco) }}
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Informações de Entrega -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Informações de Entrega</h5>
-                    <div class="mb-3">
-                        <label for="endereco" class="form-label">Endereço de Entrega</label>
-                        <textarea class="form-control" id="endereco" name="endereco" rows="3" placeholder="Digite seu endereço completo para entrega..." required></textarea>
-                        <div class="form-text">Inclua rua, número, bairro, cidade e CEP</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="observacoes" class="form-label">Observações (Opcional)</label>
-                        <textarea class="form-control" id="observacoes" name="observacoes" rows="2" placeholder="Alguma observação especial para a entrega..."></textarea>
-                    </div>
-                </div>
-            </div>
+            <!-- DADOS DO CLIENTE -->
+            <form id="formCheckout">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">Dados do Cliente</h5>
 
-            <!-- Formas de Pagamento -->
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Forma de Pagamento</h5>
-                    <form id="formCheckout">
                         <div class="mb-3">
-                            <div class="form-check border rounded p-3 mb-2">
-                                <input class="form-check-input" type="radio" name="metodo" id="pix" value="PIX" checked>
-                                <label class="form-check-label fw-bold" for="pix">
-                                    <i class="fas fa-qrcode text-primary"></i> PIX
-                                </label>
-                                <small class="text-muted d-block mt-1">Pagamento instantâneo com 10% de desconto</small>
-                            </div>
-                            
-                            <div class="form-check border rounded p-3 mb-2">
-                                <input class="form-check-input" type="radio" name="metodo" id="cartao" value="Cartão de Crédito">
-                                <label class="form-check-label fw-bold" for="cartao">
-                                    <i class="fas fa-credit-card text-info"></i> Cartão de Crédito
-                                </label>
-                                <small class="text-muted d-block mt-1">Em até 12x sem juros</small>
-                            </div>
-                            
-                            <div class="form-check border rounded p-3">
-                                <input class="form-check-input" type="radio" name="metodo" id="boleto" value="Boleto">
-                                <label class="form-check-label fw-bold" for="boleto">
-                                    <i class="fas fa-barcode text-success"></i> Boleto Bancário
-                                </label>
-                                <small class="text-muted d-block mt-1">Pagamento em 1-2 dias úteis</small>
-                            </div>
+                            <label class="form-label">Nome completo</label>
+                            <input type="text" id="nome" class="form-control" placeholder="Digite seu nome">
                         </div>
-                        
-                        <button type="submit" class="btn btn-success btn-lg w-100 py-3" id="btnFinalizar">
-                            <i class="fas fa-shopping-bag"></i> Finalizar Compra
+
+                        <div class="mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" id="telefone" class="form-control" placeholder="(11) 99999-9999">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENTREGA -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">Endereço de Entrega</h5>
+
+                        <textarea id="endereco" class="form-control" rows="3"
+                            placeholder="Rua, número, bairro, cidade, CEP"></textarea>
+                    </div>
+                </div>
+
+                <!-- PAGAMENTO -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">Forma de Pagamento</h5>
+
+                        <div class="form-check">
+                            <label>
+                                <input type="radio" name="metodo" value="PIX" checked>
+                                <i class="fas fa-qrcode text-primary"></i> PIX
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <label>
+                                <input type="radio" name="metodo" value="Cartão de Crédito">
+                                <i class="fas fa-credit-card text-info"></i> Cartão de Crédito
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <label>
+                                <input type="radio" name="metodo" value="Boleto">
+                                <i class="fas fa-barcode text-success"></i> Boleto
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 mt-3" id="btnFinalizar">
+                            Finalizar Compra
                         </button>
-                    </form>
+                    </div>
                 </div>
-            </div>
+            </form>
+
         </div>
 
-        <!-- Resumo do Pedido -->
+        <!-- DIREITA (RESUMO) -->
         <div class="col-lg-4">
-            <div class="card shadow-sm" style="position: sticky; top: 20px;">
-                <div class="card-body">
-                    <h5 class="card-title border-bottom pb-3 mb-3">Resumo do Pedido</h5>
-                    
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Produto:</span>
-                        <span>R$ {{ "%.2f"|format(produto.preco) }}</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Frete:</span>
-                        <span class="text-success">Grátis</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Desconto PIX:</span>
-                        <span class="text-success" id="descontoPix">- R$ 0,00</span>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
-                        <span>Total:</span>
-                        <span class="text-primary" id="totalFinal">R$ {{ "%.2f"|format(produto.preco) }}</span>
-                    </div>
-                    
-                    <div class="alert alert-info small mb-0">
-                        <i class="fas fa-lock me-2"></i> Compra 100% segura
-                    </div>
-                </div>
-            </div>
+            <div class="card p-3">
 
-            <!-- Informações de Segurança -->
-            <div class="card shadow-sm mt-4">
-                <div class="card-body">
-                    <h6 class="card-title text-center mb-3">TechTrade</h6>
-                    <div class="row small text-muted text-center">
-                        <div class="col-6 mb-2">
-                            <a href="#" class="text-decoration-none text-muted">Links Rápidos</a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="#" class="text-decoration-none text-muted">Para Vendedores</a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="#" class="text-decoration-none text-muted">Contato</a>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <a href="#" class="text-decoration-none text-muted">Suporte</a>
-                        </div>
-                    </div>
+                <h5 class="mb-3">Resumo do Pedido</h5>
+
+                <div class="d-flex justify-content-between">
+                    <span>Produto</span>
+                    <span>R$ {{ "%.2f"|format(produto.preco) }}</span>
                 </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>Frete</span>
+                    <span class="text-success">Grátis</span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>Desconto PIX</span>
+                    <span id="descontoPix">R$ 0,00</span>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total</span>
+                    <span id="totalFinal">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                </div>
+
+                <div class="alert alert-info mt-3 small">
+                     Pagando com <strong>PIX</strong> você ganha <strong>10% de desconto</strong>
+                </div>
+
             </div>
         </div>
+
     </div>
 </div>
 
-<style>
-.form-check-input:checked {
-    background-color: #198754;
-    border-color: #198754;
-}
-.form-check {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-.form-check:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-1px);
-}
-.card {
-    border: none;
-    border-radius: 12px;
-}
-.btn-success {
-    background: linear-gradient(135deg, #198754, #157347);
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-.btn-success:hover {
-    background: linear-gradient(135deg, #157347, #0f5132);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
-}
-.loading {
-    opacity: 0.7;
-    pointer-events: none;
-}
-.sticky-top {
-    position: sticky;
-    top: 20px;
-}
-</style>
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <div class="logo">Tech<span>Trade</span></div>
+            <p>O marketplace mais confiável para compra de eletrônicos.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+        <div class="footer-section">
+            <h4>Links Rápidos</h4>
+            <ul>
+                <li><a href="{{ url_for('produto.home') }}">Home</a></li>
+                <li><a href="#sobre">Sobre</a></li>
+                <li><a href="#ajuda">Ajuda</a></li>
+                <li><a href="{{ url_for('produto.renderizar_produtos') }}">Produtos</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Para Compradores</h4>
+            <ul>
+                <li><a href="{{ url_for('produto.login') }}">Minha Conta</a></li>
+                <li><a href="#">Como Comprar</a></li>
+                <li><a href="#">Garantia</a></li>
+                <li><a href="#">Perguntas Frequentes</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Contato</h4>
+            <div class="contact-info">
+                <p><i class="fas fa-envelope"></i> contato@techtrade.com</p>
+                <p><i class="fas fa-phone"></i> (11) 4004-1234</p>
+                <p><i class="fas fa-map-marker-alt"></i> São Paulo, SP</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <p>&copy; 2026 TechTrade. Todos os direitos reservados.</p>
+        <div class="footer-links">
+            <a href="#">Política de Privacidade</a>
+            <a href="#">Termos de Uso</a>
+        </div>
+    </div>
+</footer>
 
+<!-- DADOS -->
 <script>
-// Preços e cálculos
-const precoProduto = {{ produto.preco }};
-let descontoPix = 0;
-let totalFinal = precoProduto;
-
-// Atualizar totais quando método de pagamento mudar
-function atualizarTotais() {
-    const metodoSelecionado = document.querySelector('input[name="metodo"]:checked');
-    
-    if (metodoSelecionado && metodoSelecionado.value === 'PIX') {
-        // 10% de desconto no PIX
-        descontoPix = precoProduto * 0.1;
-        totalFinal = precoProduto - descontoPix;
-    } else {
-        descontoPix = 0;
-        totalFinal = precoProduto;
-    }
-    
-    // Atualizar display
-    document.getElementById('descontoPix').textContent = `- R$ ${descontoPix.toFixed(2).replace('.', ',')}`;
-    document.getElementById('totalFinal').textContent = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
-}
-
-// Event listeners para métodos de pagamento
-document.querySelectorAll('input[name="metodo"]').forEach(radio => {
-    radio.addEventListener('change', atualizarTotais);
-});
-
-// Inicializar totais
-atualizarTotais();
-
-// Submit do formulário
-document.getElementById('formCheckout').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const btnFinalizar = document.getElementById('btnFinalizar');
-    const metodoSelecionado = document.querySelector('input[name="metodo"]:checked');
-    
-    if (!metodoSelecionado) {
-        alert('Por favor, selecione uma forma de pagamento.');
-        return;
-    }
-    
-    const endereco = document.getElementById('endereco').value.trim();
-    if (!endereco) {
-        alert('Por favor, informe o endereço de entrega.');
-        document.getElementById('endereco').focus();
-        return;
-    }
-    
-    const metodo = metodoSelecionado.value;
-    const observacoes = document.getElementById('observacoes').value.trim();
-    
-    // Mostrar loading
-    btnFinalizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-    btnFinalizar.classList.add('loading');
-    btnFinalizar.disabled = true;
-    
-    const dadosCompra = {
-        id_produto: {{ produto.id_produto }},
-        metodo_pagamento: metodo,
-        endereco_entrega: endereco,
-        observacoes: observacoes
-    };
-    
-    console.log('Enviando compra:', dadosCompra);
-    
-    // Enviar para a rota completa que registra no BD e notifica vendedor
-    fetch('/techtrade/produtos/finalizar_compra_completa', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dadosCompra)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erro na resposta do servidor');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Resposta recebida:', data);
-        
-        if (data.mensagem) {
-            // Compra realizada com sucesso - redirecionar para confirmação
-            const params = new URLSearchParams({
-                produto: data.id_produto,
-                metodo: data.metodo_pagamento,
-                nome: data.nome_produto,
-                preco: data.preco,
-                vendedor: data.vendedor
-            });
-            
-            window.location.href = `/confirmacao?${params.toString()}`;
-        } else {
-            throw new Error(data.erro || 'Erro desconhecido');
-        }
-    })
-    .catch(error => {
-        console.error('Erro completo:', error);
-        
-        // Restaurar botão
-        btnFinalizar.innerHTML = '<i class="fas fa-shopping-bag"></i> Finalizar Compra';
-        btnFinalizar.classList.remove('loading');
-        btnFinalizar.disabled = false;
-        
-        // Mostrar erro específico
-        if (error.message.includes('Estoque insuficiente')) {
-            alert('❌ Desculpe, este produto está fora de estoque no momento.');
-        } else if (error.message.includes('não logado')) {
-            alert('❌ Você precisa estar logado para finalizar a compra.');
-            window.location.href = '/login';
-        } else if (error.message.includes('Produto não encontrado')) {
-            alert('❌ Produto não encontrado.');
-        } else {
-            alert('❌ Erro ao finalizar compra: ' + error.message);
-        }
-    });
-});
-
-// Validação em tempo real do endereço
-document.getElementById('endereco').addEventListener('input', function() {
-    const endereco = this.value.trim();
-    
-    if (endereco.length > 10) {
-        this.classList.remove('is-invalid');
-        this.classList.add('is-valid');
-    } else {
-        this.classList.remove('is-valid');
-        this.classList.add('is-invalid');
-    }
-});
-
-// Preencher endereço automaticamente se possível (exemplo)
-function preencherEnderecoExemplo() {
-    const enderecoExemplo = "Rua Exemplo, 123 - Centro\nSão Paulo - SP\nCEP: 01234-567";
-    document.getElementById('endereco').value = enderecoExemplo;
-    
-    // Disparar evento de input para validação
-    document.getElementById('endereco').dispatchEvent(new Event('input'));
-}
-
-// Adicionar botão de exemplo (apenas para desenvolvimento)
-// Descomente a linha abaixo se quiser um botão para preencher endereço de exemplo
-// document.querySelector('.card-body:has(#endereco)').innerHTML += '<button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="preencherEnderecoExemplo()"><i class="fas fa-magic"></i> Preencher exemplo</button>';
+    const precoProduto = {{ produto.preco }};
+    const idProduto = {{ produto.id_produto }};
 </script>
-{% endblock %}
+
+<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+
+</body>
+</html>

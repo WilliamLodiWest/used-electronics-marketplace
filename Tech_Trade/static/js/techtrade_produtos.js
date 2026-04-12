@@ -1,247 +1,325 @@
 // ==========================================
-// Arquivo: techtrade_produtos.js
-// Integração Frontend (JavaScript) + Backend Flask
-// Projeto: Tech Trade
+// Arquivo: techtrade_produtos.js (ATUALIZADO)
 // ==========================================
 
-// Variável global para verificar o estado de login
-let usuarioLogado = false;
+// ==========================
+// VARIÁVEIS GLOBAIS
+// ==========================
+let todosProdutos = [];
+let produtosFiltrados = [];
 
-// ==========================================
-// FUNÇÃO DE ALERTA
-// ==========================================
-window.chamar_alerta = function (tipo, mensagem, fechar) {
+let paginaAtual = 1;
+const produtosPorPagina = 8;
+
+// ==========================
+// ALERTA
+// ==========================
+window.chamar_alerta = function (tipo, mensagem) {
     console.log(`[ALERTA - ${tipo}] ${mensagem}`);
-    if (tipo === "erro") {
-        alert(`Erro: ${mensagem}`);
-    } else if (tipo === "sucesso") {
-        alert(`✅ ${mensagem}`);
-    } else {
-        console.info(mensagem);
-    }
+
+    if (tipo === "erro") alert(`Erro: ${mensagem}`);
+    else if (tipo === "sucesso") alert(`✅ ${mensagem}`);
+    else alert(mensagem);
 };
 
-// ==========================================
-// INICIALIZAÇÃO GERAL
-// ==========================================
-document.addEventListener("DOMContentLoaded", function () {
-    // Verificar se usuário está logado
-    verificarEstadoLogin();
-    
-    (async function () {
-        await Promise.all([
-            consultarCategorias(),
-            carregarProdutos(),
-        ]);
-        console.log("Inicialização concluída: categorias e produtos carregados.");
-    })();
+// ==========================
+// INIT
+// ==========================
+document.addEventListener("DOMContentLoaded", async function () {
 
-    configurarCadastroVendedor();
+    // prioridade: Flask → fallback localStorage
+    if (typeof usuarioLogado === "undefined") {
+    usuarioLogado = localStorage.getItem("usuario_logado") === "true";
+
+    } else {
+        usuarioLogado = localStorage.getItem("usuario_logado") === "true";
+    }
+
+    await Promise.all([
+        consultarCategorias(),
+        carregarProdutos()
+    ]);
+
     configurarEventosProdutos();
+    configurarBusca();
+    configurarEventosFiltros();
+
+    console.log("Sistema carregado com sucesso 🚀");
 });
 
-// ==========================================
-// VERIFICAR ESTADO DE LOGIN
-// ==========================================
-function verificarEstadoLogin() {
-    // Em uma aplicação real, isso viria do servidor/sessão
-    // Por enquanto, vamos verificar se há um indicador no localStorage
-    usuarioLogado = localStorage.getItem('usuario_logado') === 'true';
-    console.log('Usuário logado:', usuarioLogado);
+// ==========================
+// BUSCA (INPUT)
+// ==========================
+function configurarBusca() {
+    const input = document.getElementById("buscaProduto");
+
+    if (!input) return;
+
+    input.addEventListener("keyup", function (e) {
+        const termo = e.target.value.toLowerCase();
+
+        produtosFiltrados = todosProdutos.filter(p =>
+            p.nome.toLowerCase().includes(termo) ||
+            p.descricao.toLowerCase().includes(termo)
+        );
+
+        paginaAtual = 1;
+        renderizarProdutos();
+    });
 }
 
-// ==========================================
-// CADASTRO DE VENDEDOR
-// ==========================================
-function configurarCadastroVendedor() {
-    const form = document.getElementById("formCadastroVendedor");
-
-    if (form) {
-        form.addEventListener("submit", async function (e) {
-            e.preventDefault();
-
-            const dados = {
-                nome: document.getElementById("nome").value,
-                email: document.getElementById("email").value,
-                senha: document.getElementById("senha").value,
-                meio_comunicacao: document.getElementById("meioComunicacao").value,
-            };
-
-            try {
-                const resposta = await fetch("/api/vendedores", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(dados),
-                });
-
-                if (resposta.ok) {
-                    chamar_alerta("sucesso", "Vendedor cadastrado com sucesso!");
-                    form.reset();
-                } else {
-                    const erroData = await resposta.json();
-                    chamar_alerta("erro", erroData.erro || "Erro ao cadastrar vendedor.");
-                }
-            } catch (erro) {
-                console.error("Erro:", erro);
-                chamar_alerta("erro", "Falha de conexão com o servidor.");
-            }
-        });
+function configurarEventosFiltros() {
+    const btnLimpar = document.getElementById("btnLimparFiltros");
+    if (btnLimpar) {
+        btnLimpar.addEventListener("click", limparFiltros);
     }
 }
 
-// ==========================================
-// CONSULTA DE CATEGORIAS
-// ==========================================
+function limparFiltros() {
+    const busca = document.getElementById("buscaProduto");
+    const precoMin = document.getElementById("precoMin");
+    const precoMax = document.getElementById("precoMax");
+
+    if (busca) busca.value = "";
+    if (precoMin) precoMin.value = "";
+    if (precoMax) precoMax.value = "";
+
+    document.querySelectorAll("#categoriasLista input[type='checkbox']").forEach(cb => cb.checked = false);
+    document.querySelectorAll("input[name='condicao']").forEach(cb => cb.checked = false);
+
+    produtosFiltrados = [...todosProdutos];
+    paginaAtual = 1;
+    renderizarProdutos();
+}
+
+function filtrarPorPreco() {
+    const min = parseFloat(document.getElementById("precoMin")?.value) || 0;
+    const max = parseFloat(document.getElementById("precoMax")?.value) || Number.MAX_VALUE;
+
+    produtosFiltrados = todosProdutos.filter(p => {
+        const validoPreco = p.preco >= min && p.preco <= max;
+        return validoPreco;
+    });
+
+    const termo = document.getElementById("buscaProduto")?.value.toLowerCase() || "";
+    if (termo) {
+        produtosFiltrados = produtosFiltrados.filter(p =>
+            p.nome.toLowerCase().includes(termo) ||
+            p.descricao.toLowerCase().includes(termo)
+        );
+    }
+
+    const selecionadas = Array.from(document.querySelectorAll("#categoriasLista input:checked")).map(cb => cb.value);
+    if (selecionadas.length) {
+        produtosFiltrados = produtosFiltrados.filter(p => selecionadas.includes((p.categoria || "").toLowerCase()));
+    }
+
+    paginaAtual = 1;
+    renderizarProdutos();
+}
+
+// ==========================
+// CATEGORIAS
+// ==========================
 async function consultarCategorias() {
     try {
         const resposta = await fetch("/techtrade/categorias");
-        if (!resposta.ok) throw new Error(`Erro HTTP: ${resposta.status}`);
+        if (!resposta.ok) throw new Error();
 
         const categorias = await resposta.json();
-        const selectCategoria = document.getElementById("categoria_id");
-        if (!selectCategoria) return;
 
-        selectCategoria.innerHTML = '<option value="">Todas as categorias</option>';
+        const container = document.getElementById("categoriasLista");
+        if (!container) return;
 
-        categorias.forEach(cat => {
-            const option = document.createElement("option");
-            option.value = cat[0];
-            option.textContent = cat[1];
-            selectCategoria.appendChild(option);
-        });
+        container.innerHTML = categorias.map(cat => `
+            <label class="filtro-item">
+                ${cat[1]}
+                <input type="checkbox" value="${cat[1].toLowerCase()}" onchange="filtrarCategorias()">
+            </label>
+        `).join("");
 
-        // Adicionar evento de filtro
-        selectCategoria.addEventListener("change", carregarProdutos);
     } catch (erro) {
-        console.error("Erro ao carregar categorias:", erro);
-        chamar_alerta("erro", "Não foi possível carregar as categorias.");
+        console.error(erro);
+        chamar_alerta("erro", "Erro ao carregar categorias");
     }
 }
 
-// ==========================================
-// CONSULTA E EXIBIÇÃO DE PRODUTOS
-// ==========================================
+// ==========================
+// FILTRO CATEGORIA
+// ==========================
+function filtrarCategorias() {
+    const selecionadas = Array.from(
+        document.querySelectorAll("#categoriasLista input:checked")
+    ).map(cb => cb.value);
+
+    if (selecionadas.length === 0) {
+        produtosFiltrados = [...todosProdutos];
+    } else {
+        produtosFiltrados = todosProdutos.filter(p =>
+            selecionadas.includes((p.categoria || "").toLowerCase())
+        );
+    }
+
+    paginaAtual = 1;
+    renderizarProdutos();
+}
+
+// ==========================
+// CARREGAR PRODUTOS (API)
+// ==========================
 async function carregarProdutos() {
-    const container = document.getElementById("cards-produtos");
-    if (!container) return;
+    const grid = document.getElementById("gridProdutos");
+    if (!grid) return;
 
     try {
-        const categoriaId = document.getElementById("categoria_id")?.value || '';
-        let url = "/techtrade/produtos/registros";
-        if (categoriaId) {
-            url += `?categoria_id=${categoriaId}`;
-        }
-
-        const resposta = await fetch(url);
-        if (!resposta.ok) throw new Error(`Erro HTTP: ${resposta.status}`);
+        const resposta = await fetch("/techtrade/produtos/registros");
+        if (!resposta.ok) throw new Error();
 
         const data = await resposta.json();
-        const produtos = data.json_produtos || [];
 
-        container.innerHTML = "";
+        todosProdutos = (data.json_produtos || []).map(p => ({
+            id: p.id_produto,
+            nome: p.nome,
+            preco: p.preco,
+            preco_formatado: p.preco_formatado,
+            imagem: p.imagem,
+            descricao: p.descricao,
+            categoria: p.categoria || "Outros",
+            vendedor: p.criado_por,
+            verificado: p.verificado
+        }));
 
-        if (produtos.length === 0) {
-            container.innerHTML = "<p class='text-center text-muted'>Nenhum produto encontrado.</p>";
-            return;
-        }
+        produtosFiltrados = [...todosProdutos];
 
-        produtos.forEach(p => {
-            const cardHTML = `
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <img src="${p.imagem}" class="card-img-top" alt="${p.nome}" style="height: 200px; object-fit: cover;">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${p.nome}</h5>
-                            <p class="card-text text-muted small">${p.descricao.substring(0, 80)}...</p>
-                            <p class="text-success fw-bold mb-2">R$ ${p.preco_formatado}</p>
-                            <div class="mt-auto d-flex flex-column gap-2">
-                                <button class="btn btn-outline-primary btn-detalhes" data-produto='${JSON.stringify(p).replace(/'/g, "&#39;")}'>
-                                    Ver detalhes
-                                </button>
-                                <button class="btn btn-success btn-comprar-direto" data-id="${p.id_produto}">
-                                    Comprar agora
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML("beforeend", cardHTML);
-        });
+        renderizarProdutos();
+
     } catch (erro) {
-        console.error("Erro ao carregar produtos:", erro);
-        container.innerHTML = "<p class='text-center text-danger'>Erro ao carregar produtos.</p>";
+        console.error(erro);
+        grid.innerHTML = `<p class="text-danger">Erro ao carregar produtos</p>`;
     }
 }
 
-// ==========================================
-// MODAL DE DETALHES DE PRODUTO
-// ==========================================
+// ==========================
+// RENDER PRODUTOS (GRID NOVO)
+// ==========================
+function renderizarProdutos() {
+    const grid = document.getElementById("gridProdutos");
+    const total = document.getElementById("totalProdutos");
+    const sem = document.getElementById("semResultados");
+
+    if (!grid) return;
+
+    if (produtosFiltrados.length === 0) {
+        grid.innerHTML = "";
+        sem.style.display = "block";
+        if (total) total.textContent = "Nenhum produto encontrado";
+        return;
+    }
+
+    sem.style.display = "none";
+
+    const inicio = (paginaAtual - 1) * produtosPorPagina;
+    const fim = inicio + produtosPorPagina;
+
+    const pagina = produtosFiltrados.slice(inicio, fim);
+
+    grid.innerHTML = pagina.map(p => `
+        <div class="produto-card">
+
+            <img src="${p.imagem}" onerror="this.src='https://via.placeholder.com/300'">
+
+            <h3>${p.nome}</h3>
+
+            <p>${p.descricao.substring(0, 60)}...</p>
+
+            <strong>R$ ${p.preco_formatado || p.preco}</strong>
+
+            <button class="btn-detalhes" data-produto='${JSON.stringify(p).replace(/'/g, "&#39;")}'>
+                Ver detalhes
+            </button>
+
+            <button class="btn-comprar-direto" data-id="${p.id}">
+                Comprar
+            </button>
+
+        </div>
+    `).join("");
+
+    if (total) {
+        total.textContent = `Mostrando ${produtosFiltrados.length} produtos`;
+    }
+
+    renderizarPaginacao();
+}
+
+// ==========================
+// PAGINAÇÃO
+// ==========================
+function renderizarPaginacao() {
+    const container = document.getElementById("paginacao");
+    if (!container) return;
+
+    const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPagina);
+
+    container.innerHTML = "";
+
+    for (let i = 1; i <= totalPaginas; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.classList.add("pagina");
+
+        if (i === paginaAtual) btn.classList.add("active");
+
+        btn.onclick = () => {
+            paginaAtual = i;
+            renderizarProdutos();
+            window.scrollTo({ top: 0 });
+        };
+
+        container.appendChild(btn);
+    }
+}
+
+// ==========================
+// MODAL DETALHES
+// ==========================
 function mostrarDetalhesProduto(produto) {
-    try {
-        if (typeof produto === "string") produto = JSON.parse(produto);
+    if (typeof produto === "string") produto = JSON.parse(produto);
 
-        document.getElementById("detalhe-nome").textContent = produto.nome;
-        document.getElementById("detalhe-descricao").textContent = produto.descricao;
-        document.getElementById("detalhe-categoria").textContent = produto.categoria;
-        document.getElementById("detalhe-preco").textContent = produto.preco_formatado;
-        document.getElementById("detalhe-vendedor").textContent = produto.criado_por;
-        document.getElementById("detalhe-imagem").src = produto.imagem;
+    document.getElementById("detalhe-nome").textContent = produto.nome;
+    document.getElementById("detalhe-descricao").textContent = produto.descricao;
+    document.getElementById("detalhe-preco").textContent = produto.preco_formatado;
+    document.getElementById("detalhe-vendedor").textContent = produto.vendedor;
+    document.getElementById("detalhe-imagem").src = produto.imagem;
+    document.getElementById("detalhe-categoria").textContent = produto.categoria;
+    const btn = document.getElementById("btn-comprar");
+    btn.onclick = () => verificarLoginAntesCompra(produto.id);
 
-        const selo = document.getElementById("selo-verificado");
-        if (produto.verificado === true || produto.verificado === 1) {
-            selo.classList.remove("d-none");
-        } else {
-            selo.classList.add("d-none");
-        }
-
-        const btnComprar = document.getElementById("btn-comprar");
-        btnComprar.setAttribute("data-id-produto", produto.id_produto);
-        btnComprar.onclick = () => verificarLoginAntesCompra(produto.id_produto);
-
-        const modalEl = document.getElementById("modalDetalhesProduto");
-        if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
-        } else {
-            chamar_alerta("aviso", "Bootstrap Modal não está disponível.");
-        }
-    } catch (error) {
-        console.error("Erro ao exibir detalhes:", error);
-        chamar_alerta("erro", "Erro ao abrir detalhes do produto.");
-    }
+    new bootstrap.Modal(document.getElementById("modalDetalhesProduto")).show();
 }
 
-// ==========================================
-// VERIFICA LOGIN ANTES DA COMPRA
-// ==========================================
-function verificarLoginAntesCompra(idProduto) {
-    if (!usuarioLogado) {
-        const modalLogin = document.getElementById("modalLoginNecessario");
-        if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modalLogin);
-            modal.show();
-        } else {
-            chamar_alerta("aviso", "Faça login para continuar a compra.");
-        }
-    } else {
-        window.location.href = `/techtrade/produtos/checkout/${idProduto}`;
-    }
+// ==========================
+// COMPRA
+// ==========================
+function verificarLoginAntesCompra(id) {
+    window.location.href = `/techtrade/produtos/checkout/${id}`;
 }
 
-// ==========================================
-// EVENTOS DE INTERAÇÃO (DELEGAÇÃO)
-// ==========================================
+// ==========================
+// EVENTOS
+// ==========================
 function configurarEventosProdutos() {
     document.body.addEventListener("click", function (e) {
+
         if (e.target.classList.contains("btn-detalhes")) {
-            const produtoData = e.target.getAttribute("data-produto");
-            if (produtoData) mostrarDetalhesProduto(produtoData);
+            const data = e.target.getAttribute("data-produto");
+            mostrarDetalhesProduto(data);
         }
 
         if (e.target.classList.contains("btn-comprar-direto")) {
-            const idProduto = e.target.getAttribute("data-id");
-            if (idProduto) verificarLoginAntesCompra(idProduto);
+            const id = e.target.getAttribute("data-id");
+            verificarLoginAntesCompra(id);
         }
+
     });
 }
