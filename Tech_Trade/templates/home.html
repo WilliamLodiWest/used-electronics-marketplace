@@ -2,26 +2,62 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Tech Trade - Compre Eletrônicos com Preço Inteligente</title>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="#" class="logo">Tech<span>Trade</span></a>
-        <ul class="nav-links">
-            <li><a href="#" class="active">HOME</a></li>
-            <li><a href="#sobre">SOBRE</a></li>
-            <li><a href="#ajuda">AJUDA</a></li>
-            <li><a href="{{ url_for('produto.login') }}" class="btn-login">LOGIN CLIENTE</a></li>
-        </ul>
-        <div class="menu-mobile" id="menuMobile">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </nav>
+   <nav class="navbar">
+    <a href="#" class="logo">Tech<span>Trade</span></a>
+
+    <ul class="nav-links">  
+        <li><a href="#" class="active">HOME</a></li>
+        <li><a href="#sobre">SOBRE</a></li>
+        <li><a href="#ajuda">AJUDA</a></li>
+        <li><a href="{{ url_for('produto.renderizar_produtos') }}">PRODUTOS</a></li>
+        
+        {% if session.get('usuario_logado') %}
+        <li class="user-menu" id="userMenu">
+
+            <!-- BOTÃO (nome + seta) -->
+            <div class="user-trigger" id="userTrigger">
+                <span class="btn-login user-name">
+                    {{ session.get('usuario_nome') }}
+                </span>
+                <i class="arrow-down"></i>
+            </div>
+
+            <!-- DROPDOWN -->
+            <div class="dropdown" id="dropdownMenu">
+                <a href="{{ url_for('produto.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </div>
+
+        </li>
+        {% else %}
+        <li>
+            <a href="{{ url_for('produto.login') }}" class="btn-login">
+                LOGIN CLIENTE
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+
+    <!-- ACESSO SECRETO DO VENDEDOR - APENAS VOCÊ SABE -->
+    <div class="vendedor-secret-access" id="vendedorSecretAccess" onclick="acessarPainelVendedor()">
+        <i class="fas fa-shield-alt"></i>
+    </div>
+
+    <div class="menu-mobile" id="menuMobile">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</nav>
+
+<div class="dropdown-overlay" id="dropdownOverlay"></div>
 
     <section class="hero">
         <div class="hero-content">
@@ -29,7 +65,7 @@
                 <h1 class="hero-title">Tecnologia de ponta, com preço inteligente</h1>
                 <p class="hero-subtitle">Encontre os melhores produtos eletrônicos com segurança e garantia</p>
                 <div class="hero-actions">
-                    <a href="{{ url_for('produto.login') }}" class="btn-primary">Comprar Agora</a>
+                    <a href="#produtos" class="btn-primary">Ver Produtos</a>
                 </div>
             </div>
             <div class="hero-visual">
@@ -59,6 +95,43 @@
         <div class="hero-background"></div>
     </section>
 
+    <!-- ================= SEÇÃO DE PRODUTOS (BUSCANDO DA API) ================= -->
+    <section class="produtos-section" id="produtos">
+        <h2 class="section-title">Nossos Produtos</h2>
+        <p class="section-subtitle">Encontre os melhores eletrônicos</p>
+
+        <!-- BARRA DE PESQUISA E FILTRO -->
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Pesquisar produto...">
+            </div>
+            <select id="categoryFilter" class="filter-select">
+                <option value="todos">Todas as categorias</option>
+            </select>
+            <button id="clearFilterBtn" class="btn-clear-filter">
+                <i class="fas fa-times"></i> Limpar
+            </button>
+        </div>
+
+        <!-- CONTADOR DE PRODUTOS -->
+        <div class="products-counter" id="productsCounter">
+            Mostrando <span id="productCount">0</span> produtos
+        </div>
+
+        <!-- GRADE DE PRODUTOS -->
+        <div class="produtos-grid" id="produtosGrid">
+            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Carregando produtos...</div>
+        </div>
+
+        <!-- MENSAGEM QUANDO NÃO ENCONTRAR PRODUTOS -->
+        <div class="no-results" id="noResults" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h3>Nenhum produto encontrado</h3>
+            <p>Tente buscar por outro termo ou categoria</p>
+        </div>
+    </section>
+
     <section class="sobre" id="sobre">
         <h2 class="section-title">Sobre a TechTrade</h2>
         <div class="sobre-content">
@@ -81,6 +154,7 @@
         </div>
     </section>
 
+    <section class="ajuda" id="ajuda">
         <div class="contact-channels">
             <h3>Fale Conosco</h3>
             <div class="channels-grid">
@@ -131,10 +205,10 @@
             <div class="footer-section">
                 <h4>Links Rápidos</h4>
                 <ul>
-                    <li><a href="{{ url_for('produto.home') }}">Home</a></li>
+                    <li><a href="#">Home</a></li>
                     <li><a href="#sobre">Sobre</a></li>
                     <li><a href="#ajuda">Ajuda</a></li>
-                    <li><a href="{{ url_for('produto.renderizar_produtos') }}">Produtos</a></li>
+                    <li><a href="#produtos">Produtos</a></li>
                 </ul>
             </div>
             <div class="footer-section">
@@ -150,7 +224,7 @@
                 <h4>Contato</h4>
                 <div class="contact-info">
                     <p><i class="fas fa-envelope"></i> contato@techtrade.com</p>
-                    <p><i class="fas fa-phone"></i> (11) 4004-1234</p>
+                    <p><i class="fas fa-phone"></i> (11) 96358-6157</p>
                     <p><i class="fas fa-map-marker-alt"></i> São Paulo, SP</p>
                 </div>
             </div>
@@ -165,6 +239,110 @@
         </div>
     </footer>
 
+    <!-- ================= MODAL DE DETALHES DO PRODUTO ================= -->
+    <div class="modal-overlay" id="modalDetalhes">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-box-open"></i> Detalhes do Produto</h3>
+                <button class="modal-close" onclick="fecharModalDetalhes()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-produto-imagem">
+                    <img id="modalDetalhesImagem" src="" alt="Produto">
+                </div>
+                <div class="modal-produto-info">
+                    <h2 id="modalDetalhesNome"></h2>
+                    <span class="modal-categoria" id="modalDetalhesCategoria"></span>
+                    <p class="modal-descricao" id="modalDetalhesDescricao"></p>
+                    <div class="modal-preco">
+                        <span class="preco-label">Preço:</span>
+                        <span class="preco-valor" id="modalDetalhesPreco"></span>
+                    </div>
+                    <div class="modal-vendedor">
+                        <i class="fas fa-store"></i>
+                        <span id="modalDetalhesVendedor"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-secondary" onclick="fecharModalDetalhes()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <button class="btn-modal-primary" id="modalComprarBtn">
+                    <i class="fas fa-shopping-cart"></i> Comprar Agora
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DE CONFIRMAÇÃO DE COMPRA ================= -->
+    <div class="modal-overlay" id="modalCompra">
+        <div class="modal-container modal-small">
+            <div class="modal-header">
+                <h3><i class="fas fa-shopping-cart"></i> Finalizar Compra</h3>
+                <button class="modal-close" onclick="fecharModalCompra()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="compra-produto-info">
+                    <img id="modalCompraImagem" src="" alt="Produto">
+                    <div class="compra-detalhes">
+                        <h4 id="modalCompraNome"></h4>
+                        <p class="compra-preco" id="modalCompraPreco"></p>
+                    </div>
+                </div>
+                <div class="compra-alerta">
+                    <i class="fas fa-lock"></i>
+                    <p>Para finalizar sua compra, você precisa estar logado na sua conta.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-secondary" onclick="fecharModalCompra()">
+                    Cancelar
+                </button>
+                <a href="{{ url_for('produto.login') }}" class="btn-modal-primary" id="modalCompraLoginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Fazer Login
+                </a>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/home_produtos.js') }}"></script>
+    
+    <!-- Script para o acesso secreto do vendedor -->
+    <script>
+        function acessarPainelVendedor() {
+            // Você pode mudar essa URL para algo mais secreto se quiser
+            window.location.href = "{{ url_for('produto.vendedor_login') }}";
+        }
+        
+        // Acesso via tecla de atalho (Ctrl + Shift + A)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                e.preventDefault();
+                acessarPainelVendedor();
+            }
+        });
+        
+        // Acesso via clique duplo no logo (opcional)
+        let logo = document.querySelector('.logo');
+        if (logo) {
+            let clickCount = 0;
+            let timer;
+            logo.addEventListener('click', function(e) {
+                clickCount++;
+                if (clickCount === 5) {
+                    acessarPainelVendedor();
+                    clickCount = 0;
+                }
+                clearTimeout(timer);
+                timer = setTimeout(() => { clickCount = 0; }, 1000);
+            });
+        }
+    </script>
 </body>
 </html>

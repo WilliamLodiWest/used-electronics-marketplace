@@ -1,181 +1,91 @@
-// ==========================================
-// Arquivo: techtrade_produtos.js (ATUALIZADO)
-// ==========================================
-
-// ==========================
-// VARIÁVEIS GLOBAIS
-// ==========================
 let todosProdutos = [];
 let produtosFiltrados = [];
-
 let paginaAtual = 1;
 const produtosPorPagina = 8;
+let usuarioLogadoGlobal = false;
 
 // ==========================
-// ALERTA
-// ==========================
-window.chamar_alerta = function (tipo, mensagem) {
-    console.log(`[ALERTA - ${tipo}] ${mensagem}`);
-
-    if (tipo === "erro") alert(`Erro: ${mensagem}`);
-    else if (tipo === "sucesso") alert(`✅ ${mensagem}`);
-    else alert(mensagem);
-};
-
-// ==========================
-// INIT
+// INICIALIZAÇÃO
 // ==========================
 document.addEventListener("DOMContentLoaded", async function () {
-
-    // prioridade: Flask → fallback localStorage
-    if (typeof usuarioLogado === "undefined") {
-    usuarioLogado = localStorage.getItem("usuario_logado") === "true";
-
-    } else {
-        usuarioLogado = localStorage.getItem("usuario_logado") === "true";
+    // Verificar se o usuário está logado (vindo do HTML)
+    if (typeof usuarioLogado !== 'undefined') {
+        usuarioLogadoGlobal = usuarioLogado;
     }
+    
 
+    // Carregar categorias e produtos
     await Promise.all([
         consultarCategorias(),
         carregarProdutos()
     ]);
 
-    configurarEventosProdutos();
-    configurarBusca();
-    configurarEventosFiltros();
-
-    console.log("Sistema carregado com sucesso 🚀");
+    configurarEventos();
+    
 });
 
 // ==========================
-// BUSCA (INPUT)
+// CONFIGURAR EVENTOS
 // ==========================
-function configurarBusca() {
-    const input = document.getElementById("buscaProduto");
+function configurarEventos() {
+    // Busca em tempo real
+    const buscaInput = document.getElementById("buscaProduto");
+    if (buscaInput) {
+        buscaInput.addEventListener("input", function() {
+            aplicarFiltros();
+        });
+    }
 
-    if (!input) return;
-
-    input.addEventListener("keyup", function (e) {
-        const termo = e.target.value.toLowerCase();
-
-        produtosFiltrados = todosProdutos.filter(p =>
-            p.nome.toLowerCase().includes(termo) ||
-            p.descricao.toLowerCase().includes(termo)
-        );
-
-        paginaAtual = 1;
-        renderizarProdutos();
-    });
-}
-
-function configurarEventosFiltros() {
+    // Botão limpar filtros
     const btnLimpar = document.getElementById("btnLimparFiltros");
     if (btnLimpar) {
         btnLimpar.addEventListener("click", limparFiltros);
     }
-}
 
-function limparFiltros() {
-    const busca = document.getElementById("buscaProduto");
-    const precoMin = document.getElementById("precoMin");
-    const precoMax = document.getElementById("precoMax");
+    // Eventos para detalhes e compra (delegação)
+    document.body.addEventListener("click", function(e) {
+        if (e.target.classList.contains("btn-detalhes")) {
+            const data = e.target.getAttribute("data-produto");
+            if (data) {
+                try {
+                    mostrarDetalhesProduto(JSON.parse(data));
+                } catch(erro) {
+                    console.error("Erro ao parsear produto:", erro);
+                }
+            }
+        }
 
-    if (busca) busca.value = "";
-    if (precoMin) precoMin.value = "";
-    if (precoMax) precoMax.value = "";
-
-    document.querySelectorAll("#categoriasLista input[type='checkbox']").forEach(cb => cb.checked = false);
-    document.querySelectorAll("input[name='condicao']").forEach(cb => cb.checked = false);
-
-    produtosFiltrados = [...todosProdutos];
-    paginaAtual = 1;
-    renderizarProdutos();
-}
-
-function filtrarPorPreco() {
-    const min = parseFloat(document.getElementById("precoMin")?.value) || 0;
-    const max = parseFloat(document.getElementById("precoMax")?.value) || Number.MAX_VALUE;
-
-    produtosFiltrados = todosProdutos.filter(p => {
-        const validoPreco = p.preco >= min && p.preco <= max;
-        return validoPreco;
+        if (e.target.classList.contains("btn-comprar-direto")) {
+            const id = e.target.getAttribute("data-id");
+            if (id) verificarLoginAntesCompra(id);
+        }
     });
-
-    const termo = document.getElementById("buscaProduto")?.value.toLowerCase() || "";
-    if (termo) {
-        produtosFiltrados = produtosFiltrados.filter(p =>
-            p.nome.toLowerCase().includes(termo) ||
-            p.descricao.toLowerCase().includes(termo)
-        );
-    }
-
-    const selecionadas = Array.from(document.querySelectorAll("#categoriasLista input:checked")).map(cb => cb.value);
-    if (selecionadas.length) {
-        produtosFiltrados = produtosFiltrados.filter(p => selecionadas.includes((p.categoria || "").toLowerCase()));
-    }
-
-    paginaAtual = 1;
-    renderizarProdutos();
 }
 
 // ==========================
-// CATEGORIAS
-// ==========================
-async function consultarCategorias() {
-    try {
-        const resposta = await fetch("/techtrade/categorias");
-        if (!resposta.ok) throw new Error();
-
-        const categorias = await resposta.json();
-
-        const container = document.getElementById("categoriasLista");
-        if (!container) return;
-
-        container.innerHTML = categorias.map(cat => `
-            <label class="filtro-item">
-                ${cat[1]}
-                <input type="checkbox" value="${cat[1].toLowerCase()}" onchange="filtrarCategorias()">
-            </label>
-        `).join("");
-
-    } catch (erro) {
-        console.error(erro);
-        chamar_alerta("erro", "Erro ao carregar categorias");
-    }
-}
-
-// ==========================
-// FILTRO CATEGORIA
-// ==========================
-function filtrarCategorias() {
-    const selecionadas = Array.from(
-        document.querySelectorAll("#categoriasLista input:checked")
-    ).map(cb => cb.value);
-
-    if (selecionadas.length === 0) {
-        produtosFiltrados = [...todosProdutos];
-    } else {
-        produtosFiltrados = todosProdutos.filter(p =>
-            selecionadas.includes((p.categoria || "").toLowerCase())
-        );
-    }
-
-    paginaAtual = 1;
-    renderizarProdutos();
-}
-
-// ==========================
-// CARREGAR PRODUTOS (API)
+// CARREGAR PRODUTOS (API PÚBLICA - SEM LOGIN)
 // ==========================
 async function carregarProdutos() {
     const grid = document.getElementById("gridProdutos");
+    const totalDiv = document.getElementById("totalProdutos");
+    
     if (!grid) return;
 
     try {
+        if (totalDiv) totalDiv.innerHTML = " Carregando produtos...";
+        
+        // ROTA PÚBLICA - não exige login
         const resposta = await fetch("/techtrade/produtos/registros");
-        if (!resposta.ok) throw new Error();
-
+        
+        if (!resposta.ok) {
+            throw new Error(`Erro HTTP: ${resposta.status}`);
+        }
+        
         const data = await resposta.json();
+
+        if (data.erro) {
+            throw new Error(data.erro);
+        }
 
         todosProdutos = (data.json_produtos || []).map(p => ({
             id: p.id_produto,
@@ -183,24 +93,125 @@ async function carregarProdutos() {
             preco: p.preco,
             preco_formatado: p.preco_formatado,
             imagem: p.imagem,
-            descricao: p.descricao,
+            descricao: p.descricao || "Sem descrição disponível",
             categoria: p.categoria || "Outros",
-            vendedor: p.criado_por,
-            verificado: p.verificado
+            vendedor: p.criado_por || "TechTrade",
+            verificado: p.verificado,
+            disponivel: p.disponivel
         }));
 
         produtosFiltrados = [...todosProdutos];
-
+        
         renderizarProdutos();
 
     } catch (erro) {
-        console.error(erro);
-        grid.innerHTML = `<p class="text-danger">Erro ao carregar produtos</p>`;
+        console.error("Erro ao carregar produtos:", erro);
+        if (grid) {
+            grid.innerHTML = `<div class="alert-error"> Erro ao carregar produtos: ${erro.message}</div>`;
+        }
+        if (totalDiv) totalDiv.innerHTML = " Erro ao carregar produtos";
     }
 }
 
 // ==========================
-// RENDER PRODUTOS (GRID NOVO)
+// CONSULTAR CATEGORIAS
+// ==========================
+async function consultarCategorias() {
+    try {
+        const resposta = await fetch("/techtrade/categorias");
+        if (!resposta.ok) throw new Error();
+        
+        const categorias = await resposta.json();
+        const container = document.getElementById("categoriasLista");
+        
+        if (!container) return;
+
+        if (!categorias || categorias.length === 0) {
+            container.innerHTML = "<p>Nenhuma categoria encontrada</p>";
+            return;
+        }
+
+        container.innerHTML = categorias.map(cat => `
+            <label class="filtro-item">
+                <span>${cat[1]}</span>
+                <input type="checkbox" value="${cat[1].toLowerCase()}" onchange="aplicarFiltros()">
+            </label>
+        `).join("");
+
+    } catch (erro) {
+        console.error("Erro ao carregar categorias:", erro);
+    }
+}
+
+// ==========================
+// APLICAR FILTROS
+// ==========================
+window.aplicarFiltros = function() {
+    let resultados = [...todosProdutos];
+    
+    // Filtro de busca
+    const termo = document.getElementById("buscaProduto")?.value.toLowerCase() || "";
+    if (termo) {
+        resultados = resultados.filter(p =>
+            p.nome.toLowerCase().includes(termo) ||
+            p.descricao.toLowerCase().includes(termo)
+        );
+    }
+    
+    // Filtro de categorias
+    const categoriasSelecionadas = Array.from(
+        document.querySelectorAll("#categoriasLista input:checked")
+    ).map(cb => cb.value);
+    
+    if (categoriasSelecionadas.length > 0) {
+        resultados = resultados.filter(p =>
+            categoriasSelecionadas.includes((p.categoria || "").toLowerCase())
+        );
+    }
+    
+    // Filtro de preço
+    const precoMin = parseFloat(document.getElementById("precoMin")?.value) || 0;
+    const precoMax = parseFloat(document.getElementById("precoMax")?.value) || Infinity;
+    
+    resultados = resultados.filter(p => p.preco >= precoMin && p.preco <= precoMax);
+    
+    produtosFiltrados = resultados;
+    paginaAtual = 1;
+    renderizarProdutos();
+};
+
+// ==========================
+// FILTRAR POR PREÇO
+// ==========================
+window.filtrarPorPreco = function() {
+    aplicarFiltros();
+};
+
+// ==========================
+// LIMPAR FILTROS
+// ==========================
+window.limparFiltros = function() {
+    // Limpar busca
+    const busca = document.getElementById("buscaProduto");
+    if (busca) busca.value = "";
+    
+    // Limpar preços
+    const precoMin = document.getElementById("precoMin");
+    const precoMax = document.getElementById("precoMax");
+    if (precoMin) precoMin.value = "";
+    if (precoMax) precoMax.value = "";
+    
+    // Limpar categorias
+    document.querySelectorAll("#categoriasLista input[type='checkbox']").forEach(cb => cb.checked = false);
+    
+    // Resetar produtos
+    produtosFiltrados = [...todosProdutos];
+    paginaAtual = 1;
+    renderizarProdutos();
+};
+
+// ==========================
+// RENDERIZAR PRODUTOS
 // ==========================
 function renderizarProdutos() {
     const grid = document.getElementById("gridProdutos");
@@ -211,55 +222,54 @@ function renderizarProdutos() {
 
     if (produtosFiltrados.length === 0) {
         grid.innerHTML = "";
-        sem.style.display = "block";
-        if (total) total.textContent = "Nenhum produto encontrado";
+        if (sem) sem.style.display = "block";
+        if (total) total.textContent = "📭 Nenhum produto encontrado";
+        const paginacao = document.getElementById("paginacao");
+        if (paginacao) paginacao.innerHTML = "";
         return;
     }
 
-    sem.style.display = "none";
+    if (sem) sem.style.display = "none";
 
     const inicio = (paginaAtual - 1) * produtosPorPagina;
     const fim = inicio + produtosPorPagina;
-
     const pagina = produtosFiltrados.slice(inicio, fim);
 
     grid.innerHTML = pagina.map(p => `
         <div class="produto-card">
-
-            <img src="${p.imagem}" onerror="this.src='https://via.placeholder.com/300'">
-
-            <h3>${p.nome}</h3>
-
-            <p>${p.descricao.substring(0, 60)}...</p>
-
-            <strong>R$ ${p.preco_formatado || p.preco}</strong>
-
+            <img src="${p.imagem}" onerror="this.src='https://via.placeholder.com/300x200?text=Sem+Imagem'" alt="${p.nome}">
+            <h3 title="${p.nome}">${p.nome.length > 40 ? p.nome.substring(0, 40) + '...' : p.nome}</h3>
+            <p>${p.descricao.length > 60 ? p.descricao.substring(0, 60) + '...' : p.descricao}</p>
+            <strong>R$ ${p.preco_formatado || p.preco.toFixed(2)}</strong>
             <button class="btn-detalhes" data-produto='${JSON.stringify(p).replace(/'/g, "&#39;")}'>
-                Ver detalhes
+                 Ver detalhes
             </button>
-
             <button class="btn-comprar-direto" data-id="${p.id}">
-                Comprar
+                 Comprar
             </button>
-
         </div>
     `).join("");
 
     if (total) {
-        total.textContent = `Mostrando ${produtosFiltrados.length} produtos`;
+        total.textContent = ` Mostrando ${produtosFiltrados.length} produtos (${inicio + 1}-${Math.min(fim, produtosFiltrados.length)})`;
     }
 
     renderizarPaginacao();
 }
 
 // ==========================
-// PAGINAÇÃO
+// RENDERIZAR PAGINAÇÃO
 // ==========================
 function renderizarPaginacao() {
     const container = document.getElementById("paginacao");
     if (!container) return;
 
     const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPagina);
+    
+    if (totalPaginas <= 1) {
+        container.innerHTML = "";
+        return;
+    }
 
     container.innerHTML = "";
 
@@ -267,13 +277,12 @@ function renderizarPaginacao() {
         const btn = document.createElement("button");
         btn.textContent = i;
         btn.classList.add("pagina");
-
         if (i === paginaAtual) btn.classList.add("active");
 
         btn.onclick = () => {
             paginaAtual = i;
             renderizarProdutos();
-            window.scrollTo({ top: 0 });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         container.appendChild(btn);
@@ -281,45 +290,35 @@ function renderizarPaginacao() {
 }
 
 // ==========================
-// MODAL DETALHES
+// MOSTRAR DETALHES DO PRODUTO
 // ==========================
 function mostrarDetalhesProduto(produto) {
-    if (typeof produto === "string") produto = JSON.parse(produto);
-
     document.getElementById("detalhe-nome").textContent = produto.nome;
     document.getElementById("detalhe-descricao").textContent = produto.descricao;
-    document.getElementById("detalhe-preco").textContent = produto.preco_formatado;
+    document.getElementById("detalhe-preco").textContent = produto.preco_formatado || produto.preco.toFixed(2);
     document.getElementById("detalhe-vendedor").textContent = produto.vendedor;
     document.getElementById("detalhe-imagem").src = produto.imagem;
     document.getElementById("detalhe-categoria").textContent = produto.categoria;
-    const btn = document.getElementById("btn-comprar");
-    btn.onclick = () => verificarLoginAntesCompra(produto.id);
-
-    new bootstrap.Modal(document.getElementById("modalDetalhesProduto")).show();
+    
+    const btnComprar = document.getElementById("btn-comprar");
+    btnComprar.onclick = () => verificarLoginAntesCompra(produto.id);
+    
+    const modal = new bootstrap.Modal(document.getElementById("modalDetalhesProduto"));
+    modal.show();
 }
 
 // ==========================
-// COMPRA
+// VERIFICAR LOGIN ANTES DA COMPRA
 // ==========================
-function verificarLoginAntesCompra(id) {
-    window.location.href = `/techtrade/produtos/checkout/${id}`;
+function verificarLoginAntesCompra(idProduto) {
+    window.location.href = `/techtrade/produtos/checkout/${idProduto}`;
 }
 
-// ==========================
-// EVENTOS
-// ==========================
-function configurarEventosProdutos() {
-    document.body.addEventListener("click", function (e) {
-
-        if (e.target.classList.contains("btn-detalhes")) {
-            const data = e.target.getAttribute("data-produto");
-            mostrarDetalhesProduto(data);
-        }
-
-        if (e.target.classList.contains("btn-comprar-direto")) {
-            const id = e.target.getAttribute("data-id");
-            verificarLoginAntesCompra(id);
-        }
-
-    });
-}
+// Verificar se veio de um redirecionamento de compra
+document.addEventListener("DOMContentLoaded", function() {
+    const produtoPendente = localStorage.getItem("produto_para_comprar");
+    if (produtoPendente && usuarioLogadoGlobal) {
+        localStorage.removeItem("produto_para_comprar");
+        window.location.href = `/techtrade/produtos/checkout/${produtoPendente}`;
+    }
+});

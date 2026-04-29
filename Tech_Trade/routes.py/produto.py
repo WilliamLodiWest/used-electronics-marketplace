@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from src.utils.bd import ConexaoBD
-from flask import Blueprint, jsonify, render_template, request, abort, session, redirect, url_for
+from flask import Blueprint, flash, jsonify, render_template, request, abort, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 import hashlib
 import secrets
@@ -18,29 +18,31 @@ def home():
 
 @rotas_produto.route('/login', methods=['GET', 'POST'])
 def login():
-    try:
-        if request.method == 'POST':
-            email = request.form.get('email')
-            senha = request.form.get('senha')
+    if request.method == 'POST':
+        email = request.form.get('email')
+        senha = request.form.get('senha')
 
-            conexao = ConexaoBD()
-            sql = "SELECT id_cliente, nome, senha FROM clientes_tt WHERE email = %s"
-            usuario = conexao.select(sql, (email,))
-            conexao.close()
+        conexao = ConexaoBD()
+        sql = "SELECT id_cliente, nome, senha FROM clientes_tt WHERE email = %s"
+        usuario = conexao.select(sql, (email,))
+        conexao.close()
 
-            if usuario and check_password_hash(usuario[0][2], senha):
-                session['usuario_logado'] = True
-                session['usuario_nome'] = usuario[0][1]
-                session['usuario_id'] = usuario[0][0]
-                return redirect(url_for('produto.renderizar_produtos'))
-            else:
-                erro = "E-mail ou senha incorretos."
-                return render_template('login.html', erro=erro)
+        if usuario and check_password_hash(usuario[0][2], senha):
+            session['usuario_logado'] = True
+            session['usuario_nome'] = usuario[0][1]
+            session['usuario_id'] = usuario[0][0]
+            return redirect(url_for('produto.renderizar_produtos'))
+        else:
+            erro = "E-mail ou senha incorretos."
+            flash("E-mail ou senha incorretos.", "erro")
+            return redirect(url_for('produto.login'))
 
-        return render_template('login.html')
+    return render_template('login.html')
 
-    except Exception as err:
-        abort(500)
+@rotas_produto.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('produto.home'))
 
 # ------------------- CADASTRO DE CLIENTE -------------------
 
@@ -54,7 +56,7 @@ def cadastro():
             telefone = request.form.get('telefone')
 
             if not nome or not email or not senha or not telefone:
-                return render_template('cadastro.html', erro="Preencha todos os campos obrigatórios.")
+                return render_template('login.html', erro="Preencha todos os campos obrigatórios.")
 
             conexao = ConexaoBD()
 
@@ -63,10 +65,10 @@ def cadastro():
             existente = conexao.select(sql_verifica, (email,))
             if existente:
                 conexao.close()
-                return render_template('cadastro.html', erro="E-mail já cadastrado.")
+                return render_template('login.html', erro="E-mail já cadastrado.")
 
             # Inserir cliente
-            hash_senha = generate_password_hash(senha)
+            hash_senha = generate_password_hash(senha, method='pbkdf2:sha256')
             sql_insert = """
                 INSERT INTO clientes_tt (nome, email, senha, telefone, criado_em)
                 VALUES (%s, %s, %s, %s, NOW())
@@ -81,63 +83,61 @@ def cadastro():
             session['usuario_nome'] = nome
             session['usuario_id'] = usuario[0][0]
 
-
             return redirect(url_for('produto.renderizar_produtos'))
 
-        return render_template('cadastro.html')
+        return render_template('login.html')
 
     except Exception as err:
-        return render_template('cadastro.html', erro="Erro ao cadastrar.")
+        return render_template('login.html', erro="Erro ao cadastrar.")
+
 # ------------------- RECUPERAÇÃO DE SENHA -------------------
 
 @rotas_produto.route('/esqueceu_senha', methods=['GET', 'POST'])
 def esqueceu_senha():
-    """Página para solicitar recuperação de senha"""
+    """Página e API para solicitar recuperação de senha"""
     try:
         if request.method == 'POST':
             email = request.form.get('email')
             
             if not email:
-                return render_template('esqueceu_senha.html', erro="Por favor, informe seu e-mail.")
+                return jsonify({"erro": "Por favor, informe seu e-mail."}), 400
             
             conexao = ConexaoBD()
             
-            # Verificar se o e-mail existe
             sql = "SELECT id_cliente, nome FROM clientes_tt WHERE email = %s"
             usuario = conexao.select(sql, (email,))
             
             if usuario:
-                
                 token = secrets.token_urlsafe(32)
                 token_hash = hashlib.sha256(token.encode()).hexdigest()
                 expiracao = datetime.now() + timedelta(hours=1)
                 
-                # Salvar token no banco
                 sql_token = """
                     INSERT INTO recuperacao_senha_tt (id_cliente, token, expiracao, usado)
                     VALUES (%s, %s, %s, 0)
                 """
                 conexao.insert(sql_token, (usuario[0][0], token_hash, expiracao))
                 
-                # Gerar link de recuperação
                 link_recuperacao = url_for('produto.redefinir_senha', token=token, _external=True)
                 
-                
                 conexao.close()
                 
-                # RETORNAR APENAS O LINK DE DEBUG (SEM MENSAGEM DE SUCESSO)
-                return render_template('esqueceu_senha.html', 
-                                     link_debug=link_recuperacao)
+                return jsonify({
+                    "success": True,
+                    "message": "Link de recuperação gerado!",
+                    "link": link_recuperacao
+                }), 200
             else:
                 conexao.close()
-                # Por segurança, não informe se o e-mail não existe
-                return render_template('esqueceu_senha.html', 
-                                     mensagem="Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.")
+                return jsonify({
+                    "success": True,
+                    "message": "Se o e-mail estiver cadastrado, você receberá as instruções."
+                }), 200
         
-        return render_template('esqueceu_senha.html')
+        return render_template('login.html')
     
     except Exception as err:
-        return render_template('esqueceu_senha.html', erro="Erro ao processar solicitação.")
+        return jsonify({"erro": str(err)}), 500
 
 @rotas_produto.route('/redefinir_senha/<token>', methods=['GET', 'POST'])
 def redefinir_senha(token):
@@ -147,7 +147,6 @@ def redefinir_senha(token):
         
         conexao = ConexaoBD()
         
-        # Verificar se o token é válido e não expirou
         sql = """
             SELECT r.id_cliente, c.nome, r.expiracao
             FROM recuperacao_senha_tt r
@@ -158,18 +157,17 @@ def redefinir_senha(token):
         
         if not recuperacao:
             conexao.close()
-            return render_template('redefinir_senha.html', 
-                                 erro="Token inválido ou já utilizado.")
+            return render_template('login.html', 
+                                 erro_token="Token inválido ou já utilizado.")
         
         id_cliente = recuperacao[0][0]
         nome_cliente = recuperacao[0][1]
         expiracao = recuperacao[0][2]
         
-        # Verificar se o token expirou
         if datetime.now() > expiracao:
             conexao.close()
-            return render_template('redefinir_senha.html', 
-                                 erro="Token expirado. Solicite uma nova recuperação.")
+            return render_template('login.html', 
+                                 erro_token="Token expirado. Solicite uma nova recuperação.")
         
         if request.method == 'POST':
             nova_senha = request.form.get('nova_senha')
@@ -177,39 +175,44 @@ def redefinir_senha(token):
             
             if not nova_senha or not confirmar_senha:
                 return render_template('login.html', 
-                                     token=token,
-                                     erro="Preencha todos os campos.")
-            
+                                    erro="Preencha todos os campos.",
+                                    token=token,
+                                    show_reset=True)
+
             if nova_senha != confirmar_senha:
                 return render_template('login.html', 
-                                     token=token,
-                                     erro="As senhas não conferem.")
-            
-            # Atualizar a senha
-            hash_senha = generate_password_hash(nova_senha)
+                                    erro="As senhas não conferem.",
+                                    token=token,
+                                    show_reset=True)
+
+            if len(nova_senha) < 6:
+                return render_template('login.html', 
+                                    erro="A senha deve ter no mínimo 6 caracteres.",
+                                    token=token,
+                                    show_reset=True)
+
+            hash_senha = generate_password_hash(nova_senha, method='pbkdf2:sha256')
             sql_update = "UPDATE clientes_tt SET senha = %s WHERE id_cliente = %s"
             conexao.update(sql_update, (hash_senha, id_cliente))
-            
-            conexao.commit()
-            
-            # Marcar token como usado
-            sql_usar_token = "UPDATE recuperacao_senha_tt SET usado = 1 WHERE token = %s"
-            conexao.insert(sql_usar_token, (token_hash,))
-            
+
+            sql_token = "UPDATE recuperacao_senha_tt SET usado = 1 WHERE token = %s"
+            conexao.update(sql_token, (token_hash,))
+
             conexao.close()
-            
-            return render_template('login.html', 
-                                 mensagem="Senha redefinida com sucesso!",
-                                 sucesso=True)
+
+            flash("Senha redefinida com sucesso! Faça login.", "sucesso")
+            return redirect(url_for('produto.login'))
         
         conexao.close()
         
         return render_template('login.html', 
                              token=token,
-                             nome_cliente=nome_cliente)
+                             nome_cliente=nome_cliente,
+                             show_reset=True)
     
     except Exception as err:
         return render_template('login.html', erro="Erro ao processar solicitação.")
+
 # ------------------- RENDERIZAÇÃO DE PÁGINAS -------------------       
 
 @rotas_produto.route("/produtos")
@@ -232,7 +235,7 @@ def consultar_categorias_produtos():
     except Exception as err:
         erro = str(err).replace("'", '"')
         return jsonify({"erro": erro}), 500
-#............................................................................................................
+
 @rotas_produto.get("/techtrade/produtos/registros")
 def consultar_produtos():
     """Retorna a lista de produtos"""
@@ -258,7 +261,6 @@ def consultar_produtos():
         """)
         conexao_bd.close()
 
-        # --- Funções auxiliares ---
         def formata_data(data):
             if isinstance(data, datetime):
                 return data.strftime('%d/%m/%Y')
@@ -279,7 +281,6 @@ def consultar_produtos():
                 except Exception:
                     return 0
 
-        # Imagens de placeholder por categoria
         def get_placeholder_image(categoria):
             placeholders = {
                 'Celulares': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
@@ -291,7 +292,6 @@ def consultar_produtos():
             }
             return placeholders.get(categoria, 'https://images.unsplash.com/photo-1556656793-08538906a9f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80')
 
-        # --- Monta o JSON final ---
         json_produtos = []
         for row in retorno_bd:
             imagem = f"/static/tech_trade_imagens/{row[8]}" if row[8] else get_placeholder_image(row[3])
@@ -349,7 +349,6 @@ def verificar_produto():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
-
 # ------------------- CONCLUIR COMPRA -------------------
 
 @rotas_produto.route("/techtrade/produtos/checkout/<int:id_produto>", methods=["GET", "POST"])
@@ -357,7 +356,6 @@ def checkout(id_produto):
     try:
         conexao = ConexaoBD()
         
-        # Buscar produto
         sql_produto = """
             SELECT 
                 p.id_produto,
@@ -378,7 +376,6 @@ def checkout(id_produto):
             conexao.close()
             abort(404, "Produto não encontrado")
 
-        # Extrair dados do produto
         p = resultado[0]
         produto = {
             "id_produto": p[0],
@@ -401,7 +398,6 @@ def checkout(id_produto):
                 conexao.close()
                 return "Método de pagamento não selecionado.", 400
 
-            # Registrar compra usando o novo sistema completo
             try:
                 dados_compra = {
                     "id_produto": id_produto,
@@ -410,14 +406,8 @@ def checkout(id_produto):
                     "observacoes": observacoes
                 }
 
-                # Fechar conexão atual antes de fazer a requisição
                 conexao.close()
                 
-                # Fazer requisição para a nova rota de compra completa
-                import requests
-                from flask import url_for
-                
-                # Criar uma requisição interna para a nova rota
                 with rotas_produto.test_client() as client:
                     response = client.post(
                         '/techtrade/produtos/finalizar_compra_completa',
@@ -442,7 +432,6 @@ def checkout(id_produto):
                     conexao.close()
                 return f"Erro ao processar compra: {str(e)}", 500
 
-        # GET request - mostrar página de checkout
         conexao.close()
         return render_template("checkout.html", produto=produto)
 
@@ -457,7 +446,6 @@ def checkout(id_produto):
 def comprovante_compra(id_produto):
     """Página dedicada para o comprovante de compra"""
     try:
-        # Buscar dados reais do produto do banco
         conexao = ConexaoBD()
         sql_produto = """
             SELECT nome, descricao, preco, criado_por, imagem 
@@ -489,10 +477,9 @@ def comprovante_compra(id_produto):
         abort(500)
 
 # ------------------- SISTEMA DE COMPRAS E NOTIFICAÇÕES -------------------
-
 @rotas_produto.route("/techtrade/produtos/finalizar_compra_completa", methods=["POST"])
 def finalizar_compra_completa():
-    """Registra compra, atualiza estoque e notifica vendedor - VERSÃO CORRIGIDA"""
+    """Registra compra, atualiza estoque e notifica vendedor"""
     try:
         if not session.get('usuario_logado'):
             return jsonify({"erro": "Usuário não logado"}), 401
@@ -512,7 +499,6 @@ def finalizar_compra_completa():
         
         conexao = ConexaoBD()
 
-        # 1. Buscar informações do produto e vendedor
         sql_produto = """
             SELECT p.preco, p.estoque, p.criado_por_id, p.nome, 
                    COALESCE(v.nome, 'Vendedor TechTrade') as vendedor_nome,
@@ -532,15 +518,13 @@ def finalizar_compra_completa():
         id_vendedor = produto_info[0][2]
         nome_produto = produto_info[0][3]
         nome_vendedor = produto_info[0][4]
-        email_vendedor = produto_info[0][5]
         total = preco_unitario * quantidade
 
-        # 2. Verificar estoque
         if estoque_atual < quantidade:
             conexao.close()
             return jsonify({"erro": "Estoque insuficiente"}), 400
 
-        # 3. Inserir compra no banco
+        # 1. Registrar compra
         sql_compra = """
             INSERT INTO compras_tt 
             (id_cliente, id_produto, quantidade, preco_unitario, total, 
@@ -552,24 +536,22 @@ def finalizar_compra_completa():
             metodo_pagamento, endereco_entrega, observacoes
         ))
 
-        # 4. Atualizar estoque do produto
+        # 2. Atualizar estoque
         sql_estoque = "UPDATE produtos_tt SET estoque = estoque - %s WHERE id_produto = %s"
         conexao.insert(sql_estoque, (quantidade, id_produto))
 
-        # 5. Notificar vendedor (inserir na tabela de notificações)
+        # 3. Notificar vendedor (sem título, apenas mensagem)
         if id_vendedor:
-            mensagem_notificacao = f" Nova venda! {nome_produto} vendido para o cliente via {metodo_pagamento}. Total: R$ {total:.2f}"
-            
+            mensagem_notificacao = f"🎉 Nova venda! {nome_produto} - R$ {total:.2f} via {metodo_pagamento}"
             sql_notificacao = """
                 INSERT INTO notificacoes_tt (id_vendedor, mensagem, data_envio, lida)
                 VALUES (%s, %s, NOW(), 0)
             """
             conexao.insert(sql_notificacao, (id_vendedor, mensagem_notificacao))
-            
 
         conexao.close()
 
-        # Armazenar dados da compra na sessão para a página de confirmação
+        # 4. Guardar dados na sessão
         session['produto'] = {
             "id_produto": int(id_produto),
             "nome": nome_produto,
@@ -596,7 +578,6 @@ def finalizar_compra_completa():
         import traceback
         traceback.print_exc()
         return jsonify({"erro": str(err)}), 500
-
 
 # ------------------- PÁGINA DE CONFIRMAÇÃO DE COMPRA -------------------
 
@@ -628,3 +609,202 @@ def confirmacao_compra():
 def suporte_comprador():
     """Página de suporte e ajuda para compradores"""
     return render_template('suporte_comprador.html')
+
+# ------------------- SISTEMA DO VENDEDOR (VERSÃO SIMPLIFICADA) -------------------
+
+@rotas_produto.route('/vendedor/login', methods=['GET', 'POST'])
+def vendedor_login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        
+        conexao = ConexaoBD()
+        sql = "SELECT id_vendedor, nome, email, senha FROM vendedores_tt WHERE email = %s"
+        vendedor = conexao.select(sql, (email,))
+        conexao.close()
+        
+        if vendedor:
+            # Comparação direta (já que você inseriu '1234' em texto plano)
+            if vendedor[0][3] == senha:
+                session['vendedor_logado'] = True
+                session['vendedor_id'] = vendedor[0][0]
+                session['vendedor_nome'] = vendedor[0][1]
+                session['vendedor_email'] = vendedor[0][2]
+                return redirect(url_for('produto.painel_vendedor'))
+        flash("E-mail ou senha incorretos.", "erro")
+        return redirect(url_for('produto.vendedor_login'))
+    
+    return render_template('vendedor_login.html')
+
+@rotas_produto.route('/vendedor/painel')
+def painel_vendedor():
+    if not session.get('vendedor_logado'):
+        flash("Faça login como vendedor para acessar esta página.", "erro")
+        return redirect(url_for('produto.vendedor_login'))
+    return render_template('vendedor_painel.html', 
+                         vendedor_nome=session.get('vendedor_nome'),
+                         vendedor_id=session.get('vendedor_id'))
+
+@rotas_produto.route('/vendedor/api/dashboard')
+def vendedor_dashboard_data():
+    if not session.get('vendedor_logado'):
+        return jsonify({"erro": "Não autorizado"}), 401
+    
+    vendedor_id = session.get('vendedor_id')
+    conexao = ConexaoBD()
+    
+    sql_stats = """
+        SELECT 
+            COUNT(DISTINCT p.id_produto) as total_produtos,
+            COALESCE(SUM(p.estoque), 0) as total_estoque,
+            COUNT(DISTINCT c.id_compra) as total_vendas,
+            COALESCE(SUM(c.total), 0) as receita_total
+        FROM vendedores_tt v
+        LEFT JOIN produtos_tt p ON v.id_vendedor = p.criado_por_id
+        LEFT JOIN compras_tt c ON p.id_produto = c.id_produto
+        WHERE v.id_vendedor = %s
+    """
+    stats = conexao.select(sql_stats, (vendedor_id,))
+    
+    sql_vendas_recentes = """
+        SELECT c.id_compra, p.nome, c.quantidade, c.total, c.metodo_pagamento, 
+               c.status, c.data_compra
+        FROM compras_tt c
+        JOIN produtos_tt p ON c.id_produto = p.id_produto
+        WHERE p.criado_por_id = %s
+        ORDER BY c.data_compra DESC LIMIT 10
+    """
+    vendas = conexao.select(sql_vendas_recentes, (vendedor_id,))
+    
+    sql_estoque_baixo = """
+        SELECT id_produto, nome, preco, estoque
+        FROM produtos_tt
+        WHERE criado_por_id = %s AND estoque < 10 AND estoque > 0
+    """
+    estoque = conexao.select(sql_estoque_baixo, (vendedor_id,))
+    conexao.close()
+    
+    vendas_list = []
+    for v in vendas:
+        vendas_list.append({
+            "id": v[0],
+            "produto": v[1],
+            "quantidade": v[2],
+            "total": float(v[3]),
+            "metodo": v[4],
+            "status": v[5],
+            "data": v[6].strftime('%d/%m/%Y %H:%M') if v[6] else ''
+        })
+    
+    estoque_list = [{"id": e[0], "nome": e[1], "preco": float(e[2]), "estoque": e[3]} for e in estoque]
+    
+    return jsonify({
+        "total_produtos": stats[0][0] if stats else 0,
+        "total_estoque": stats[0][1] if stats else 0,
+        "total_vendas": stats[0][2] if stats else 0,
+        "receita_total": float(stats[0][3]) if stats and stats[0][3] else 0,
+        "vendas_recentes": vendas_list,
+        "estoque_baixo": estoque_list,
+        "notificacoes_nao_lidas": 0
+    })
+
+@rotas_produto.route('/vendedor/api/produtos')
+def vendedor_produtos():
+    if not session.get('vendedor_logado'):
+        return jsonify({"erro": "Não autorizado"}), 401
+    
+    vendedor_id = session.get('vendedor_id')
+    conexao = ConexaoBD()
+    sql = """
+        SELECT p.id_produto, p.nome, p.descricao, c.nome as categoria,
+               p.preco, p.estoque, p.criado_em, p.imagem, p.verificado
+        FROM produtos_tt p
+        LEFT JOIN categorias_produtos_tt c ON p.categoria_id = c.id_categoria
+        WHERE p.criado_por_id = %s
+        ORDER BY p.criado_em DESC
+    """
+    produtos = conexao.select(sql, (vendedor_id,))
+    conexao.close()
+    
+    result = []
+    for p in produtos:
+        result.append({
+            "id": p[0],
+            "nome": p[1],
+            "descricao": p[2],
+            "categoria": p[3] or "Sem categoria",
+            "preco": float(p[4]),
+            "estoque": p[5],
+            "criado_em": p[6].strftime('%d/%m/%Y') if p[6] else '',
+            "imagem": f"/static/tech_trade_imagens/{p[7]}" if p[7] else "/static/tech_trade_imagens/default.jpg",
+            "verificado": bool(p[8])
+        })
+    return jsonify(result)
+
+# Rotas para notificações (vazias por enquanto)
+@rotas_produto.route('/vendedor/api/notificacoes')
+def vendedor_notificacoes():
+    return jsonify([])
+
+@rotas_produto.route('/vendedor/api/notificacoes/marcar_lida', methods=['POST'])
+def marcar_notificacao_lida():
+    return jsonify({"success": True})
+
+@rotas_produto.route('/vendedor/api/notificacoes/marcar_todas_lidas', methods=['POST'])
+def marcar_todas_notificacoes_lidas():
+    return jsonify({"success": True})
+
+# CRUD de produtos
+@rotas_produto.route('/vendedor/produto/novo', methods=['POST'])
+def vendedor_novo_produto():
+    if not session.get('vendedor_logado'):
+        return jsonify({"erro": "Não autorizado"}), 401
+    
+    dados = request.get_json()
+    conexao = ConexaoBD()
+    sql = """
+        INSERT INTO produtos_tt (nome, descricao, preco, estoque, categoria_id, imagem, criado_por, criado_por_id, criado_em, verificado)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), 0)
+    """
+    conexao.insert(sql, (
+        dados['nome'], dados['descricao'], float(dados['preco']), int(dados['estoque']),
+        dados['categoria_id'], dados.get('imagem', ''), session.get('vendedor_nome'), session.get('vendedor_id')
+    ))
+    conexao.close()
+    return jsonify({"success": True, "mensagem": "Produto adicionado!"})
+
+@rotas_produto.route('/vendedor/produto/editar/<int:id_produto>', methods=['PUT'])
+def vendedor_editar_produto(id_produto):
+    if not session.get('vendedor_logado'):
+        return jsonify({"erro": "Não autorizado"}), 401
+    
+    dados = request.get_json()
+    conexao = ConexaoBD()
+    sql = """
+        UPDATE produtos_tt SET nome=%s, descricao=%s, preco=%s, estoque=%s, categoria_id=%s, imagem=%s
+        WHERE id_produto=%s AND criado_por_id=%s
+    """
+    conexao.update(sql, (
+        dados['nome'], dados['descricao'], float(dados['preco']), int(dados['estoque']),
+        dados['categoria_id'], dados.get('imagem', ''), id_produto, session.get('vendedor_id')
+    ))
+    conexao.close()
+    return jsonify({"success": True, "mensagem": "Produto atualizado!"})
+
+@rotas_produto.route('/vendedor/produto/deletar/<int:id_produto>', methods=['DELETE'])
+def vendedor_deletar_produto(id_produto):
+    if not session.get('vendedor_logado'):
+        return jsonify({"erro": "Não autorizado"}), 401
+    
+    conexao = ConexaoBD()
+    conexao.update("UPDATE produtos_tt SET estoque=0 WHERE id_produto=%s AND criado_por_id=%s", 
+                  (id_produto, session.get('vendedor_id')))
+    conexao.close()
+    return jsonify({"success": True, "mensagem": "Produto removido!"})
+
+@rotas_produto.route('/vendedor/logout')
+def vendedor_logout():
+    for key in ['vendedor_logado', 'vendedor_id', 'vendedor_nome', 'vendedor_email']:
+        session.pop(key, None)
+    flash("Você saiu do painel do vendedor.", "sucesso")
+    return redirect(url_for('produto.home'))

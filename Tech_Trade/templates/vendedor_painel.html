@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Vendedor - TechTrade</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vendedor.css') }}">
+</head>
+<body>
+    <div class="vendedor-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-store"></i> TechTrade</h3>
+                <p>Olá, {{ vendedor_nome }}</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-page="dashboard">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="#" class="nav-link" data-page="produtos">
+                    <i class="fas fa-box"></i> Meus Produtos
+                </a>
+                <a href="#" class="nav-link" data-page="vendas">
+                    <i class="fas fa-shopping-cart"></i> Vendas
+                </a>
+                <a href="#" class="nav-link" data-page="notificacoes">
+                    <i class="fas fa-bell"></i> Notificações
+                    <span class="badge" id="notif-badge">0</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="{{ url_for('produto.vendedor_logout') }}" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard -->
+            <div id="dashboard-page" class="page-content active">
+                <div class="page-header">
+                    <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+                    <p>Bem-vindo ao seu painel de controle</p>
+                </div>
+                
+                <div class="stats-grid" id="stats-container">
+                    <!-- Stats will be loaded here -->
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-7">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-clock"></i> Vendas Recentes</h5>
+                            </div>
+                            <div class="card-body" id="vendas-recentes">
+                                <div class="loading">Carregando...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-exclamation-triangle"></i> Estoque Baixo</h5>
+                            </div>
+                            <div class="card-body" id="estoque-baixo">
+                                <div class="loading">Carregando...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Produtos Page -->
+            <div id="produtos-page" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-box"></i> Meus Produtos</h1>
+                    <button class="btn btn-primary" onclick="abrirModalProduto()">
+                        <i class="fas fa-plus"></i> Novo Produto
+                    </button>
+                </div>
+                
+                <div class="products-grid" id="produtos-container">
+                    <div class="loading">Carregando produtos...</div>
+                </div>
+            </div>
+            
+            <!-- Vendas Page -->
+            <div id="vendas-page" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-shopping-cart"></i> Minhas Vendas</h1>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Total</th>
+                                <th>Método</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vendas-tabela">
+                            <tr><td colspan="7" class="text-center">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Notificações Page -->
+            <div id="notificacoes-page" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-bell"></i> Notificações</h1>
+                    <button class="btn btn-secondary" onclick="marcarTodasLidas()">
+                        <i class="fas fa-check-double"></i> Marcar todas como lidas
+                    </button>
+                </div>
+                
+                <div class="notifications-list" id="notificacoes-container">
+                    <div class="loading">Carregando notificações...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Produto -->
+    <div class="modal fade" id="produtoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar/Editar Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="produto-form">
+                        <input type="hidden" id="produto-id">
+                        
+                        <div class="mb-3">
+                            <label for="produto-nome" class="form-label">Nome do Produto *</label>
+                            <input type="text" class="form-control" id="produto-nome" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="produto-descricao" class="form-label">Descrição *</label>
+                            <textarea class="form-control" id="produto-descricao" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="produto-preco" class="form-label">Preço (R$) *</label>
+                                <input type="number" step="0.01" class="form-control" id="produto-preco" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="produto-estoque" class="form-label">Estoque *</label>
+                                <input type="number" class="form-control" id="produto-estoque" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="produto-categoria" class="form-label">Categoria *</label>
+                                <select class="form-control" id="produto-categoria" required>
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="produto-imagem" class="form-label">URL da Imagem</label>
+                            <input type="text" class="form-control" id="produto-imagem" placeholder="https://...">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/vendedor.js') }}"></script>
+</body>
+</html>

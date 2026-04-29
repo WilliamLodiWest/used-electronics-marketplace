@@ -159,25 +159,37 @@
 </div>
 
 <!-- ==================== RESET SENHA ==================== -->
-<!-- IMPORTANTE: essa tela depende do token vindo da URL -->
 <div id="resetPasswordScreen" class="reset-container" style="display: none;">
-    <form class="form" method="POST">
+    <form class="form" method="POST" action="" id="resetPasswordForm">
         <div class="form-header">
             <h1>Redefinir Senha</h1>
+            {% if nome_cliente %}
+            <p>Olá, {{ nome_cliente }}!</p>
+            {% endif %}
         </div>
 
+        {% if erro %}
+        <div class="alert alert-danger">{{ erro }}</div>
+        {% endif %}
+
+        <div class="flex-column">
+            <label>Nova Senha</label>
+        </div>
         <div class="inputForm">
             <input type="password" name="nova_senha" class="input" placeholder="Nova senha" required>
         </div>
 
+        <div class="flex-column">
+            <label>Confirmar Senha</label>
+        </div>
         <div class="inputForm">
             <input type="password" name="confirmar_senha" class="input" placeholder="Confirmar senha" required>
         </div>
 
-        <button type="submit" class="button-submit">Redefinir</button>
+        <button type="submit" class="button-submit">Redefinir Senha</button>
 
-        <div class="back-link">
-            <a href="{{ url_for('produto.login') }}">Voltar ao login</a>
+        <div class="back-link" style="margin-top: 20px; text-align: center;">
+            <a href="#" onclick="showLogin(); return false;" class="span">← Voltar para o login</a>
         </div>
     </form>
 </div>

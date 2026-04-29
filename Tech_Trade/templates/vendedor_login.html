@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Restrito - TechTrade</title>
+
+    <!-- SEU CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vendedor.css') }}">
+</head>
+
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div class="login-container">
+
+    <form method="POST" action="{{ url_for('produto.vendedor_login') }}" class="form login-form">
+
+        <!-- HEADER -->
+        <div class="form-header">
+            <h1> Área Restrita</h1>
+            <p>Acesso exclusivo da administração</p>
+        </div>
+
+        <!-- ALERTAS -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- EMAIL -->
+        <div class="inputForm">
+            <svg width="20" viewBox="0 0 24 24" fill="none">
+                <path d="M3 8L12 13L21 8" stroke="currentColor" stroke-width="2"/>
+                <path d="M5 19H19V5H5V19Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input 
+                type="email" 
+                name="email" 
+                class="input" 
+                placeholder="seu@email.com"
+                required
+            >
+        </div>
+
+        <!-- SENHA -->
+        <div class="inputForm">
+            <svg width="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 15V17" stroke="currentColor" stroke-width="2"/>
+                <path d="M6 21H18V9H6V21Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+
+            <input 
+                type="password" 
+                id="senha"
+                name="senha" 
+                class="input" 
+                placeholder="Digite sua senha"
+                required
+            >
+
+            <svg class="toggle-password" onclick="togglePassword()" width="20" viewBox="0 0 24 24">
+                <path d="M12 5C7 5 3 9 2 12C3 15 7 19 12 19C17 19 21 15 22 12C21 9 17 5 12 5Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <!-- BOTÃO -->
+        <button type="submit" class="button-submit">
+            Acessar Painel
+        </button>
+
+        <!-- VOLTAR -->
+        <p class="p">
+            <a href="{{ url_for('produto.home') }}" class="span">
+                ← Voltar para a loja
+            </a>
+        </p>
+
+    </form>
+</div>
+
+<!-- ==================== JS ==================== -->
+<script>
+
+function togglePassword() {
+    const input = document.getElementById('senha');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+    }
+}
+
+// Evitar múltiplos envios
+document.querySelector('.login-form')?.addEventListener('submit', function(e) {
+    const btn = this.querySelector('.button-submit');
+
+    if (btn.disabled) {
+        e.preventDefault();
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = 'Acessando...';
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Senha - TechTrade</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index_login.css') }}">
+</head>
+<body>
+    <div class="recovery-container">
+        <form class="form" method="POST" action="{{ url_for('produto.esqueceu_senha') }}">
+            <div class="form-header">
+                <h1>Recuperar Senha</h1>
+                <p>Digite seu e-mail para receber as instruções</p>
+            </div>
+
+            {% if erro %}
+            <div class="alert alert-danger">{{ erro }}</div>
+            {% endif %}
+
+            {% if link_debug %}
+            <div class="alert alert-success" style="margin-bottom: 20px;">
+                <p><strong>Link de recuperação gerado:</strong></p>
+                <a href="{{ link_debug }}" target="_blank">{{ link_debug }}</a>
+                <p style="margin-top: 10px; font-size: 12px;">(Este link só aparece em modo de desenvolvimento)</p>
+            </div>
+            {% endif %}
+
+            <div class="flex-column">
+                <label>E-mail cadastrado</label>
+            </div>
+            <div class="inputForm">
+                <svg height="20" viewBox="0 0 32 32" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455z"/>
+                </svg>
+                <input type="email" class="input" name="email" placeholder="Informe o seu e-mail" required>
+            </div>
+
+            <button type="submit" class="button-submit">Enviar Link de Recuperação</button>
+
+            <div class="back-link" style="margin-top: 20px; text-align: center;">
+                <a href="{{ url_for('produto.login') }}" class="span" 
+                   style="text-decoration: none; color: var(--accent);">← Voltar para o login</a>
+            </div>
+        </form>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>TechTrade</h3>
+                <p>O marketplace mais confiável para compra e venda de eletrônicos usados.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Links Rápidos</h3>
+                <ul>
+                    <li><a href="{{ url_for('produto.home') }}">Home</a></li>
+                    <li><a href="{{ url_for('produto.renderizar_produtos') }}">Catálogo</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contato</h3>
+                <ul>
+                    <li>contato@techtrade.com</li>
+                    <li>(11) 9999-9999</li>
+                    <li>São Paulo, SP</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 TechTrade. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+</body>
+</html>

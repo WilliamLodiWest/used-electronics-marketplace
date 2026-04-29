@@ -1190,3 +1190,753 @@ main {
         margin-right: auto;
     }
 }
+/* ===========================
+   SEÇÃO DE PRODUTOS - ESTILOS
+   =========================== */
+
+.produtos-section {
+    padding: 5rem 5%;
+    background-color: var(--light-bg);
+}
+
+.section-subtitle {
+    text-align: center;
+    color: var(--gray-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+/* Barra de pesquisa e filtro */
+.search-filter-bar {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-box {
+    flex: 2;
+    min-width: 250px;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 50px;
+    padding: 0.8rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+    border-color: var(--secondary-color);
+    box-shadow: 0 2px 15px rgba(81, 130, 255, 0.2);
+}
+
+.search-box i {
+    color: var(--gray-text);
+    font-size: 1.2rem;
+    margin-right: 0.8rem;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    padding: 0.5rem 0;
+    font-size: 1rem;
+    background: transparent;
+    outline: none;
+}
+
+.filter-select {
+    min-width: 180px;
+    padding: 0.8rem 1.2rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 50px;
+    background: white;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+    border-color: var(--secondary-color);
+}
+
+.btn-clear-filter {
+    background: #f0f0f0;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--dark-text);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-clear-filter:hover {
+    background: #e0e0e0;
+}
+
+/* Contador de produtos */
+.products-counter {
+    max-width: 1200px;
+    margin: 0 auto 1.5rem auto;
+    text-align: right;
+    color: var(--gray-text);
+    font-size: 0.9rem;
+}
+
+.products-counter span {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Grade de produtos - GRID RESPONSIVO */
+.produtos-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+/* Card do produto */
+.produto-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.produto-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.produto-imagem {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #f5f5f5;
+}
+
+.produto-info {
+    padding: 1.5rem;
+}
+
+.produto-nome {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--dark-text);
+}
+
+.produto-descricao {
+    font-size: 0.85rem;
+    color: var(--gray-text);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.produto-preco {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.produto-preco small {
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: var(--gray-text);
+}
+
+.produto-categoria {
+    display: inline-block;
+    background: #f0f0f0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    margin-bottom: 1rem;
+}
+
+.produto-actions {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.btn-detalhes {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+    padding: 0.6rem 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-detalhes:hover {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.btn-comprar {
+    flex: 1;
+    background: linear-gradient(135deg, #5182ff 0%, #7dcdff 100%);
+    border: none;
+    color: white;
+    padding: 0.6rem 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-comprar:hover {
+    transform: scale(1.02);
+    box-shadow: 0 3px 10px rgba(81, 130, 255, 0.4);
+}
+
+/* Loading spinner */
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    color: var(--gray-text);
+}
+
+.loading-spinner i {
+    margin-right: 0.5rem;
+}
+
+/* Mensagem sem resultados */
+.no-results {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 15px;
+    max-width: 500px;
+    margin: 2rem auto;
+}
+
+.no-results i {
+    font-size: 3rem;
+    color: var(--gray-text);
+    margin-bottom: 1rem;
+}
+
+.no-results h3 {
+    margin-bottom: 0.5rem;
+    color: var(--dark-text);
+}
+
+.no-results p {
+    color: var(--gray-text);
+}
+
+/* RESPONSIVIDADE DA SEÇÃO DE PRODUTOS */
+@media (max-width: 768px) {
+    .produtos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .search-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+    
+    .btn-clear-filter {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .products-counter {
+        text-align: center;
+    }
+    
+    .produto-actions {
+        flex-direction: column;
+    }
+    
+    .produto-info {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .produtos-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .produto-imagem {
+        height: 180px;
+    }
+    
+    .produto-nome {
+        font-size: 1rem;
+    }
+    
+    .produto-preco {
+        font-size: 1.2rem;
+    }
+}
+/* ===========================
+   MODAIS PROFISSIONAIS
+   =========================== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    animation: modalFadeIn 0.3s ease;
+}
+
+.modal-small {
+    max-width: 450px;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-header h3 {
+    color: white;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: white;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-produto-imagem {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-produto-imagem img {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: 15px;
+    object-fit: cover;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.modal-produto-info h2 {
+    font-size: 1.5rem;
+    color: var(--dark-text);
+    margin-bottom: 0.5rem;
+}
+
+.modal-categoria {
+    display: inline-block;
+    background: #f0f0f0;
+    padding: 0.25rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--gray-text);
+    margin-bottom: 1rem;
+}
+
+.modal-descricao {
+    color: var(--gray-text);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.modal-preco {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.preco-label {
+    font-size: 0.9rem;
+    color: var(--gray-text);
+}
+
+.preco-valor {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.modal-vendedor {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-text);
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+}
+
+.modal-vendedor i {
+    color: var(--secondary-color);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    border-radius: 0 0 20px 20px;
+}
+
+.btn-modal-primary {
+    background: linear-gradient(135deg, #5182ff 0%, #7dcdff 100%);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.8rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-modal-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(81, 130, 255, 0.4);
+}
+
+.btn-modal-secondary {
+    background: transparent;
+    border: 1px solid #ddd;
+    color: var(--dark-text);
+    padding: 0.8rem 1.8rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-modal-secondary:hover {
+    background: #f0f0f0;
+    border-color: #ccc;
+}
+
+/* Modal de Compra */
+.compra-produto-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.compra-produto-info img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.compra-detalhes h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: var(--dark-text);
+}
+
+.compra-preco {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.compra-alerta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 10px;
+}
+
+.compra-alerta i {
+    font-size: 1.5rem;
+    color: #ffc107;
+}
+
+.compra-alerta p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.9rem;
+}
+
+/* Scrollbar do modal */
+.modal-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.modal-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsividade dos Modais */
+@media (max-width: 768px) {
+    .modal-container {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        flex-direction: column;
+    }
+    
+    .btn-modal-primary,
+    .btn-modal-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .compra-produto-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .compra-alerta {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+.user-menu {
+    position: relative;
+    cursor: pointer;
+}
+
+/* botão com nome + seta */
+.user-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* seta */
+.arrow-down {
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 4px;
+    transform: rotate(45deg);
+    margin-top: -3px;
+}
+
+/* dropdown escondido */
+.dropdown {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    background: #fff;
+    border-radius: 8px;
+    min-width: 140px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+    z-index: 1000;
+}
+
+/* link dentro */
+.dropdown a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.3s;
+}
+
+.dropdown a:hover {
+    background: #f1f1f1;
+}
+
+/* MOSTRAR ao passar o mouse */
+.user-menu:hover .dropdown {
+    display: block;
+}
+.dropdown {
+    display: none;
+}
+
+.dropdown.active {
+    display: block;
+}
+/* ========== ACESSO SECRETO DO VENDEDOR ========== */
+.vendedor-secret-access {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    opacity: 0.3;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.vendedor-secret-access:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.vendedor-secret-access i {
+    color: white;
+    font-size: 20px;
+}
+
+/* Opcional: esconder completamente (só aparece no hover do footer) */
+.vendedor-secret-access {
+    opacity: 0;
+}
+
+.vendedor-secret-access:hover {
+    opacity: 0.8;
+}
+
+/* Ou você pode deixar apenas no canto inferior direito do footer */
+footer:hover .vendedor-secret-access {
+    opacity: 0.5;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .vendedor-secret-access {
+        width: 40px;
+        height: 40px;
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .vendedor-secret-access i {
+        font-size: 18px;
+    }
+}

@@ -10,138 +10,230 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/produtos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="produtos.css">
 </head>
 
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar">
-    <ul class="nav-links">
-        <li><a href="{{ url_for('produto.home') }}">HOME</a></li>
-        <li><a href="#sobre">SOBRE</a></li>
-        <li><a href="{{ url_for('produto.suporte_comprador') }}">SUPORTE</a></li>
+<header>
+    <!-- NAVBAR -->
+    <nav class="navbar-custom">
+        <div class="container nav-container">
 
-        {% if session.get('usuario_logado') %}
-            <li><a href="#" class="btn-login">{{ session.get('usuario_nome') }}</a></li>
-        {% else %}
-            <li><a href="{{ url_for('produto.login') }}" class="btn-login">LOGIN</a></li>
-        {% endif %}
-    </ul>
+            <div class="logo">
+                <h2>TechTrade</h2>
+            </div>
 
-    <div class="menu-mobile" id="menuMobile">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-</nav>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('produto.home') }}">Home</a></li>
+                <li><a href="#sobre">Sobre</a></li>
+                <li><a href="{{ url_for('produto.suporte_comprador') }}">Suporte</a></li>
 
-<!-- HEADER -->
-<section class="produtos-header">
-    <div class="container text-center">
-        <h1>Nossos Produtos</h1>
-        <p>Encontre os melhores eletrônicos</p>
-    </div>
-</section>
+                {% if session.get('usuario_logado') %}
+                    <li><a href="#" class="btn-login">{{ session.get('usuario_nome') }}</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('produto.login') }}" class="btn-login">Login</a></li>
+                {% endif %}
+            </ul>
 
-<!-- MAIN -->
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <section class="produtos-header">
+        <div class="container text-center">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Compra segura • Entrega rápida</span>
+                </div>
+                <h1>Nossos Produtos</h1>
+                <p>Encontre os melhores eletrônicos com segurança e escolha por categoria, condição e preço.</p>
+                <div class="hero-actions">
+                    <a class="hero-btn hero-btn-ghost" href="{{ url_for('produto.suporte_comprador') }}">
+                        <i class="fa-regular fa-circle-question"></i>
+                        Falar com suporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</header>
+
 <main class="produtos-main">
-<div class="container">
-<div class="produtos-layout">
+    <div class="container">
 
-<!-- SIDEBAR COMPLETA -->
-<aside class="filtros-sidebar">
+        <div class="produtos-layout">
 
-    <div class="filtros-header">
-        <h3>Filtros</h3>
-        <button type="button" id="btnLimparFiltros" class="btn-limpar">Limpar</button>
+            <button
+                id="btnToggleFiltrosMobile"
+                class="btn-toggle-filtros-mobile"
+                type="button"
+                aria-expanded="false"
+                aria-controls="filtrosSidebar"
+            >
+                <i class="fa-solid fa-sliders"></i>
+                <span>Mostrar filtros</span>
+            </button>
+
+            <!-- SIDEBAR -->
+            <aside id="filtrosSidebar" class="filtros-sidebar is-collapsed-mobile">
+
+                <div class="filtros-header">
+                    <h3>Filtros</h3>
+                    <button id="btnLimparFiltros">Limpar</button>
+                </div>
+
+                <input type="text" id="buscaProduto" placeholder="Buscar produto...">
+
+                <h4>Categorias</h4>
+                <div id="categoriasLista"></div>
+
+                <h4>Condição</h4>
+                <label class="filtro-item">Novo <input type="checkbox" value="novo"></label>
+                <label class="filtro-item">Seminovo <input type="checkbox" value="seminovo"></label>
+                <label class="filtro-item">Usado <input type="checkbox" value="usado"></label>
+
+                <h4>Preço</h4>
+                <input type="number" id="precoMin" placeholder="Mínimo">
+                <input type="number" id="precoMax" placeholder="Máximo">
+                <button onclick="filtrarPorPreco()">Aplicar</button>
+
+            </aside>
+
+            <!-- PRODUTOS -->
+            <section class="produtos-content">
+                <div class="content-surface">
+
+                <div class="top-bar toolbar">
+                    <div class="toolbar-right">
+                        <label class="sort-control" aria-label="Ordenar produtos">
+                            <i class="fa-solid fa-arrow-up-wide-short"></i>
+                            <select class="sort-select">
+                                <option selected>Ordenar: Relevância</option>
+                                <option>Menor preço</option>
+                                <option>Maior preço</option>
+                                <option>A-Z</option>
+                            </select>
+                        </label>
+                        <div class="view-toggles" aria-label="Visualização">
+                            <button class="view-btn is-active" type="button" title="Grade">
+                                <i class="fa-solid fa-border-all"></i>
+                            </button>
+                            <button class="view-btn" type="button" title="Lista" disabled>
+                                <i class="fa-solid fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="gridProdutos" class="produtos-grid"></div>
+                <div id="gridSkeleton" class="produtos-grid grid-skeleton" aria-hidden="true">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+
+                <div id="semResultados" class="sem-resultados">
+                    <h3>Nenhum produto encontrado</h3>
+                    <p>Tente remover filtros ou ajustar a busca.</p>
+                </div>
+
+                <div id="paginacao"></div>
+
+                </div>
+            </section>
+
+        </div>
+
     </div>
-
-    <!-- BUSCA -->
-    <input type="text" id="buscaProduto" placeholder="Buscar produto...">
-
-    <!-- CATEGORIAS -->
-    <h4>Categorias</h4>
-    <div id="categoriasLista"></div>
-
-    <!-- CONDIÇÃO -->
-    <h4>Condição</h4>
-    <label class="filtro-item">Novo <input type="checkbox" name="condicao" value="novo"></label>
-    <label class="filtro-item">Seminovo <input type="checkbox" name="condicao" value="seminovo"></label>
-    <label class="filtro-item">Usado <input type="checkbox" name="condicao" value="usado"></label>
-
-    <!-- PREÇO -->
-    <h4>Preço</h4>
-    <input type="number" id="precoMin" placeholder="Min">
-    <input type="number" id="precoMax" placeholder="Max">
-    <button onclick="filtrarPorPreco()">Aplicar</button>
-
-</aside>
-
-<!-- PRODUTOS -->
-<section class="produtos-content">
-
-    <div id="totalProdutos">Carregando...</div>
-
-    <div id="gridProdutos" class="produtos-grid"></div>
-
-    <div id="paginacao"></div>
-
-    <div id="semResultados" style="display:none;">
-        <h3>Nenhum produto encontrado</h3>
-    </div>
-
-</section>
-
-</div>
-</div>
 </main>
 
-<!-- MODAL DETALHES -->
-<div class="modal fade" id="modalDetalhesProduto">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 id="detalhe-nome"></h5>
-                <button class="btn-close" data-bs-dismiss="modal"></button>
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo">TechTrade</div>
+                <p class="footer-text">Marketplace de compra e venda de eletrônicos com foco em confiança e transparência.</p>
+                <div class="footer-badges" aria-label="Destaques">
+                    <span class="footer-pill"><i class="fa-solid fa-shield-halved"></i> Compra segura</span>
+                    <span class="footer-pill"><i class="fa-solid fa-headset"></i> Suporte</span>
+                </div>
             </div>
 
-            <div class="modal-body">
-                <img id="detalhe-imagem" class="img-fluid mb-3">
-                <p id="detalhe-descricao"></p>
-                <p><b>Categoria:</b> <span id="detalhe-categoria"></span></p>
-                <p><b>Preço:</b> R$ <span id="detalhe-preco"></span></p>
-                <p><b>Vendedor:</b> <span id="detalhe-vendedor"></span></p>
-            </div>
+            <nav class="footer-links" aria-label="Categorias">
+                <h4>Categorias</h4>
+                <a href="#gridProdutos"><i class="fa-solid fa-mobile-screen-button"></i> Celulares</a>
+                <a href="#gridProdutos"><i class="fa-solid fa-laptop"></i> Notebooks</a>
+                <a href="#gridProdutos"><i class="fa-solid fa-keyboard"></i> Periféricos</a>
+                <a href="#gridProdutos"><i class="fa-solid fa-headphones"></i> Áudio</a>
+            </nav>
 
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                <button class="btn btn-primary" id="btn-comprar">Comprar</button>
+            <div class="footer-links" aria-label="Ajuda">
+                <h4>Ajuda</h4>
+                <a href="{{ url_for('produto.suporte_comprador') }}"><i class="fa-solid fa-headset"></i> Central de ajuda</a>
+                <a href="{{ url_for('produto.suporte_comprador') }}"><i class="fa-regular fa-circle-question"></i> Falar com suporte</a>
             </div>
+        </div>
 
+        <div class="footer-bottom">
+            <span>&copy; 2026 TechTrade</span>
+            <span class="footer-sep">•</span>
+            <span>Todos os direitos reservados</span>
         </div>
     </div>
-</div>
-
-<!-- MODAL LOGIN -->
-<div class="modal fade" id="modalLoginNecessario">
-    <div class="modal-dialog">
-        <div class="modal-content p-3">
-            <p>Faça login para continuar</p>
-            <a href="{{ url_for('produto.login') }}" class="btn btn-primary">Login</a>
-        </div>
-    </div>
-</div>
-
-<!-- FOOTER -->
-<footer class="footer text-center">
-    <p>&copy; 2026 TechTrade</p>
 </footer>
 
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 <script src="{{ url_for('static', filename='js/techtrade_produtos.js') }}"></script>
+<script>
+    (function () {
+        const toggleButton = document.getElementById("btnToggleFiltrosMobile");
+        const filtrosSidebar = document.getElementById("filtrosSidebar");
+        const mobileBreakpoint = window.matchMedia("(max-width: 992px)");
+
+        if (!toggleButton || !filtrosSidebar) {
+            return;
+        }
+
+        function syncByViewport() {
+            const isMobile = mobileBreakpoint.matches;
+            if (isMobile) {
+                if (!filtrosSidebar.classList.contains("is-open-mobile")) {
+                    filtrosSidebar.classList.add("is-collapsed-mobile");
+                    toggleButton.setAttribute("aria-expanded", "false");
+                    toggleButton.querySelector("span").textContent = "Mostrar filtros";
+                }
+            } else {
+                filtrosSidebar.classList.remove("is-collapsed-mobile", "is-open-mobile");
+                toggleButton.setAttribute("aria-expanded", "true");
+                toggleButton.querySelector("span").textContent = "Filtros";
+            }
+        }
+
+        toggleButton.addEventListener("click", function () {
+            if (!mobileBreakpoint.matches) {
+                return;
+            }
+
+            const isCollapsed = filtrosSidebar.classList.contains("is-collapsed-mobile");
+            filtrosSidebar.classList.toggle("is-collapsed-mobile", !isCollapsed);
+            filtrosSidebar.classList.toggle("is-open-mobile", isCollapsed);
+            toggleButton.setAttribute("aria-expanded", isCollapsed ? "true" : "false");
+            toggleButton.querySelector("span").textContent = isCollapsed ? "Ocultar filtros" : "Mostrar filtros";
+        });
+
+        mobileBreakpoint.addEventListener("change", syncByViewport);
+        syncByViewport();
+    })();
+</script>
 
 </body>
 </html>
