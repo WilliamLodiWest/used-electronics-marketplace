@@ -179,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
         userTrigger.addEventListener('click', function (e) {
             e.stopPropagation();
             dropdown.classList.toggle('active');
+            userTrigger.setAttribute('aria-expanded', dropdown.classList.contains('active'));
         });
 
         dropdown.addEventListener('click', function (e) {
@@ -187,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.addEventListener('click', function () {
             dropdown.classList.remove('active');
+            userTrigger.setAttribute('aria-expanded', 'false');
         });
     }
 
@@ -238,6 +240,116 @@ document.addEventListener('DOMContentLoaded', function () {
     function fecharModalCompra() {
         const modal = document.getElementById('modalCompra');
         if (modal) modal.classList.remove('active');
+    }
+
+    // ================= CHAT DE SUPORTE =================
+    const supportChatModal = document.getElementById('supportChatModal');
+    const openSupportChat = document.getElementById('openSupportChat');
+    const closeSupportChat = document.getElementById('closeSupportChat');
+    const supportChatForm = document.getElementById('supportChatForm');
+    const supportChatInput = document.getElementById('supportChatInput');
+    const supportChatWindow = document.getElementById('supportChatWindow');
+    let supportChatHistory = [];
+
+    function appendSupportChatMessage(text, sender) {
+        if (!supportChatWindow) return;
+        const message = document.createElement('div');
+        message.className = `support-chat-message support-chat-message--${sender}`;
+        message.textContent = text;
+        supportChatWindow.appendChild(message);
+        supportChatWindow.scrollTop = supportChatWindow.scrollHeight;
+    }
+
+    function getSupportBotReplyLocal(userText) {
+        const normalized = userText.toLowerCase();
+        if (normalized.includes('entrega') || normalized.includes('frete') || normalized.includes('rastre')) {
+            return 'Fazemos entregas para todo o Brasil. Para rastrear, use sua conta ou escreva para suporte@techtrade.com com o número do pedido.';
+        }
+        if (normalized.includes('pagamento') || normalized.includes('cartao') || normalized.includes('pix') || normalized.includes('boleto')) {
+            return 'Aceitamos cartão, Pix e boleto, com processamento seguro. Dúvidas em cobrança: suporte@techtrade.com.';
+        }
+        if (normalized.includes('garantia') || normalized.includes('troca') || normalized.includes('devolu')) {
+            return 'Há política de garantia e devolução. Para seu caso específico, use suporte@techtrade.com ou (11) 4004-1234.';
+        }
+        if (normalized.includes('produto') || normalized.includes('preco')) {
+            return 'Veja a seção Produtos no site. Se disser categoria e faixa de preço, ajudo nos próximos passos.';
+        }
+        return 'Não consegui conectar ao assistente agora. Tente de novo ou use suporte@techtrade.com ou (11) 4004-1234.';
+    }
+
+    function abrirSupportChatModal() {
+        if (!supportChatModal) return;
+        supportChatModal.classList.add('active');
+        supportChatModal.setAttribute('aria-hidden', 'false');
+        if (supportChatInput) supportChatInput.focus();
+    }
+
+    function fecharSupportChatModal() {
+        if (!supportChatModal) return;
+        supportChatModal.classList.remove('active');
+        supportChatModal.setAttribute('aria-hidden', 'true');
+    }
+
+    if (openSupportChat) {
+        openSupportChat.addEventListener('click', function (event) {
+            event.preventDefault();
+            abrirSupportChatModal();
+        });
+    }
+
+    if (closeSupportChat) {
+        closeSupportChat.addEventListener('click', fecharSupportChatModal);
+    }
+
+    if (supportChatForm) {
+        supportChatForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            if (!supportChatInput) return;
+
+            const userMessage = supportChatInput.value.trim();
+            if (!userMessage) return;
+
+            const submitBtn = supportChatForm.querySelector('button[type="submit"]');
+            const prevBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+            appendSupportChatMessage(userMessage, 'user');
+            supportChatInput.value = '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            }
+
+            try {
+                const response = await fetch('/techtrade/chat_suporte', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        history: supportChatHistory,
+                    }),
+                });
+                const data = await response.json().catch(() => ({}));
+                let reply = data.reply;
+                if (!response.ok || !reply) {
+                    reply = data.erro || getSupportBotReplyLocal(userMessage);
+                }
+                appendSupportChatMessage(reply, 'bot');
+                supportChatHistory.push({ role: 'user', content: userMessage });
+                supportChatHistory.push({ role: 'assistant', content: reply });
+                if (supportChatHistory.length > 24) {
+                    supportChatHistory = supportChatHistory.slice(-24);
+                }
+            } catch (err) {
+                console.error(err);
+                appendSupportChatMessage(getSupportBotReplyLocal(userMessage), 'bot');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = prevBtnHtml;
+                }
+                supportChatInput.focus();
+            }
+        });
     }
 
     // ================= CARREGAR PRODUTOS DA API =================
@@ -316,9 +428,10 @@ document.addEventListener('DOMContentLoaded', function () {
         
         grid.style.display = 'grid';
         if (noResults) noResults.style.display = 'none';
-        if (productCount) productCount.textContent = produtosFiltrados.length;
+    const produtosParaExibir = produtosFiltrados.slice(0, 3);
+    if (productCount) productCount.textContent = produtosParaExibir.length;
         
-        grid.innerHTML = produtosFiltrados.map(produto => `
+    grid.innerHTML = produtosParaExibir.map(produto => `
             <div class="produto-card" data-id="${produto.id}">
                 <img src="${produto.imagem}" alt="${produto.nome}" class="produto-imagem" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=Sem+Imagem'">
                 <div class="produto-info">
@@ -387,6 +500,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target === modalCompra) {
             fecharModalCompra();
         }
+
+        if (event.target === supportChatModal) {
+            fecharSupportChatModal();
+        }
     });
 
     // ================= FECHAR MODAIS COM TECLA ESC =================
@@ -394,6 +511,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.key === 'Escape') {
             fecharModalDetalhes();
             fecharModalCompra();
+            fecharSupportChatModal();
         }
     });
 
@@ -427,3 +545,73 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// ================= VENDEDOR LOGIN / ACESSO SECRETO =================
+window.togglePassword = function () {
+    const input = document.getElementById('senha');
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    const loginForm = document.querySelector('.login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+            const btn = this.querySelector('.button-submit');
+            if (!btn) return;
+            if (btn.disabled) {
+                e.preventDefault();
+                return;
+            }
+            btn.disabled = true;
+            btn.innerText = 'Acessando...';
+        });
+    }
+
+    const vendedorLoginUrl = document.body?.dataset?.vendedorLoginUrl;
+    if (!vendedorLoginUrl) return;
+
+    window.acessarPainelVendedor = function () {
+        window.location.href = vendedorLoginUrl;
+    };
+
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+            e.preventDefault();
+            window.acessarPainelVendedor();
+        }
+    });
+
+    const logo = document.querySelector('.logo');
+    if (logo) {
+        let clickCount = 0;
+        let timer;
+        logo.addEventListener('click', function () {
+            clickCount++;
+            if (clickCount === 5) {
+                window.acessarPainelVendedor();
+                clickCount = 0;
+            }
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                clickCount = 0;
+            }, 1000);
+        });
+    }
+});
+
+// Ajusta automaticamente o espaço da home para a navbar fixa
+(function () {
+    function syncHomeNavbarHeight() {
+        if (!document.body?.dataset?.vendedorLoginUrl) return;
+        const navbar = document.querySelector('.navbar');
+        if (!navbar) return;
+
+        const height = Math.ceil(navbar.getBoundingClientRect().height);
+        document.documentElement.style.setProperty('--home-navbar-height', `${height}px`);
+    }
+
+    window.addEventListener('load', syncHomeNavbarHeight);
+    window.addEventListener('resize', syncHomeNavbarHeight);
+    document.addEventListener('DOMContentLoaded', syncHomeNavbarHeight);
+})();

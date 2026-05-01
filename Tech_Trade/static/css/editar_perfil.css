@@ -1,0 +1,372 @@
+/* Página editar perfil — complementa index_login.css (layout comprador) */
+
+/* Coluna azul mais estreita (~30–36% da largura) para não sobrar “mar vazio”; formulário ganha espaço */
+@media (min-width: 921px) {
+    .page-editar-perfil .login-page--comprador {
+        grid-template-columns: minmax(280px, 0.38fr) minmax(340px, 1fr);
+    }
+}
+
+/* Painel azul: conteúdo no topo, tipografia maior, bloco usa melhor a largura da coluna */
+.page-editar-perfil .login-brand-panel--comprador {
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: clamp(32px, 4vw, 56px) clamp(28px, 3.5vw, 48px) clamp(28px, 3vh, 48px);
+}
+
+.page-editar-perfil .login-brand-content {
+    text-align: left;
+    width: 100%;
+    max-width: min(520px, 100%);
+}
+
+.page-editar-perfil .login-brand-mark {
+    width: clamp(72px, 8vw, 88px);
+    height: clamp(72px, 8vw, 88px);
+    border-radius: 18px;
+    margin-bottom: clamp(18px, 2.5vw, 26px);
+}
+
+.page-editar-perfil .login-brand-mark svg {
+    width: clamp(36px, 4.5vw, 44px);
+    height: clamp(36px, 4.5vw, 44px);
+}
+
+.page-editar-perfil .login-brand-kicker {
+    font-size: clamp(0.82rem, 1.1vw, 0.95rem);
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+}
+
+.page-editar-perfil .login-brand-title {
+    font-size: clamp(1.85rem, 2.8vw, 2.75rem);
+    line-height: 1.12;
+    margin-bottom: clamp(12px, 1.8vw, 18px);
+}
+
+.page-editar-perfil .login-brand-sub {
+    font-size: clamp(1.02rem, 1.35vw, 1.2rem);
+    line-height: 1.6;
+    max-width: 48ch;
+    margin-bottom: clamp(22px, 2.5vw, 28px);
+}
+
+.page-editar-perfil .login-brand-bullets {
+    align-items: stretch;
+    gap: clamp(12px, 1.5vw, 16px);
+    font-size: clamp(0.95rem, 1.15vw, 1.08rem);
+}
+
+.page-editar-perfil .login-brand-bullets li {
+    justify-content: flex-start;
+    line-height: 1.45;
+}
+
+.page-editar-perfil .login-dot {
+    width: 10px;
+    height: 10px;
+}
+
+.page-editar-perfil .login-shell {
+    align-items: flex-start;
+    padding-top: clamp(20px, 3vh, 40px);
+}
+
+.page-editar-perfil .login-container {
+    padding-top: clamp(12px, 3vw, 28px);
+    padding-bottom: clamp(12px, 4vw, 36px);
+}
+
+.page-editar-perfil .login-shell .form.editar-perfil-form {
+    max-width: min(720px, 100%);
+}
+
+.page-editar-perfil .login-shell .form-header h1 {
+    font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+}
+
+.page-editar-perfil .login-shell .form-header p {
+    font-size: clamp(0.98rem, 1.35vw, 1.12rem);
+}
+
+@media (max-width: 920px) {
+    .page-editar-perfil .login-brand-panel--comprador {
+        text-align: left;
+        padding: clamp(24px, 5vw, 36px) clamp(20px, 4vw, 28px);
+    }
+
+    .page-editar-perfil .login-brand-mark {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .page-editar-perfil .login-brand-bullets {
+        align-items: flex-start;
+    }
+
+    .page-editar-perfil .login-brand-bullets li {
+        justify-content: flex-start;
+    }
+}
+
+/* Foto do perfil */
+.editar-perfil-photo {
+    width: 100%;
+    padding: clamp(14px, 2.5vw, 20px);
+    margin-bottom: clamp(8px, 1.5vw, 14px);
+    border-radius: var(--radius-md, 14px);
+    border: 1px dashed rgba(81, 130, 255, 0.35);
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.06), rgba(16, 185, 129, 0.04));
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    outline: none;
+}
+
+.editar-perfil-photo:focus-visible {
+    border-color: rgba(81, 130, 255, 0.75);
+    box-shadow: 0 0 0 4px rgba(81, 130, 255, 0.22);
+}
+
+.editar-perfil-photo.is-dragging {
+    border-style: solid;
+    border-color: rgba(37, 99, 235, 0.65);
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.12), rgba(16, 185, 129, 0.08));
+    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.12);
+}
+
+.editar-perfil-photo-title {
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin: 0 0 6px;
+}
+
+.editar-perfil-photo-lead {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.45;
+    margin: 0 0 16px;
+}
+
+.editar-perfil-photo-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: clamp(16px, 3vw, 24px);
+}
+
+.editar-perfil-avatar-btn {
+    border: none;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.editar-perfil-avatar-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(81, 130, 255, 0.35);
+}
+
+.editar-perfil-avatar-wrap {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    display: block;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    background: linear-gradient(145deg, #5182ff, #22c55e);
+}
+
+.editar-perfil-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.editar-perfil-avatar-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.95);
+    gap: 4px;
+}
+
+.editar-perfil-avatar-fallback .fa-user {
+    font-size: 2rem;
+    opacity: 0.55;
+}
+
+.editar-perfil-avatar-fallback.has-initials .fa-user {
+    display: none;
+}
+
+.editar-perfil-avatar-initials {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+.editar-perfil-avatar-camera {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.82);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+
+.editar-perfil-photo-side {
+    flex: 1;
+    min-width: min(100%, 220px);
+}
+
+.editar-perfil-photo-choose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 320px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    background: linear-gradient(105deg, #5182ff 0%, #2563eb 100%);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    margin: 0;
+}
+
+.editar-perfil-photo-choose:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+}
+
+.editar-perfil-photo-secondary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.editar-perfil-photo-link {
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 0.9rem;
+    font-weight: 650;
+    color: #5182ff;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.editar-perfil-photo-link:hover {
+    color: #2563eb;
+}
+
+.editar-perfil-photo-link--warn {
+    color: #b45309;
+}
+
+.editar-perfil-photo-link--warn:hover {
+    color: #92400e;
+}
+
+.editar-perfil-photo-hint {
+    margin: 12px 0 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.45;
+    max-width: 42ch;
+}
+
+.editar-perfil-photo-msg {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    font-weight: 650;
+    color: #b91c1c;
+}
+
+@media (max-width: 480px) {
+    .editar-perfil-photo-choose {
+        max-width: none;
+    }
+}
+
+.editar-perfil-section {
+    width: 100%;
+    margin: 0;
+    padding-top: clamp(14px, 2.2vw, 22px);
+    margin-top: clamp(4px, 1vw, 10px);
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.editar-perfil-section-heading {
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin: 0 0 8px;
+}
+
+.editar-perfil-hint {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.45;
+    margin: 0 0 14px;
+}
+
+.page-editar-perfil .editar-perfil-form .inputForm {
+    margin-bottom: clamp(14px, 2vw, 20px);
+}
+
+.editar-perfil-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.editar-perfil-cancel {
+    display: inline-block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.editar-perfil-cancel:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .page-editar-perfil .login-shell .form.editar-perfil-form {
+        padding: 20px 16px;
+    }
+}

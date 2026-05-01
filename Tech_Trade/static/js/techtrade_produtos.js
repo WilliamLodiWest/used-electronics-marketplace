@@ -8,48 +8,42 @@ let usuarioLogadoGlobal = false;
 // INICIALIZAÇÃO
 // ==========================
 document.addEventListener("DOMContentLoaded", async function () {
-    // Verificar se o usuário está logado (vindo do HTML)
-    if (typeof usuarioLogado !== 'undefined') {
+
+    if (typeof usuarioLogado !== "undefined") {
         usuarioLogadoGlobal = usuarioLogado;
     }
-    
 
-    // Carregar categorias e produtos
     await Promise.all([
         consultarCategorias(),
         carregarProdutos()
     ]);
 
     configurarEventos();
-    
 });
 
 // ==========================
-// CONFIGURAR EVENTOS
+// EVENTOS
 // ==========================
 function configurarEventos() {
-    // Busca em tempo real
+
     const buscaInput = document.getElementById("buscaProduto");
     if (buscaInput) {
-        buscaInput.addEventListener("input", function() {
-            aplicarFiltros();
-        });
+        buscaInput.addEventListener("input", aplicarFiltros);
     }
 
-    // Botão limpar filtros
     const btnLimpar = document.getElementById("btnLimparFiltros");
     if (btnLimpar) {
         btnLimpar.addEventListener("click", limparFiltros);
     }
 
-    // Eventos para detalhes e compra (delegação)
-    document.body.addEventListener("click", function(e) {
+    document.body.addEventListener("click", function (e) {
+
         if (e.target.classList.contains("btn-detalhes")) {
             const data = e.target.getAttribute("data-produto");
             if (data) {
                 try {
                     mostrarDetalhesProduto(JSON.parse(data));
-                } catch(erro) {
+                } catch (erro) {
                     console.error("Erro ao parsear produto:", erro);
                 }
             }
@@ -63,29 +57,26 @@ function configurarEventos() {
 }
 
 // ==========================
-// CARREGAR PRODUTOS (API PÚBLICA - SEM LOGIN)
+// CARREGAR PRODUTOS
 // ==========================
 async function carregarProdutos() {
+
     const grid = document.getElementById("gridProdutos");
     const totalDiv = document.getElementById("totalProdutos");
-    
+
     if (!grid) return;
 
     try {
-        if (totalDiv) totalDiv.innerHTML = " Carregando produtos...";
-        
-        // ROTA PÚBLICA - não exige login
+
+        if (totalDiv) totalDiv.innerHTML = "Carregando produtos...";
+
         const resposta = await fetch("/techtrade/produtos/registros");
-        
+
         if (!resposta.ok) {
             throw new Error(`Erro HTTP: ${resposta.status}`);
         }
-        
-        const data = await resposta.json();
 
-        if (data.erro) {
-            throw new Error(data.erro);
-        }
+        const data = await resposta.json();
 
         todosProdutos = (data.json_produtos || []).map(p => ({
             id: p.id_produto,
@@ -93,43 +84,43 @@ async function carregarProdutos() {
             preco: p.preco,
             preco_formatado: p.preco_formatado,
             imagem: p.imagem,
-            descricao: p.descricao || "Sem descrição disponível",
+            descricao: p.descricao || "Sem descrição",
             categoria: p.categoria || "Outros",
             vendedor: p.criado_por || "TechTrade",
             verificado: p.verificado,
-            disponivel: p.disponivel
+            chave_nfe: (p.chave_nfe || "").trim(),
+            consulta_nfe_url: p.consulta_nfe_url || ""
         }));
 
         produtosFiltrados = [...todosProdutos];
-        
         renderizarProdutos();
 
     } catch (erro) {
-        console.error("Erro ao carregar produtos:", erro);
-        if (grid) {
-            grid.innerHTML = `<div class="alert-error"> Erro ao carregar produtos: ${erro.message}</div>`;
-        }
-        if (totalDiv) totalDiv.innerHTML = " Erro ao carregar produtos";
+
+        console.error(erro);
+
+        grid.innerHTML = `
+            <div class="alert-error">
+                Erro ao carregar produtos: ${erro.message}
+            </div>
+        `;
+
+        if (totalDiv) totalDiv.innerHTML = "Erro ao carregar produtos";
     }
 }
 
 // ==========================
-// CONSULTAR CATEGORIAS
+// CATEGORIAS
 // ==========================
 async function consultarCategorias() {
-    try {
-        const resposta = await fetch("/techtrade/categorias");
-        if (!resposta.ok) throw new Error();
-        
-        const categorias = await resposta.json();
-        const container = document.getElementById("categoriasLista");
-        
-        if (!container) return;
 
-        if (!categorias || categorias.length === 0) {
-            container.innerHTML = "<p>Nenhuma categoria encontrada</p>";
-            return;
-        }
+    try {
+
+        const resposta = await fetch("/techtrade/categorias");
+        const categorias = await resposta.json();
+
+        const container = document.getElementById("categoriasLista");
+        if (!container) return;
 
         container.innerHTML = categorias.map(cat => `
             <label class="filtro-item">
@@ -139,186 +130,128 @@ async function consultarCategorias() {
         `).join("");
 
     } catch (erro) {
-        console.error("Erro ao carregar categorias:", erro);
+        console.error("Erro categorias:", erro);
     }
 }
 
 // ==========================
-// APLICAR FILTROS
+// FILTROS
 // ==========================
-window.aplicarFiltros = function() {
+window.aplicarFiltros = function () {
+
     let resultados = [...todosProdutos];
-    
-    // Filtro de busca
+
     const termo = document.getElementById("buscaProduto")?.value.toLowerCase() || "";
+
     if (termo) {
         resultados = resultados.filter(p =>
             p.nome.toLowerCase().includes(termo) ||
             p.descricao.toLowerCase().includes(termo)
         );
     }
-    
-    // Filtro de categorias
+
     const categoriasSelecionadas = Array.from(
         document.querySelectorAll("#categoriasLista input:checked")
     ).map(cb => cb.value);
-    
+
     if (categoriasSelecionadas.length > 0) {
         resultados = resultados.filter(p =>
-            categoriasSelecionadas.includes((p.categoria || "").toLowerCase())
+            categoriasSelecionadas.includes(p.categoria.toLowerCase())
         );
     }
-    
-    // Filtro de preço
+
     const precoMin = parseFloat(document.getElementById("precoMin")?.value) || 0;
     const precoMax = parseFloat(document.getElementById("precoMax")?.value) || Infinity;
-    
-    resultados = resultados.filter(p => p.preco >= precoMin && p.preco <= precoMax);
-    
+
+    resultados = resultados.filter(p =>
+        p.preco >= precoMin && p.preco <= precoMax
+    );
+
     produtosFiltrados = resultados;
     paginaAtual = 1;
     renderizarProdutos();
 };
 
 // ==========================
-// FILTRAR POR PREÇO
+// LIMPAR
 // ==========================
-window.filtrarPorPreco = function() {
-    aplicarFiltros();
-};
+window.limparFiltros = function () {
 
-// ==========================
-// LIMPAR FILTROS
-// ==========================
-window.limparFiltros = function() {
-    // Limpar busca
-    const busca = document.getElementById("buscaProduto");
-    if (busca) busca.value = "";
-    
-    // Limpar preços
-    const precoMin = document.getElementById("precoMin");
-    const precoMax = document.getElementById("precoMax");
-    if (precoMin) precoMin.value = "";
-    if (precoMax) precoMax.value = "";
-    
-    // Limpar categorias
-    document.querySelectorAll("#categoriasLista input[type='checkbox']").forEach(cb => cb.checked = false);
-    
-    // Resetar produtos
+    document.getElementById("buscaProduto").value = "";
+    document.getElementById("precoMin").value = "";
+    document.getElementById("precoMax").value = "";
+
+    document.querySelectorAll("#categoriasLista input")
+        .forEach(cb => cb.checked = false);
+
     produtosFiltrados = [...todosProdutos];
-    paginaAtual = 1;
     renderizarProdutos();
 };
 
 // ==========================
-// RENDERIZAR PRODUTOS
+// RENDER
 // ==========================
 function renderizarProdutos() {
-    const grid = document.getElementById("gridProdutos");
-    const total = document.getElementById("totalProdutos");
-    const sem = document.getElementById("semResultados");
 
+    const grid = document.getElementById("gridProdutos");
     if (!grid) return;
 
     if (produtosFiltrados.length === 0) {
-        grid.innerHTML = "";
-        if (sem) sem.style.display = "block";
-        if (total) total.textContent = "📭 Nenhum produto encontrado";
-        const paginacao = document.getElementById("paginacao");
-        if (paginacao) paginacao.innerHTML = "";
+        grid.innerHTML = "<p>Nenhum produto encontrado</p>";
         return;
     }
-
-    if (sem) sem.style.display = "none";
 
     const inicio = (paginaAtual - 1) * produtosPorPagina;
-    const fim = inicio + produtosPorPagina;
-    const pagina = produtosFiltrados.slice(inicio, fim);
+    const pagina = produtosFiltrados.slice(inicio, inicio + produtosPorPagina);
 
-    grid.innerHTML = pagina.map(p => `
-        <div class="produto-card">
-            <img src="${p.imagem}" onerror="this.src='https://via.placeholder.com/300x200?text=Sem+Imagem'" alt="${p.nome}">
-            <h3 title="${p.nome}">${p.nome.length > 40 ? p.nome.substring(0, 40) + '...' : p.nome}</h3>
-            <p>${p.descricao.length > 60 ? p.descricao.substring(0, 60) + '...' : p.descricao}</p>
-            <strong>R$ ${p.preco_formatado || p.preco.toFixed(2)}</strong>
-            <button class="btn-detalhes" data-produto='${JSON.stringify(p).replace(/'/g, "&#39;")}'>
-                 Ver detalhes
-            </button>
-            <button class="btn-comprar-direto" data-id="${p.id}">
-                 Comprar
-            </button>
-        </div>
-    `).join("");
+    grid.innerHTML = pagina.map(p => {
 
-    if (total) {
-        total.textContent = ` Mostrando ${produtosFiltrados.length} produtos (${inicio + 1}-${Math.min(fim, produtosFiltrados.length)})`;
-    }
+        const selo = p.verificado
+            ? `<span class="badge bg-success">Verificado</span>`
+            : `<span class="badge bg-secondary">Pendente</span>`;
 
-    renderizarPaginacao();
+        return `
+            <div class="produto-card">
+                <img src="${p.imagem}" onerror="this.src='https://via.placeholder.com/300x200'">
+                <h3>${p.nome}</h3>
+                ${selo}
+                <p>${p.descricao}</p>
+                <strong>R$ ${p.preco_formatado}</strong>
+
+                <button class="btn-detalhes"
+                    data-produto='${JSON.stringify(p)}'>
+                    Detalhes
+                </button>
+
+                <button class="btn-comprar-direto"
+                    data-id="${p.id}">
+                    Comprar
+                </button>
+            </div>
+        `;
+    }).join("");
 }
 
 // ==========================
-// RENDERIZAR PAGINAÇÃO
-// ==========================
-function renderizarPaginacao() {
-    const container = document.getElementById("paginacao");
-    if (!container) return;
-
-    const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPagina);
-    
-    if (totalPaginas <= 1) {
-        container.innerHTML = "";
-        return;
-    }
-
-    container.innerHTML = "";
-
-    for (let i = 1; i <= totalPaginas; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = i;
-        btn.classList.add("pagina");
-        if (i === paginaAtual) btn.classList.add("active");
-
-        btn.onclick = () => {
-            paginaAtual = i;
-            renderizarProdutos();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        container.appendChild(btn);
-    }
-}
-
-// ==========================
-// MOSTRAR DETALHES DO PRODUTO
+// DETALHES
 // ==========================
 function mostrarDetalhesProduto(produto) {
+
     document.getElementById("detalhe-nome").textContent = produto.nome;
     document.getElementById("detalhe-descricao").textContent = produto.descricao;
-    document.getElementById("detalhe-preco").textContent = produto.preco_formatado || produto.preco.toFixed(2);
-    document.getElementById("detalhe-vendedor").textContent = produto.vendedor;
+    document.getElementById("detalhe-preco").textContent = produto.preco_formatado;
     document.getElementById("detalhe-imagem").src = produto.imagem;
-    document.getElementById("detalhe-categoria").textContent = produto.categoria;
-    
-    const btnComprar = document.getElementById("btn-comprar");
-    btnComprar.onclick = () => verificarLoginAntesCompra(produto.id);
-    
-    const modal = new bootstrap.Modal(document.getElementById("modalDetalhesProduto"));
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("modalDetalhesProduto")
+    );
+
     modal.show();
 }
 
 // ==========================
-// VERIFICAR LOGIN ANTES DA COMPRA
+// COMPRA
 // ==========================
 function verificarLoginAntesCompra(idProduto) {
     window.location.href = `/techtrade/produtos/checkout/${idProduto}`;
 }
-
-// Verificar se veio de um redirecionamento de compra
-document.addEventListener("DOMContentLoaded", function() {
-    const produtoPendente = localStorage.getItem("produto_para_comprar");
-    if (produtoPendente && usuarioLogadoGlobal) {
-        localStorage.removeItem("produto_para_comprar");
-        window.location.href = `/techtrade/produtos/checkout/${produtoPendente}`;
-    }
-});

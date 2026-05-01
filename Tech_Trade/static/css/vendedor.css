@@ -85,13 +85,231 @@ body {
     justify-content: center;
     align-items: center;
     flex-grow: 1;
-    padding: 30px;
+    padding: clamp(16px, 4vw, 30px);
+    min-height: 100vh;
+    position: relative;
+    z-index: 0;
+}
+
+.login-container::before,
+.cadastro-container::before,
+.recovery-container::before,
+.reset-container::before,
+.suporte-container::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(800px 420px at 18% 12%, rgba(59, 130, 246, 0.2), transparent 58%),
+        radial-gradient(720px 380px at 88% 78%, rgba(16, 185, 129, 0.14), transparent 58%),
+        linear-gradient(165deg, #f4f6fb 0%, #eef2fb 45%, #f8fafc 100%);
+}
+
+.page-vendedor-login .login-container::before {
+    display: none;
+}
+
+/* ========== Login vendedor – layout em duas colunas ========== */
+.login-page {
+    display: grid;
+    grid-template-columns: minmax(260px, 1.05fr) minmax(320px, 0.95fr);
+    width: 100%;
+    position: relative;
+    isolation: isolate;
+}
+
+/* Com rodapé: área principal flexível (body já é flex column em .vendedor.css) */
+body.page-vendedor-login .login-page {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.login-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(780px 400px at 92% 18%, rgba(59, 130, 246, 0.16), transparent 55%),
+        radial-gradient(680px 360px at 8% 88%, rgba(16, 185, 129, 0.12), transparent 56%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2fb 50%, #f4f6fb 100%);
+}
+
+body.page-vendedor-login > .footer {
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.login-brand-panel {
+    position: relative;
+    z-index: 1;
+    padding: clamp(28px, 5vw, 56px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(ellipse 520px 380px at 80% 20%, rgba(96, 165, 250, 0.35), transparent 55%),
+        radial-gradient(ellipse 420px 300px at 15% 75%, rgba(52, 211, 153, 0.22), transparent 52%),
+        linear-gradient(145deg, #070d2b 0%, #142a6e 42%, #1f3c88 100%);
+    color: #fff;
+    overflow: hidden;
+}
+
+.login-brand-glow {
+    position: absolute;
+    inset: -40% -20%;
+    background:
+        radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.14), transparent 42%),
+        radial-gradient(circle at 25% 70%, rgba(59, 130, 246, 0.35), transparent 46%);
+    pointer-events: none;
+}
+
+.login-brand-content {
+    position: relative;
+    max-width: 420px;
+}
+
+.login-brand-mark {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+}
+
+.login-brand-kicker {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.88;
+    margin-bottom: 8px;
+}
+
+.login-brand-title {
+    font-size: clamp(1.65rem, 4vw, 2.25rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    text-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+}
+
+.login-brand-sub {
+    font-size: clamp(0.92rem, 2vw, 1.05rem);
+    opacity: 0.88;
+    line-height: 1.55;
+    max-width: 36ch;
+    margin-bottom: 22px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.login-brand-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.login-brand-bullets li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #60a5fa, #34d399);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
+}
+
+.login-shell {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(16px, 4vw, 40px);
+}
+
+.login-page .login-container {
+    flex-grow: 0;
+    min-height: unset;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.login-page .login-container .form {
+    max-width: 420px;
+}
+
+@media (max-width: 900px) {
+    .login-page {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .login-brand-panel {
+        padding: 24px 22px 28px;
+        text-align: center;
+    }
+
+    .login-brand-mark {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .login-brand-sub {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .login-brand-bullets {
+        align-items: center;
+    }
+
+    .login-shell {
+        align-items: flex-start;
+        padding-top: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-brand-title {
+        font-size: 1.45rem;
+    }
+
+    .login-brand-bullets {
+        font-size: 0.85rem;
+        gap: 8px;
+    }
 }
 
 .form {
-    background: var(--surface);
-    border-radius: 24px;
-    padding: 40px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: clamp(28px, 5vw, 40px);
     width: 100%;
     max-width: 450px;
     box-shadow: var(--shadow-md);
@@ -118,26 +336,48 @@ body {
 }
 .form-header h1 {
     color: var(--text);
-    font-size: 2em;
+    font-size: clamp(1.45rem, 4vw, 2em);
+    font-weight: 800;
+    letter-spacing: -0.02em;
     margin-bottom: 8px;
+}
+.form-header h1::after {
+    content: "";
+    display: block;
+    width: 52px;
+    height: 4px;
+    margin: 14px auto 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--primary), rgba(16, 185, 129, 0.85));
 }
 .form-header p {
     color: var(--muted);
-    font-size: 0.95em;
+    font-size: clamp(0.88rem, 2.2vw, 0.95em);
+    font-weight: 500;
 }
 
 .inputForm {
-    border: 1.5px solid #ecedec;
-    border-radius: var(--radius-sm);
-    height: 55px;
+    border: 1.5px solid rgba(15, 23, 42, 0.1);
+    border-radius: var(--radius-md);
+    min-height: 52px;
+    height: auto;
     display: flex;
     align-items: center;
     padding: 0 15px;
-    transition: 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
     margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.75);
 }
 .inputForm:focus-within {
-    border-color: var(--primary);
+    border-color: rgba(59, 130, 246, 0.55);
+    box-shadow: 0 0 0 4px var(--ring);
+}
+.inputForm svg {
+    color: var(--muted);
+    flex-shrink: 0;
+}
+.inputForm:focus-within svg {
+    color: var(--primary);
 }
 .input {
     flex: 1;
@@ -166,20 +406,22 @@ body {
 }
 
 .button-submit {
-    background-color: var(--primary);
+    background: linear-gradient(105deg, var(--primary), var(--primary-600));
     color: white;
     border: none;
-    border-radius: var(--radius-sm);
-    height: 55px;
+    border-radius: var(--radius-md);
+    min-height: 52px;
+    height: auto;
     width: 100%;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
     font-size: 16px;
+    box-shadow: 0 10px 26px rgba(37, 99, 235, 0.22);
 }
 .button-submit:hover {
-    background-color: var(--primary-600);
     transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.28);
 }
 
 .p, .back-link {
@@ -347,7 +589,8 @@ body {
 }
 .product-image {
     width: 100%;
-    height: 200px;
+    aspect-ratio: 16 / 10;
+    height: auto;
     object-fit: cover;
 }
 .product-info {
@@ -529,36 +772,13 @@ body {
 }
 .produto-card img {
     width: 100%;
-    height: 180px;
+    aspect-ratio: 16 / 10;
+    height: auto;
     object-fit: cover;
     border-radius: 14px;
 }
 
-/* Footer */
-.footer {
-    margin-top: 46px;
-    padding: 34px 0 20px;
-    background: rgba(255, 255, 255, 0.72);
-    border-top: 1px solid rgba(15, 23, 42, 0.08);
-}
-.footer-grid {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    gap: 18px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 18px;
-    padding: 18px;
-}
-.footer-links a {
-    text-decoration: none;
-    color: rgba(15,23,42,0.74);
-}
-.footer-bottom {
-    margin-top: 14px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
+/* Rodapé: estilo canônico em produtos.css quando a página também carrega esse arquivo */
 
 /* ==================== SUPORTE ==================== */
 .help-card {
@@ -599,9 +819,6 @@ body {
     }
     .products-grid, .produtos-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-    .footer-grid {
-        grid-template-columns: 1fr;
     }
     .stats-grid {
         grid-template-columns: 1fr;
@@ -657,6 +874,84 @@ body {
     color: var(--muted);
     font-size: 0.85rem;
     font-weight: 500;
+}
+
+.admin-profile {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-avatar-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, rgba(81, 130, 255, 0.22), rgba(125, 205, 255, 0.42));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+}
+
+.admin-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    filter: saturate(1.08) contrast(1.04);
+}
+
+.admin-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1e3a8a;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.admin-avatar-fallback .admin-avatar-initials {
+    display: none;
+}
+
+.admin-avatar-fallback.has-initials i {
+    display: none;
+}
+
+.admin-avatar-fallback.has-initials .admin-avatar-initials {
+    display: inline;
+}
+
+.admin-profile-info {
+    min-width: 0;
+}
+
+.admin-greeting {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.admin-name {
+    margin: 0;
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 800;
+    max-width: 168px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 1.3;
 }
 
 .sidebar-nav {
@@ -878,7 +1173,8 @@ body {
 
 .product-image {
     width: 100%;
-    height: 190px;
+    aspect-ratio: 16 / 10;
+    height: auto;
     object-fit: cover;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -1055,6 +1351,13 @@ body {
     .nav-link span:not(.badge) {
         display: none;
     }
+    .admin-profile {
+        justify-content: center;
+        margin-top: 0;
+    }
+    .admin-profile-info {
+        display: none;
+    }
     .nav-link {
         justify-content: center;
         padding: 14px;
@@ -1084,4 +1387,183 @@ body {
         align-items: flex-start;
         gap: 16px;
     }
-}   
+}
+
+/* ========== PAINEL – detalhes finos (alinhado ao restante do site) ========== */
+.page-header p {
+    margin: 6px 0 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--muted);
+    max-width: 42ch;
+}
+
+.page-header .btn,
+.page-header .btn-primary,
+.page-header .btn-secondary {
+    align-self: stretch;
+}
+
+.vendedor-container .table-responsive {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.vendedor-container .table {
+    margin-bottom: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.vendedor-container .modal-content {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.vendedor-container .modal-header {
+    background: linear-gradient(135deg, #0a0f3c 0%, #1f3c88 100%);
+    color: #fff;
+    border-bottom: none;
+    padding: 1rem 1.25rem;
+}
+
+.vendedor-container .modal-header .btn-close {
+    filter: invert(1);
+    opacity: 0.85;
+}
+
+.vendedor-container .modal-title {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.vendedor-container .modal-footer {
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    background: #f8fafc;
+}
+
+.loading {
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px dashed var(--border);
+}
+
+/* ========== LOGIN / PAINEL – responsividade extra ========== */
+@media (max-width: 576px) {
+    .login-container .form {
+        border-radius: var(--radius-md);
+    }
+
+    .vendedor-container .main-content {
+        padding: 16px 14px;
+    }
+
+    .sidebar {
+        width: 72px;
+    }
+
+    .main-content {
+        margin-left: 72px;
+        padding: 16px 12px !important;
+    }
+
+    .sidebar-header {
+        padding: 20px 12px;
+    }
+
+    .sidebar-nav {
+        padding: 16px 8px;
+    }
+
+    .nav-link {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .page-header h1 {
+        font-size: 1.35rem;
+    }
+
+    .stat-card {
+        padding: 16px 18px;
+        border-radius: var(--radius-lg);
+    }
+
+    .stat-number {
+        font-size: 1.75rem;
+    }
+
+    .vendedor-container .card-header,
+    .vendedor-container .card-body {
+        padding: 16px;
+    }
+
+    .vendedor-container .table th,
+    .vendedor-container .table td {
+        padding: 10px 12px;
+        font-size: 0.875rem;
+    }
+
+    .products-grid {
+        gap: 16px;
+    }
+}
+
+@media (max-width: 380px) {
+    .form-header h1::after {
+        width: 40px;
+        height: 3px;
+        margin-top: 10px;
+    }
+
+    .inputForm {
+        padding: 0 12px;
+        margin-bottom: 14px;
+    }
+
+    .vendedor-container .main-content {
+        padding: 12px 10px !important;
+    }
+
+    .sidebar {
+        width: 64px;
+    }
+
+    .main-content {
+        margin-left: 64px;
+    }
+
+    .sidebar-header {
+        padding: 16px 8px;
+    }
+
+    .notification-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+/* ========== Normalizacao final de responsividade ========== */
+@media (max-width: 992px) {
+    .vendedor-container .sidebar {
+        width: 80px;
+    }
+
+    .vendedor-container .main-content {
+        margin-left: 80px;
+    }
+}
+
+@media (max-width: 576px) {
+    .vendedor-container .products-grid,
+    .vendedor-container .produtos-grid {
+        grid-template-columns: 1fr;
+    }
+}

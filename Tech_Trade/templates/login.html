@@ -5,10 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - TechTrade</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-     <link rel="stylesheet" href="{{ url_for('static', filename='css/index_login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/produtos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index_login.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="page-comprador-auth">
+    <div class="login-page login-page--comprador">
+        <aside class="login-brand-panel login-brand-panel--comprador">
+            <div class="login-brand-glow"></div>
+            <div class="login-brand-content">
+                <div class="login-brand-mark">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3 12h3l3-9 4 17 4-17 3 9h5" stroke="rgba(255,255,255,0.92)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <p class="login-brand-kicker">TechTrade</p>
+                <h2 class="login-brand-title">Conta comprador</h2>
+                <p class="login-brand-sub">Entre para finalizar suas compras e acompanhar pedidos com segurança.</p>
+                <ul class="login-brand-bullets">
+                    <li><span class="login-dot"></span> Mesmo visual da loja</li>
+                    <li><span class="login-dot"></span> Pagamentos com proteção</li>
+                    <li><span class="login-dot"></span> Suporte quando precisar</li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="login-shell">
     <!-- ==================== TELA DE LOGIN ==================== -->
     <div id="loginScreen" class="login-container">
         <form class="form" method="POST" action="{{ url_for('produto.login') }}">
@@ -56,10 +80,9 @@
             <button type="submit" class="button-submit">Entrar</button>
 
             <!-- SUPORTE ABAIXO DO BOTÃO -->
-            <div style="margin-top: 10px; text-align: center;">
+            <div class="login-support-link">
                 <a href="{{ url_for('produto.suporte_comprador') }}" class="span">Precisa de ajuda? Acesse o suporte</a>
             </div>
-            </p>
             <p class="p">Não tem uma conta? <a href="#" class="span" onclick="showRegister(); return false;">Faça seu cadastro</a></p>
             <div class="back-link">
             </div>
@@ -193,43 +216,43 @@
         </div>
     </form>
 </div>
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>TechTrade</h3>
-                <p>O marketplace mais confiável para compra e venda de eletrônicos usados.</p>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Links Rápidos</h3>
-                <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">Sobre</a></li>
-                    <li><a href="#">Catálogo</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Para Vendedores</h3>
-                <ul>
-                    <li><a href="#">Cadastrar Produto</a></li>
-                    <li><a href="#">Central do Vendedor</a></li>
-                    <li><a href="#">Políticas de Venda</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Contato</h3>
-                <ul>
-                    <li>contato@techtrade.com</li>
-                    <li>(11) 9999-9999</li>
-                    <li>São Paulo, SP</li>
-                </ul>
-            </div>
+
         </div>
-        
-        <div class="footer-bottom">
-            <p>&copy; 2026 TechTrade. Todos os direitos reservados.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">TechTrade</div>
+                    <p class="footer-text">Marketplace de compra e venda de eletrônicos com foco em confiança e transparência.</p>
+                    <div class="footer-badges" aria-label="Destaques">
+                        <span class="footer-pill"><i class="fa-solid fa-shield-halved"></i> Compra segura</span>
+                        <span class="footer-pill"><i class="fa-solid fa-headset"></i> Suporte</span>
+                    </div>
+                </div>
+
+                <nav class="footer-links" aria-label="Explorar">
+                    <h4>Explorar</h4>
+                    <a href="{{ url_for('produto.home') }}"><i class="fa-solid fa-house"></i> Home</a>
+                    <a href="{{ url_for('produto.home') }}#sobre"><i class="fa-solid fa-circle-info"></i> Sobre</a>
+                    <a href="{{ url_for('produto.renderizar_produtos') }}"><i class="fa-solid fa-store"></i> Produtos</a>
+                    <a href="{{ url_for('produto.login') }}"><i class="fa-solid fa-user"></i> Minha conta</a>
+                </nav>
+
+                <div class="footer-links" aria-label="Ajuda">
+                    <h4>Ajuda</h4>
+                    <a href="{{ url_for('produto.suporte_comprador') }}"><i class="fa-solid fa-headset"></i> Central de ajuda</a>
+                    <a href="{{ url_for('produto.home') }}#ajuda"><i class="fa-regular fa-circle-question"></i> Central de perguntas</a>
+                    <a href="{{ url_for('produto.home') }}#ajuda"><i class="fa-solid fa-envelope"></i> Contato</a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <span>&copy; 2026 TechTrade</span>
+                <span class="footer-sep">•</span>
+                <span>Todos os direitos reservados</span>
+            </div>
         </div>
     </footer>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>

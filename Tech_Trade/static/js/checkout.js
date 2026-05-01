@@ -1,16 +1,20 @@
 // ==========================
 // VARIÁVEIS
 // ==========================
+let idProduto = null;
+let precoProduto = null;
+let confirmacaoUrl = "/confirmacao";
 let descontoPix = 0;
-let totalFinal = typeof precoProduto !== 'undefined' ? precoProduto : 0;
+let totalFinal = 0;
 
 // ==========================
-// FUNÇÃO ATUALIZAR TOTAIS
+// ATUALIZAR TOTAIS
 // ==========================
 function atualizarTotais() {
+
     const metodoSelecionado = document.querySelector('input[name="metodo"]:checked');
 
-    if (!metodoSelecionado || typeof precoProduto === 'undefined') return;
+    if (!metodoSelecionado || precoProduto === null || Number.isNaN(precoProduto)) return;
 
     const metodo = metodoSelecionado.value;
 
@@ -22,43 +26,45 @@ function atualizarTotais() {
         totalFinal = precoProduto;
     }
 
-    const totalEl = document.getElementById('totalFinal');
-    const descontoEl = document.getElementById('descontoPix');
+    const totalEl = document.getElementById("totalFinal");
+    const descontoEl = document.getElementById("descontoPix");
 
     if (totalEl) {
-        totalEl.innerText = `R$ ${totalFinal.toFixed(2).replace('.', ',')}`;
+        totalEl.innerText = `R$ ${totalFinal.toFixed(2).replace(".", ",")}`;
     }
 
     if (descontoEl) {
-        descontoEl.innerText = `R$ ${descontoPix.toFixed(2).replace('.', ',')}`;
+        descontoEl.innerText = `R$ ${descontoPix.toFixed(2).replace(".", ",")}`;
     }
 }
 
 // ==========================
-// EVENTOS DE PAGAMENTO
+// EVENTOS PAGAMENTO
 // ==========================
 function configurarEventosPagamento() {
+
     const radios = document.querySelectorAll('input[name="metodo"]');
 
     if (!radios.length) return;
 
     radios.forEach(radio => {
-        radio.addEventListener('change', atualizarTotais);
+        radio.addEventListener("change", atualizarTotais);
     });
 }
 
 // ==========================
-// SUBMIT DO CHECKOUT
+// SUBMIT
 // ==========================
 function configurarSubmit() {
-    const form = document.getElementById('formCheckout');
 
+    const form = document.getElementById("formCheckout");
     if (!form) return;
 
-    form.addEventListener('submit', function (e) {
+    form.addEventListener("submit", function (e) {
+
         e.preventDefault();
 
-        const endereco = document.getElementById('endereco')?.value;
+        const endereco = document.getElementById("endereco")?.value;
 
         if (!endereco) {
             alert("Preencha o endereço");
@@ -74,9 +80,11 @@ function configurarSubmit() {
 
         const metodo = metodoSelecionado.value;
 
-        fetch('/techtrade/produtos/finalizar_compra_completa', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        fetch("/techtrade/produtos/finalizar_compra_completa", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 id_produto: idProduto,
                 metodo_pagamento: metodo,
@@ -85,50 +93,60 @@ function configurarSubmit() {
         })
         .then(res => res.json())
         .then(data => {
+
             if (data.erro) {
                 alert(data.erro);
                 return;
             }
 
-            window.location.href = "/confirmacao";
+            try {
+                localStorage.removeItem("produto_para_comprar");
+                localStorage.removeItem("techtrade_carrinho");
+            } catch (e) {}
+
+            window.location.href = confirmacaoUrl || "/confirmacao";
         })
-        .catch((erro) => {
-            console.error("ERRO:", erro);
+        .catch(erro => {
+            console.error("Erro:", erro);
             alert("Erro ao finalizar compra");
         });
     });
 }
 
 // ==========================
-// CONTROLE DO COMPROVANTE
+// COMPROVANTE
 // ==========================
 function mostrarComprovante() {
-    const sucesso = document.getElementById('sucessoContainer');
-    const comp = document.getElementById('comprovanteContainer');
 
-    if (sucesso) sucesso.style.display = 'none';
+    const sucesso = document.getElementById("sucessoContainer");
+    const comp = document.getElementById("comprovanteContainer");
+
+    if (sucesso) sucesso.style.display = "none";
+
     if (comp) {
-        comp.style.display = 'block';
-        comp.scrollIntoView({ behavior: 'smooth' });
+        comp.style.display = "block";
+        comp.scrollIntoView({ behavior: "smooth" });
     }
 }
 
 function fecharComprovante() {
-    const sucesso = document.getElementById('sucessoContainer');
-    const comp = document.getElementById('comprovanteContainer');
 
-    if (comp) comp.style.display = 'none';
+    const sucesso = document.getElementById("sucessoContainer");
+    const comp = document.getElementById("comprovanteContainer");
+
+    if (comp) comp.style.display = "none";
+
     if (sucesso) {
-        sucesso.style.display = 'block';
-        sucesso.scrollIntoView({ behavior: 'smooth' });
+        sucesso.style.display = "block";
+        sucesso.scrollIntoView({ behavior: "smooth" });
     }
 }
 
 // ==========================
-// EVENTOS DE IMPRESSÃO
+// IMPRESSÃO
 // ==========================
 window.onbeforeprint = function () {
-    console.log("Preparando para impressão...");
+    console.log("Preparando impressão...");
 };
 
 window.onafterprint = function () {
@@ -136,10 +154,11 @@ window.onafterprint = function () {
 };
 
 // ==========================
-// ANIMAÇÃO (OPCIONAL)
+// CONFETE (OPCIONAL)
 // ==========================
 function animacaoConfete() {
-    if (typeof confetti === 'function') {
+
+    if (typeof confetti === "function") {
         confetti({
             particleCount: 100,
             spread: 70,
@@ -151,15 +170,21 @@ function animacaoConfete() {
 // ==========================
 // INIT
 // ==========================
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-    // Checkout
-    if (typeof precoProduto !== 'undefined') {
+    const form = document.getElementById("formCheckout");
+
+    if (form) {
+        idProduto = Number(form.dataset.idProduto);
+        precoProduto = Number(form.dataset.precoProduto);
+        confirmacaoUrl = form.dataset.confirmacaoUrl || "/confirmacao";
+    }
+
+    if (precoProduto !== null && !Number.isNaN(precoProduto)) {
         atualizarTotais();
         configurarEventosPagamento();
         configurarSubmit();
     }
 
-    // Confete
     setTimeout(animacaoConfete, 500);
 });

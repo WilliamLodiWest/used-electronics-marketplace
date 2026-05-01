@@ -14,7 +14,21 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <h3><i class="fas fa-store"></i> TechTrade</h3>
-                <p>Olá, {{ vendedor_nome }}</p>
+                <div class="admin-profile">
+                    <div class="admin-avatar-ring" aria-hidden="true">
+                        {% if vendedor_foto_url %}
+                        <img class="admin-avatar-img" src="{{ vendedor_foto_url }}" width="56" height="56" alt="Foto de perfil de Giovanna Marques">
+                        {% else %}
+                        <span class="admin-avatar-fallback{% if vendedor_iniciais %} has-initials{% endif %}">
+                            <i class="fas fa-user-shield" aria-hidden="true"></i>
+                            <span class="admin-avatar-initials">{{ vendedor_iniciais }}</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="admin-profile-info">
+                        <p class="admin-greeting">Olá, Giovanna Marques</p>
+                    </div>
+                </div>
             </div>
             
             <nav class="sidebar-nav">
@@ -107,12 +121,14 @@
                                 <th>Qtd</th>
                                 <th>Total</th>
                                 <th>Método</th>
+                                <th>Rastreio</th>
                                 <th>Status</th>
                                 <th>Data</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="vendas-tabela">
-                            <tr><td colspan="7" class="text-center">Carregando...</td></tr>
+                            <tr><td colspan="9" class="text-center">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>

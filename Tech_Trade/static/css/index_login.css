@@ -6,7 +6,14 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-body {
+body.page-comprador-auth {
+    background-color: #f4f6fb;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body:not(.page-comprador-auth) {
     background-color: #f5f5f5;
     display: flex;
     flex-direction: column;
@@ -282,60 +289,7 @@ body {
     opacity: 1;
 }
 
-/* ==================== FOOTER ==================== */
-footer {
-    background-color: #08005b;
-    color: white;
-    padding: 50px 20px;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 40px;
-}
-
-.footer-section h3 {
-    margin-bottom: 20px;
-    font-size: 20px;
-    color: #fff;
-}
-
-.footer-section p {
-    color: #ccc;
-    line-height: 1.6;
-    font-size: 14px;
-}
-
-.footer-section ul {
-    list-style: none;
-}
-
-.footer-section ul li {
-    margin-bottom: 10px;
-}
-
-.footer-section a {
-    color: #ccc;
-    text-decoration: none;
-    transition: color 0.3s;
-    font-size: 14px;
-}
-
-.footer-section a:hover {
-    color: #5182ff;
-}
-
-.footer-bottom {
-    text-align: center;
-    margin-top: 40px;
-    padding-top: 25px;
-    border-top: 1px solid #333;
-    color: #999;
-    font-size: 14px;
-}
+/* Footer: use estilos globais em style.css (.footer). Páginas antigas sem .page-comprador-auth podem sobrescrever localmente se necessário. */
 
 /* ==================== ÍCONES ==================== */
 .inputForm svg {
@@ -484,12 +438,6 @@ ol.list-group-numbered li::before {
         font-size: 15px;
     }
     
-    /* Footer */
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-    
     /* Suporte */
     .suporte-container h1.display-5 {
         font-size: 2rem;
@@ -544,5 +492,251 @@ ol.list-group-numbered li::before {
     .button-submit {
         height: 50px;
         font-size: 15px;
+    }
+}
+
+/* ==================== LOGIN COMPRADOR – layout igual ao login vendedor (duas colunas) ==================== */
+.page-comprador-auth .login-page--comprador {
+    flex: 1 1 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(240px, 1.05fr) minmax(300px, 0.95fr);
+    position: relative;
+    isolation: isolate;
+    min-height: 0;
+}
+
+.page-comprador-auth .login-page--comprador::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(760px 400px at 92% 16%, rgba(59, 130, 246, 0.14), transparent 55%),
+        radial-gradient(640px 340px at 10% 88%, rgba(16, 185, 129, 0.1), transparent 55%),
+        linear-gradient(185deg, #f8fafc 0%, #eef2fb 65%, #f4f6fb 100%);
+}
+
+/* Footer visível acima do fundo decorativo; design igual à página Produtos via produtos.css */
+.page-comprador-auth > .footer {
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.page-comprador-auth .login-brand-panel--comprador {
+    position: relative;
+    z-index: 1;
+    padding: clamp(26px, 5vw, 52px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 480px 360px at 82% 18%, rgba(81, 130, 255, 0.35), transparent 54%),
+        radial-gradient(ellipse 400px 280px at 14% 78%, rgba(52, 211, 153, 0.2), transparent 52%),
+        linear-gradient(150deg, #070d2b 0%, #142a6e 45%, #1f3c88 100%);
+    color: #fff;
+}
+
+.page-comprador-auth .login-brand-glow {
+    position: absolute;
+    inset: -45% -15%;
+    background:
+        radial-gradient(circle at 72% 28%, rgba(255, 255, 255, 0.13), transparent 40%),
+        radial-gradient(circle at 28% 68%, rgba(59, 130, 246, 0.3), transparent 48%);
+    pointer-events: none;
+}
+
+.page-comprador-auth .login-brand-content {
+    position: relative;
+    max-width: 400px;
+}
+
+.page-comprador-auth .login-brand-mark {
+    width: 62px;
+    height: 62px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+}
+
+.page-comprador-auth .login-brand-kicker {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.page-comprador-auth .login-brand-title {
+    font-size: clamp(1.55rem, 4vw, 2.15rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    text-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+.page-comprador-auth .login-brand-sub {
+    font-size: clamp(0.9rem, 2vw, 1.03rem);
+    opacity: 0.9;
+    line-height: 1.55;
+    max-width: 36ch;
+    margin-bottom: 20px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.page-comprador-auth .login-brand-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.page-comprador-auth .login-brand-bullets li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-comprador-auth .login-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #5182ff, #34d399);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.page-comprador-auth .login-shell {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(14px, 4vw, 36px);
+    min-width: 0;
+}
+
+.page-comprador-auth .login-shell .login-container,
+.page-comprador-auth .login-shell .recovery-container,
+.page-comprador-auth .login-shell .reset-container {
+    flex-grow: 0;
+    min-height: unset;
+    width: 100%;
+    padding: clamp(12px, 3vw, 26px);
+    display: flex;
+    justify-content: center;
+}
+
+.page-comprador-auth .login-shell .form {
+    width: 100%;
+    max-width: min(620px, 100%);
+    padding: clamp(26px, 5vw, 42px);
+    gap: clamp(12px, 2vw, 18px);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 18px;
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.1);
+    backdrop-filter: blur(12px);
+}
+
+.page-comprador-auth .login-shell .form-header h1 {
+    font-size: clamp(1.4rem, 3.8vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+}
+
+.page-comprador-auth .login-shell .form-header h1::after {
+    content: "";
+    display: block;
+    width: 52px;
+    height: 4px;
+    margin: 14px auto 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5182ff, #22c55e);
+}
+
+.page-comprador-auth .login-shell .form-header p {
+    color: #64748b;
+    font-weight: 500;
+    font-size: clamp(0.9rem, 2.2vw, 1rem);
+}
+
+.page-comprador-auth .login-shell .inputForm:focus-within {
+    border-color: rgba(81, 130, 255, 0.55);
+    box-shadow: 0 0 0 4px rgba(81, 130, 255, 0.2);
+}
+
+.page-comprador-auth .login-shell .button-submit {
+    background: linear-gradient(105deg, #5182ff 0%, #2563eb 100%);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22);
+    border-radius: 14px;
+    margin-top: 8px;
+}
+
+.page-comprador-auth .login-shell .button-submit:hover {
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.28);
+}
+
+.page-comprador-auth .login-support-link {
+    margin-top: 8px;
+    text-align: center;
+}
+
+@media (max-width: 920px) {
+    .page-comprador-auth .login-page--comprador {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .page-comprador-auth .login-brand-panel--comprador {
+        padding: 22px 20px 26px;
+        text-align: center;
+    }
+
+    .page-comprador-auth .login-brand-mark {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .page-comprador-auth .login-brand-sub {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .page-comprador-auth .login-brand-bullets {
+        align-items: center;
+    }
+
+    .page-comprador-auth .login-shell {
+        align-items: flex-start;
+        padding-top: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-comprador-auth .login-shell .form-header h1::after {
+        width: 42px;
+        height: 3px;
+    }
+
+    .page-comprador-auth .login-shell .form {
+        padding: 22px 18px;
+        border-radius: 16px;
     }
 }

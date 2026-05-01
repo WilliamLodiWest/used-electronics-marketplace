@@ -7,10 +7,8 @@
 
     <!-- BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- SEU CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
-
     <!-- ICONES -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -18,6 +16,18 @@
 <body>
 
 {% set produto = produto if produto else {} %}
+
+<nav class="navbar checkout-navbar">
+    <a href="{{ url_for('produto.home') }}" class="logo">Tech<span>Trade</span></a>
+    <ul class="nav-links checkout-nav-links">
+        <li><a href="{{ url_for('produto.home') }}">HOME</a></li>
+        <li><a href="{{ url_for('produto.home') }}#sobre">SOBRE</a></li>
+        <li><a href="{{ url_for('produto.home') }}#ajuda">AJUDA</a></li>
+        <li><a href="{{ url_for('produto.renderizar_produtos') }}" class="active">PRODUTOS</a></li>
+    </ul>
+</nav>
+
+<main class="checkout-main">
 
 <!-- ================= SUCESSO ================= -->
 <div id="sucessoContainer">
@@ -35,16 +45,36 @@
 
             <!-- ALERTA -->
             <div class="alert alert-success mt-3">
-                <h5>Pedido Confirmado</h5>
+                <h5>Pedido registrado</h5>
                 <p class="mb-0">
                     {{ mensagem if mensagem else "Seu pedido foi processado com sucesso!" }}
                 </p>
             </div>
 
+            {% if codigo_rastreio %}
+            <div class="alert alert-info text-start mt-3">
+                <h6 class="fw-bold"><i class="fas fa-barcode me-2"></i>Código de rastreio</h6>
+                <p class="mb-2 font-monospace fs-5">{{ codigo_rastreio }}</p>
+                <p class="small mb-2">Guarde este código para acompanhar aprovação, preparação e envio.</p>
+                <a href="{{ url_for('produto.rastreio_pedido', codigo=codigo_rastreio) }}" class="btn btn-sm btn-outline-primary">
+                    Abrir página de rastreio
+                </a>
+                {% if session.get('usuario_logado') %}
+                <a href="{{ url_for('produto.meus_pedidos') }}" class="btn btn-sm btn-outline-secondary ms-1">
+                    Ver em Meus pedidos
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <!-- INFO -->
             <div class="row text-start mt-4">
                 <div class="col-md-6">
-                    <p><strong>Número do Pedido:</strong>
+                    <p><strong>Pedido (interno):</strong>
+                        {% if id_compra_sessao %}#{{ id_compra_sessao }}{% else %}—{% endif %}
+                    </p>
+
+                    <p><strong>Produto (catálogo):</strong>
                         #{{ produto.id_produto if produto.id_produto else '0000' }}
                     </p>
 
@@ -59,7 +89,11 @@
                     </p>
 
                     <p><strong>Status:</strong>
-                        <span class="badge bg-success">Aprovado</span>
+                        {% if aguardando_aprovacao_admin %}
+                        <span class="badge bg-warning text-dark">Aguardando aprovação da administradora</span>
+                        {% else %}
+                        <span class="badge bg-success">Em andamento</span>
+                        {% endif %}
                     </p>
                 </div>
             </div>
@@ -170,15 +204,18 @@
             <h4>Links Rápidos</h4>
             <ul>
                 <li><a href="{{ url_for('produto.home') }}">Home</a></li>
-                <li><a href="#sobre">Sobre</a></li>
-                <li><a href="#ajuda">Ajuda</a></li>
-                <li><a href="{{ url_for('produto.renderizar_produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('produto.home') }}#sobre">Sobre</a></li>
+                <li><a href="{{ url_for('produto.home') }}#ajuda">Ajuda</a></li>
+                <li><a href="{{ url_for('produto.home') }}#produtos">Produtos</a></li>
             </ul>
         </div>
         <div class="footer-section">
             <h4>Para Compradores</h4>
             <ul>
-                <li><a href="{{ url_for('produto.login') }}">Minha Conta</a></li>
+                <li><a href="{{ url_for('produto.editar_perfil') if session.get('usuario_logado') else url_for('produto.login') }}">Minha Conta</a></li>
+                {% if session.get('usuario_logado') %}
+                <li><a href="{{ url_for('produto.meus_pedidos') }}">Meus pedidos</a></li>
+                {% endif %}
                 <li><a href="#">Como Comprar</a></li>
                 <li><a href="#">Garantia</a></li>
                 <li><a href="#">Perguntas Frequentes</a></li>
@@ -188,7 +225,7 @@
             <h4>Contato</h4>
             <div class="contact-info">
                 <p><i class="fas fa-envelope"></i> contato@techtrade.com</p>
-                <p><i class="fas fa-phone"></i> (11) 4004-1234</p>
+                <p><i class="fas fa-phone"></i> (11) 96358-6157</p>
                 <p><i class="fas fa-map-marker-alt"></i> São Paulo, SP</p>
             </div>
         </div>
@@ -202,29 +239,10 @@
         </div>
     </div>
 </footer>
+</main>
 
 <!-- ================= SCRIPT ================= -->
-<script>
-function mostrarComprovante() {
-    const sucesso = document.getElementById('sucessoContainer');
-    const comp = document.getElementById('comprovanteContainer');
-
-    sucesso.style.display = 'none';
-    comp.style.display = 'block';
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function fecharComprovante() {
-    const sucesso = document.getElementById('sucessoContainer');
-    const comp = document.getElementById('comprovanteContainer');
-
-    comp.style.display = 'none';
-    sucesso.style.display = 'block';
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-</script>
+<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
 
 </body>
 </html>

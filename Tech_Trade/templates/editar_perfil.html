@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar perfil - TechTrade</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/produtos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index_login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/editar_perfil.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="page-comprador-auth page-editar-perfil">
+    <div class="login-page login-page--comprador">
+        <aside class="login-brand-panel login-brand-panel--comprador">
+            <div class="login-brand-glow"></div>
+            <div class="login-brand-content">
+                <div class="login-brand-mark">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-4.42 0-8 1.79-8 4v2h16v-2c0-2.21-3.58-4-8-4z" stroke="rgba(255,255,255,0.92)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <p class="login-brand-kicker">TechTrade</p>
+                <h2 class="login-brand-title">Seu perfil</h2>
+                <p class="login-brand-sub">Mantenha nome, contato e senha atualizados para uma experiência mais segura na loja.</p>
+                <ul class="login-brand-bullets">
+                    <li><span class="login-dot"></span> Foto visível ao lado do seu nome na loja</li>
+                    <li><span class="login-dot"></span> Dados usados em pedidos e suporte</li>
+                    <li><span class="login-dot"></span> Senha opcional nesta tela</li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="login-shell">
+            <div id="editProfileScreen" class="login-container">
+                <form class="form editar-perfil-form" method="POST" action="{{ url_for('produto.editar_perfil') }}" enctype="multipart/form-data">
+                    <div class="form-header">
+                        <h1>Editar perfil</h1>
+                        <p>Atualize suas informações pessoais</p>
+                    </div>
+
+                    {% if sucesso %}
+                    <div class="alert alert-success" role="alert">{{ sucesso }}</div>
+                    {% endif %}
+                    {% if erro %}
+                    <div class="alert alert-danger" role="alert">{{ erro }}</div>
+                    {% endif %}
+
+                    <input type="hidden" name="remover_foto" id="perfil_remover_foto" value="0">
+
+                    <div
+                        class="editar-perfil-photo"
+                        id="editarPerfilPhoto"
+                        data-original-url="{{ foto_url|default('', true)|e }}"
+                        tabindex="0"
+                        role="group"
+                        aria-label="Foto do perfil"
+                    >
+                        <p class="editar-perfil-photo-title">Foto do perfil</p>
+                        <p class="editar-perfil-photo-lead">Clique na imagem ou arraste um arquivo para trocar. Formatos JPG, PNG ou WebP.</p>
+
+                        <div class="editar-perfil-photo-row">
+                            <button type="button" class="editar-perfil-avatar-btn" id="editarPerfilAvatarBtn" aria-label="Escolher nova foto de perfil">
+                                <span class="editar-perfil-avatar-wrap">
+                                    <img
+                                        class="editar-perfil-avatar-img"
+                                        id="editarPerfilAvatarImg"
+                                        width="112"
+                                        height="112"
+                                        alt=""
+                                        {% if foto_url %}src="{{ foto_url }}"{% endif %}
+                                        {% if not foto_url %}hidden{% endif %}
+                                    >
+                                    <span class="editar-perfil-avatar-fallback" id="editarPerfilAvatarFallback" {% if foto_url %}hidden{% endif %}>
+                                        <i class="fa-solid fa-user" aria-hidden="true"></i>
+                                        <span class="editar-perfil-avatar-initials" id="editarPerfilAvatarInitials"></span>
+                                    </span>
+                                    <span class="editar-perfil-avatar-camera" aria-hidden="true"><i class="fa-solid fa-camera"></i></span>
+                                </span>
+                            </button>
+
+                            <div class="editar-perfil-photo-side">
+                                <label for="perfil_foto_input" class="editar-perfil-photo-choose">
+                                    <i class="fa-solid fa-image" aria-hidden="true"></i>
+                                    Escolher imagem do dispositivo
+                                </label>
+                                <input
+                                    type="file"
+                                    name="foto_perfil"
+                                    id="perfil_foto_input"
+                                    class="visually-hidden"
+                                    accept="image/jpeg,image/png,image/webp"
+                                >
+
+                                <div class="editar-perfil-photo-secondary">
+                                    <button type="button" class="editar-perfil-photo-link" id="editarPerfilLimparArquivo" hidden>
+                                        Desfazer imagem escolhida
+                                    </button>
+                                    {% if foto_url %}
+                                    <button type="button" class="editar-perfil-photo-link editar-perfil-photo-link--warn" id="editarPerfilRemoverSalva">
+                                        Remover foto atual do perfil
+                                    </button>
+                                    {% endif %}
+                                </div>
+
+                                <p class="editar-perfil-photo-hint">Tamanho máximo sugerido: 5&nbsp;MB. A foto será exibida como um círculo na navegação.</p>
+                                <p class="editar-perfil-photo-msg" id="editarPerfilPhotoMsg" hidden></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-column">
+                        <label for="perfil_nome">Nome completo</label>
+                    </div>
+                    <div class="inputForm">
+                        <svg height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path fill="#666" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        <input type="text" id="perfil_nome" class="input" name="nome" placeholder="Seu nome completo" required
+                               value="{{ nome|default('') }}">
+                    </div>
+
+                    <div class="flex-column">
+                        <label for="perfil_email">E-mail</label>
+                    </div>
+                    <div class="inputForm">
+                        <svg height="20" viewBox="0 0 32 32" width="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path fill="#666" d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"></path>
+                        </svg>
+                        <input type="email" id="perfil_email" class="input" name="email" placeholder="Seu e-mail" required
+                               value="{{ email|default('') }}">
+                    </div>
+
+                    <div class="flex-column">
+                        <label for="perfil_telefone">Telefone</label>
+                    </div>
+                    <div class="inputForm">
+                        <svg height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path fill="#666" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                        </svg>
+                        <input type="tel" id="perfil_telefone" class="input" name="telefone" placeholder="DDD + número" required
+                               value="{{ telefone|default('') }}">
+                    </div>
+
+                    <div class="editar-perfil-section" aria-labelledby="sec-senha">
+                        <h2 id="sec-senha" class="editar-perfil-section-heading">Alterar senha</h2>
+                        <p class="editar-perfil-hint">Deixe os três campos abaixo em branco para manter a senha atual. Para alterar, informe a senha atual e a nova senha duas vezes.</p>
+
+                        <div class="flex-column">
+                            <label for="perfil_senha_atual">Senha atual</label>
+                        </div>
+                        <div class="inputForm">
+                            <svg viewBox="-64 0 512 512" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path fill="#666" d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"></path>
+                                <path fill="#666" d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"></path>
+                            </svg>
+                            <input type="password" id="perfil_senha_atual" class="input" name="senha_atual" placeholder="Somente se for alterar a senha" autocomplete="current-password">
+                            <svg viewBox="0 0 576 512" width="22" height="22" xmlns="http://www.w3.org/2000/svg" class="toggle-password" aria-hidden="true">
+                                <path fill="#666" d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z"></path>
+                            </svg>
+                        </div>
+
+                        <div class="flex-column">
+                            <label for="perfil_nova_senha">Nova senha</label>
+                        </div>
+                        <div class="inputForm">
+                            <svg viewBox="-64 0 512 512" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path fill="#666" d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"></path>
+                                <path fill="#666" d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"></path>
+                            </svg>
+                            <input type="password" id="perfil_nova_senha" class="input" name="nova_senha" placeholder="Mínimo recomendado: 8 caracteres" autocomplete="new-password">
+                            <svg viewBox="0 0 576 512" width="22" height="22" xmlns="http://www.w3.org/2000/svg" class="toggle-password" aria-hidden="true">
+                                <path fill="#666" d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z"></path>
+                            </svg>
+                        </div>
+
+                        <div class="flex-column">
+                            <label for="perfil_confirmar_senha">Confirmar nova senha</label>
+                        </div>
+                        <div class="inputForm">
+                            <svg viewBox="-64 0 512 512" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path fill="#666" d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"></path>
+                                <path fill="#666" d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"></path>
+                            </svg>
+                            <input type="password" id="perfil_confirmar_senha" class="input" name="confirmar_senha" placeholder="Repita a nova senha" autocomplete="new-password">
+                            <svg viewBox="0 0 576 512" width="22" height="22" xmlns="http://www.w3.org/2000/svg" class="toggle-password" aria-hidden="true">
+                                <path fill="#666" d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="button-submit">Salvar alterações</button>
+
+                    <div class="editar-perfil-actions">
+                        <a href="{{ url_for('produto.home') }}" class="editar-perfil-cancel span">Voltar para a loja</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">TechTrade</div>
+                    <p class="footer-text">Marketplace de compra e venda de eletrônicos com foco em confiança e transparência.</p>
+                    <div class="footer-badges" aria-label="Destaques">
+                        <span class="footer-pill"><i class="fa-solid fa-shield-halved"></i> Compra segura</span>
+                        <span class="footer-pill"><i class="fa-solid fa-headset"></i> Suporte</span>
+                    </div>
+                </div>
+
+                <nav class="footer-links" aria-label="Explorar">
+                    <h4>Explorar</h4>
+                    <a href="{{ url_for('produto.home') }}"><i class="fa-solid fa-house"></i> Home</a>
+                    <a href="{{ url_for('produto.home') }}#sobre"><i class="fa-solid fa-circle-info"></i> Sobre</a>
+                    <a href="{{ url_for('produto.renderizar_produtos') }}"><i class="fa-solid fa-store"></i> Produtos</a>
+                    <a href="{{ url_for('produto.meus_pedidos') }}"><i class="fa-solid fa-box-open"></i> Meus pedidos</a>
+                    <a href="{{ url_for('produto.login') }}"><i class="fa-solid fa-user"></i> Minha conta</a>
+                </nav>
+
+                <div class="footer-links" aria-label="Ajuda">
+                    <h4>Ajuda</h4>
+                    <a href="{{ url_for('produto.suporte_comprador') }}"><i class="fa-solid fa-headset"></i> Central de ajuda</a>
+                    <a href="{{ url_for('produto.home') }}#ajuda"><i class="fa-regular fa-circle-question"></i> Perguntas frequentes</a>
+                    <a href="{{ url_for('produto.home') }}#ajuda"><i class="fa-solid fa-envelope"></i> Contato</a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <span>&copy; 2026 TechTrade</span>
+                <span class="footer-sep">•</span>
+                <span>Todos os direitos reservados</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/editar_perfil.js') }}"></script>
+
+</body>
+</html>

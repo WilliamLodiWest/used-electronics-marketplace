@@ -1,0 +1,356 @@
+/*
+ * Meus pedidos — TechTrade
+ * Funciona junto com checkout.css (navbar/footer) e reforça o visual se algo não carregar.
+ */
+
+.page-meus-pedidos {
+    --mp-brand: #08005b;
+    --mp-brand-soft: rgba(8, 0, 91, 0.08);
+    --mp-surface: #ffffff;
+    --mp-text: #0f172a;
+    --mp-muted: #64748b;
+    --mp-border: rgba(15, 23, 42, 0.1);
+    --mp-shadow: 0 25px 60px rgba(15, 23, 42, 0.12);
+    --mp-shadow-sm: 0 14px 34px rgba(15, 23, 42, 0.08);
+    --mp-radius: 22px;
+    --mp-radius-sm: 14px;
+}
+
+.page-meus-pedidos {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background:
+        radial-gradient(900px 420px at 12% -10%, rgba(59, 130, 246, 0.14), transparent 55%),
+        radial-gradient(700px 380px at 92% 8%, rgba(8, 0, 91, 0.09), transparent 50%),
+        #f4f6fb;
+}
+
+/* ---------- Navbar (reforço caso checkout.css falhe) ---------- */
+.page-meus-pedidos .checkout-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 5%;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.page-meus-pedidos .checkout-nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1rem 1.35rem;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.page-meus-pedidos .checkout-nav-links a {
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    color: rgba(15, 23, 42, 0.82);
+    transition: color 0.2s ease;
+}
+
+.page-meus-pedidos .checkout-nav-links a:hover,
+.page-meus-pedidos .checkout-nav-links a.active {
+    color: var(--mp-brand);
+}
+
+.page-meus-pedidos .logo {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: rgba(15, 23, 42, 0.95);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+}
+
+.page-meus-pedidos .logo span {
+    color: var(--mp-brand);
+}
+
+/* ---------- Conteúdo ---------- */
+.page-meus-pedidos .checkout-main {
+    flex: 1;
+    width: 100%;
+}
+
+.mp-main {
+    max-width: 920px;
+}
+
+.mp-hero {
+    background: var(--mp-surface);
+    border-radius: var(--mp-radius);
+    padding: 1.5rem 1.5rem 1.35rem;
+    border: 1px solid var(--mp-border);
+    box-shadow: var(--mp-shadow-sm);
+}
+
+.mp-hero h1 {
+    color: var(--mp-text);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-size: clamp(1.35rem, 2.5vw, 1.6rem);
+}
+
+.mp-hero .mp-icon-brand {
+    color: var(--mp-brand);
+    opacity: 0.95;
+}
+
+.mp-lead {
+    max-width: 46rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.mp-lead a {
+    color: var(--mp-brand);
+    font-weight: 650;
+}
+
+.mp-lead a:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Cards de pedido ---------- */
+.mp-card {
+    border: none !important;
+    border-radius: var(--mp-radius) !important;
+    box-shadow: var(--mp-shadow);
+    overflow: hidden;
+    background: var(--mp-surface);
+    animation: mpFadeUp 0.45s ease both;
+}
+
+@keyframes mpFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mp-pedido-card {
+    margin-bottom: 1.35rem;
+}
+
+.mp-pedido-card .card-header {
+    background: linear-gradient(135deg, rgba(8, 0, 91, 0.07), rgba(59, 130, 246, 0.06));
+    border-bottom: 1px solid var(--mp-border);
+    font-weight: 700;
+    padding: 1rem 1.25rem;
+}
+
+.mp-pedido-card .card-body {
+    padding: 1.25rem 1.35rem;
+}
+
+.mp-prod-thumb {
+    width: 76px;
+    height: 76px;
+    object-fit: cover;
+    border-radius: var(--mp-radius-sm);
+    border: 1px solid var(--mp-border);
+    flex-shrink: 0;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.mp-meta {
+    font-size: 0.88rem;
+    color: var(--mp-muted);
+}
+
+.mp-meta strong.text-success {
+    color: #15803d !important;
+}
+
+.mp-badge-status {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.45em 0.75em;
+    border-radius: 10px;
+}
+
+/* ---------- Timeline ---------- */
+.mp-timeline-section-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--mp-muted);
+}
+
+.mp-timeline-wrap {
+    margin-top: 0.5rem;
+    padding: 1rem 1rem 0.35rem;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(255, 255, 255, 0.6));
+    border: 1px solid var(--mp-border);
+    border-radius: var(--mp-radius-sm);
+}
+
+.mp-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 0.25rem;
+    border-left: 3px solid rgba(8, 0, 91, 0.14);
+}
+
+.mp-timeline li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.65rem 0 0.65rem 0.85rem;
+    margin-left: -2px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    font-size: 0.92rem;
+    color: var(--mp-text);
+    position: relative;
+}
+
+.mp-timeline li:last-child {
+    border-bottom: none;
+    padding-bottom: 0.35rem;
+}
+
+.mp-timeline li::before {
+    content: "";
+    position: absolute;
+    left: -0.62rem;
+    top: 0.85rem;
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    background: var(--mp-surface);
+    border: 2px solid rgba(8, 0, 91, 0.35);
+    box-shadow: 0 0 0 3px rgba(8, 0, 91, 0.06);
+}
+
+.mp-timeline li .fa-check-circle ~ span {
+    color: #166534;
+}
+
+.mp-timeline li .fa-dot-circle ~ span {
+    font-weight: 700;
+    color: var(--mp-brand);
+}
+
+.mp-timeline i {
+    margin-top: 0.12rem;
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+/* ---------- Botões na lista (JS injeta) ---------- */
+.mp-pedido-card .btn-outline-primary {
+    border-radius: 12px;
+    font-weight: 650;
+    border-color: rgba(8, 0, 91, 0.35);
+    color: var(--mp-brand);
+}
+
+.mp-pedido-card .btn-outline-primary:hover {
+    background: var(--mp-brand);
+    border-color: var(--mp-brand);
+    color: #fff;
+}
+
+/* ---------- Estado vazio / loading ---------- */
+#mpVazio .card-body {
+    padding: 2.5rem 1.5rem !important;
+}
+
+#mpVazio .btn-primary {
+    border-radius: 12px;
+    font-weight: 700;
+    padding: 0.65rem 1.35rem;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border: none;
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+}
+
+#mpVazio .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(37, 99, 235, 0.35);
+}
+
+#mpLoading .spinner-border {
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--mp-brand) !important;
+}
+
+/* ---------- Alertas ---------- */
+.mp-alertas .alert {
+    border-radius: 16px;
+    border: none;
+    box-shadow: var(--mp-shadow-sm);
+}
+
+.mp-notif-nova {
+    border-left: 4px solid var(--mp-brand) !important;
+    background: linear-gradient(135deg, rgba(8, 0, 91, 0.06), rgba(59, 130, 246, 0.06)) !important;
+    color: var(--mp-text);
+}
+
+.mp-alertas .alert-light.border {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: var(--mp-border) !important;
+}
+
+/* ---------- Footer ---------- */
+.page-meus-pedidos .mp-footer.footer {
+    margin-top: auto;
+    padding: 1.25rem 5%;
+    background: rgba(255, 255, 255, 0.85);
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.page-meus-pedidos .mp-footer .footer-bottom {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 768px) {
+    .page-meus-pedidos .checkout-navbar {
+        align-items: flex-start;
+    }
+
+    .mp-hero {
+        padding: 1.15rem 1.1rem;
+    }
+
+    .mp-pedido-card .card-header,
+    .mp-pedido-card .card-body {
+        padding: 1rem;
+    }
+
+    .mp-prod-thumb {
+        width: 68px;
+        height: 68px;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-meus-pedidos .checkout-nav-links {
+        gap: 0.5rem 0.85rem;
+    }
+
+    .page-meus-pedidos .checkout-nav-links a {
+        font-size: 0.74rem;
+        letter-spacing: 0.03em;
+    }
+}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastrear pedido — TechTrade</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
+</head>
+<body>
+<nav class="navbar checkout-navbar">
+    <a href="{{ url_for('produto.home') }}" class="logo">Tech<span>Trade</span></a>
+    <ul class="nav-links checkout-nav-links">
+        <li><a href="{{ url_for('produto.home') }}">HOME</a></li>
+        <li><a href="{{ url_for('produto.renderizar_produtos') }}">PRODUTOS</a></li>
+        {% if session.get('usuario_logado') %}
+        <li><a href="{{ url_for('produto.meus_pedidos') }}">MEUS PEDIDOS</a></li>
+        {% endif %}
+    </ul>
+</nav>
+
+<main class="checkout-main container py-5">
+    <h1 class="h3 mb-4"><i class="fas fa-truck me-2"></i>Rastrear pedido</h1>
+    <p class="text-muted mb-4">
+        Digite o código enviado após a compra. Você acompanha aprovação, preparação e envio aqui.
+        Para conferir uma NF-e no portal nacional da Receita Federal, use
+        <a href="{{ consulta_nfe_url }}" target="_blank" rel="noopener noreferrer">esta página oficial</a>
+        e informe a chave de 44 dígitos quando a administradora cadastrar no produto.
+    </p>
+
+    <form method="get" action="{{ url_for('produto.rastreio_pedido') }}" class="row g-2 mb-4">
+        <div class="col-md-8">
+            <label class="form-label visually-hidden" for="codigo">Código de rastreio</label>
+            <input type="text" class="form-control form-control-lg" id="codigo" name="codigo"
+                   value="{{ codigo or '' }}" placeholder="Ex.: TT-A1B2C3D4E5" autocomplete="off">
+        </div>
+        <div class="col-md-4 d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Consultar</button>
+        </div>
+    </form>
+
+    {% if erro %}
+    <div class="alert alert-warning">{{ erro }}</div>
+    {% endif %}
+
+    {% if pedido %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <img src="{{ pedido.imagem }}" alt="" width="72" height="72" class="rounded object-fit-cover">
+                </div>
+                <div class="col">
+                    <h2 class="h5 mb-1">{{ pedido.produto_nome }}</h2>
+                    <p class="mb-0 text-muted">Pedido interno #{{ pedido.id_compra }} · {{ pedido.quantidade }} un. ·
+                        <strong>R$ {{ '%.2f'|format(pedido.total) }}</strong></p>
+                    {% if pedido.data_compra %}
+                    <small class="text-muted">{{ pedido.data_compra.strftime('%d/%m/%Y %H:%M') }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="h5 mb-3">Status do envio</h3>
+    <ul class="list-group mb-4">
+        {% for step in pedido.timeline %}
+        <li class="list-group-item d-flex align-items-center gap-2">
+            {% if step.state == 'done' %}
+            <i class="fas fa-check-circle text-success"></i>
+            {% elif step.state == 'current' %}
+            <i class="fas fa-dot-circle text-primary"></i>
+            {% elif step.state == 'cancelado' %}
+            <i class="fas fa-times-circle text-danger"></i>
+            {% else %}
+            <i class="far fa-circle text-muted"></i>
+            {% endif %}
+            <span>{{ step.label }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</main>
+</body>
+</html>

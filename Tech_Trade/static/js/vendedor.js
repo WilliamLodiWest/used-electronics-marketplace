@@ -190,27 +190,105 @@ async function carregarProdutos() {
 // Carregar Vendas
 async function carregarVendas() {
     try {
-        const response = await fetch('/vendedor/api/dashboard');
-        const data = await response.json();
-        
-        if (data.vendas_recentes && data.vendas_recentes.length > 0) {
-            const vendasHtml = data.vendas_recentes.map(venda => `
-                <tr>
-                    <td>#${venda.id}</td>
-                    <td>${venda.produto}</td>
-                    <td>${venda.quantidade}</td>
-                    <td>R$ ${venda.total.toLocaleString('pt-BR')}</td>
-                    <td>${venda.metodo}</td>
-                    <td><span class="badge bg-${getStatusColor(venda.status)}">${venda.status}</span></td>
-                    <td>${venda.data}</td>
-                </tr>
-            `).join('');
-            document.getElementById('vendas-tabela').innerHTML = vendasHtml;
-        } else {
-            document.getElementById('vendas-tabela').innerHTML = '<tr><td colspan="7" class="text-center">Nenhuma venda realizada ainda</td></tr>';
+        const response = await fetch('/vendedor/pedidos/json');
+        const pedidos = await response.json();
+
+        if (!Array.isArray(pedidos)) {
+            document.getElementById('vendas-tabela').innerHTML =
+                `<tr><td colspan="9" class="text-center text-danger">${pedidos.erro || 'Erro ao carregar vendas'}</td></tr>`;
+            return;
         }
+
+        if (pedidos.length === 0) {
+            document.getElementById('vendas-tabela').innerHTML =
+                '<tr><td colspan="9" class="text-center">Nenhuma venda realizada ainda</td></tr>';
+            return;
+        }
+
+        const vendasHtml = pedidos.map((p) => {
+            const acoes = p.aguarda_aprovacao_admin
+                    ? `<button type="button" class="btn btn-sm btn-success me-1" onclick="aprovarPedido(${p.id_compra})">Aprovar</button>
+                       <button type="button" class="btn btn-sm btn-outline-danger" onclick="reprovarPedido(${p.id_compra})">Reprovar</button>`
+                    : `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="mudarStatusPedido(${p.id_compra})">Alterar status…</button>`;
+            const rastreio = p.codigo_rastreio
+                ? `<span class="font-monospace small">${p.codigo_rastreio}</span>`
+                : '—';
+            return `
+                <tr>
+                    <td>#${p.id_compra}</td>
+                    <td>${p.produto_nome}</td>
+                    <td>${p.quantidade}</td>
+                    <td>R$ ${p.total.toLocaleString('pt-BR')}</td>
+                    <td>${p.metodo_pagamento}</td>
+                    <td>${rastreio}</td>
+                    <td><span class="badge bg-${getStatusColor(p.status)}">${p.status}</span></td>
+                    <td>${p.data_compra}</td>
+                    <td class="text-nowrap">${acoes}</td>
+                </tr>
+            `;
+        }).join('');
+        document.getElementById('vendas-tabela').innerHTML = vendasHtml;
     } catch (error) {
         console.error('Erro ao carregar vendas:', error);
+    }
+}
+
+async function aprovarPedido(id) {
+    if (!confirm('Aprovar este pedido? O estoque será baixado e a separação ficará liberada.')) return;
+    try {
+        const response = await fetch(`/vendedor/pedidos/aprovar/${id}`, { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok) {
+            alert(data.erro || 'Erro ao aprovar');
+            return;
+        }
+        alert(data.mensagem || 'Pedido aprovado.');
+        carregarVendas();
+        carregarDashboard();
+    } catch (e) {
+        alert('Erro ao aprovar pedido.');
+    }
+}
+
+async function reprovarPedido(id) {
+    if (!confirm('Reprovar e cancelar este pedido? (Sem baixa de estoque.)')) return;
+    try {
+        const response = await fetch(`/vendedor/pedidos/reprovar/${id}`, { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok) {
+            alert(data.erro || 'Erro ao reprovar');
+            return;
+        }
+        alert(data.mensagem || 'Pedido cancelado.');
+        carregarVendas();
+        carregarDashboard();
+    } catch (e) {
+        alert('Erro ao reprovar pedido.');
+    }
+}
+
+async function mudarStatusPedido(id) {
+    const opcoes = ['pago', 'processando', 'enviado', 'entregue', 'cancelado'];
+    const novo = prompt(`Novo status (${opcoes.join(', ')}):`);
+    if (!novo || !opcoes.includes(novo.trim())) {
+        if (novo) alert('Status inválido.');
+        return;
+    }
+    try {
+        const response = await fetch(`/vendedor/pedidos/atualizar_status/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: novo.trim() }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            alert(data.erro || 'Erro ao atualizar');
+            return;
+        }
+        carregarVendas();
+        carregarDashboard();
+    } catch (e) {
+        alert('Erro ao atualizar status.');
     }
 }
 
@@ -257,8 +335,20 @@ async function carregarCategorias() {
         categorias = await response.json();
         
         const select = document.getElementById('produto-categoria');
-        select.innerHTML = '<option value="">Selecione uma categoria</option>' + 
-            categorias.map(cat => `<option value="${cat.id_categoria}">${cat.nome}</option>`).join('');
+        const categoriasNormalizadas = (categorias || [])
+            .map(cat => {
+                if (Array.isArray(cat)) {
+                    return { id_categoria: cat[0], nome: cat[1] };
+                }
+                return {
+                    id_categoria: cat.id_categoria ?? cat.id ?? null,
+                    nome: cat.nome ?? cat.categoria ?? ''
+                };
+            })
+            .filter(cat => cat.id_categoria !== null && cat.nome);
+
+        select.innerHTML = '<option value="">Selecione uma categoria</option>' +
+            categoriasNormalizadas.map(cat => `<option value="${cat.id_categoria}">${cat.nome}</option>`).join('');
     } catch (error) {
         console.error('Erro ao carregar categorias:', error);
     }
@@ -285,8 +375,10 @@ function abrirModalProduto(id = null) {
                     
                     // Selecionar categoria
                     const select = document.getElementById('produto-categoria');
-                    for(let i = 0; i < select.options.length; i++) {
-                        if(select.options[i].text === produto.categoria) {
+                    for (let i = 0; i < select.options.length; i++) {
+                        const batePorId = produto.categoria_id && String(select.options[i].value) === String(produto.categoria_id);
+                        const batePorNome = select.options[i].text === produto.categoria;
+                        if (batePorId || batePorNome) {
                             select.selectedIndex = i;
                             break;
                         }
@@ -409,8 +501,10 @@ async function marcarTodasLidas() {
 // Helper: Status color
 function getStatusColor(status) {
     const colors = {
+        'aguardando_aprovacao': 'warning',
         'pendente': 'warning',
         'pago': 'info',
+        'processando': 'info',
         'enviado': 'primary',
         'entregue': 'success',
         'cancelado': 'danger'

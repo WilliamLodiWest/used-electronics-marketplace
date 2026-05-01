@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Tech Trade - Compre Eletrônicos com Preço Inteligente</title>
 </head>
-<body>
+<body data-vendedor-login-url="{{ url_for('produto.vendedor_login') }}">
    <nav class="navbar">
     <a href="#" class="logo">Tech<span>Trade</span></a>
 
@@ -20,16 +20,28 @@
         {% if session.get('usuario_logado') %}
         <li class="user-menu" id="userMenu">
 
-            <!-- BOTÃO (nome + seta) -->
-            <div class="user-trigger" id="userTrigger">
-                <span class="btn-login user-name">
-                    {{ session.get('usuario_nome') }}
-                </span>
-                <i class="arrow-down"></i>
+            <div class="user-trigger user-trigger--profile" id="userTrigger" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true" aria-label="Menu da conta">
+                <div class="user-avatar-ring" aria-hidden="true">
+                    {% if usuario_foto_url %}
+                    <img class="user-avatar-img" src="{{ usuario_foto_url }}" width="48" height="48" alt="">
+                    {% else %}
+                    <span class="user-avatar-fallback{% if usuario_iniciais %} has-initials{% endif %}">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        <span class="user-avatar-initials">{{ usuario_iniciais }}</span>
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="user-trigger-row">
+                    <span class="user-name-label">{{ session.get('usuario_nome') }}</span>
+                    <i class="arrow-down user-trigger-arrow" aria-hidden="true"></i>
+                </div>
             </div>
 
             <!-- DROPDOWN -->
             <div class="dropdown" id="dropdownMenu">
+                <a href="{{ url_for('produto.editar_perfil') }}">
+                    <i class="fas fa-user-circle"></i> Meu perfil
+                </a>
                 <a href="{{ url_for('produto.logout') }}">
                     <i class="fas fa-sign-out-alt"></i> Sair
                 </a>
@@ -163,28 +175,28 @@
                     <h4>Chat Online</h4>
                     <p>Atendimento instantâneo</p>
                     <p>Seg a Sex: 8h-18h</p>
-                    <a href="#">Iniciar Chat</a>
+                    <a href="#" id="openSupportChat">Iniciar Chat</a>
                 </div>
                 <div class="channel">
                     <i class="fas fa-envelope"></i>
                     <h4>E-mail</h4>
                     <p>Resposta em até 4h</p>
                     <p>suporte@techtrade.com</p>
-                    <a href="#">Enviar E-mail</a>
+                    <a href="mailto:suporte@techtrade.com?subject=Suporte%20TechTrade">Enviar E-mail</a>
                 </div>
                 <div class="channel">
                     <i class="fas fa-phone"></i>
                     <h4>Telefone</h4>
                     <p>Atendimento personalizado</p>
-                    <p>(11) 4004-1234</p>
-                    <a href="#">Ligar Agora</a>
+                    <p>(11) 96358-6157</p>
+                    <a href="tel:+5511963586157">Ligar Agora</a>
                 </div>
                 <div class="channel">
                     <i class="fas fa-map-marker-alt"></i>
                     <h4>Escritório</h4>
                     <p>Visite nossa sede</p>
-                    <p>São Paulo - SP</p>
-                    <a href="#">Ver Localização</a>
+                    <p>Universidade Municipal de São Caetano do Sul (USCS)</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=Universidade+Municipal+de+S%C3%A3o+Caetano+do+Sul+USCS+Campus" target="_blank" rel="noopener noreferrer">Ver Localização</a>
                 </div>
             </div>
         </div>
@@ -214,7 +226,8 @@
             <div class="footer-section">
                 <h4>Para Compradores</h4>
                 <ul>
-                    <li><a href="{{ url_for('produto.login') }}">Minha Conta</a></li>
+                    <li><a href="{{ url_for('produto.editar_perfil') if session.get('usuario_logado') else url_for('produto.login') }}">Minha Conta</a></li>
+                    <li><a href="{{ url_for('produto.rastreio_pedido') }}">Rastrear pedido</a></li>
                     <li><a href="#">Como Comprar</a></li>
                     <li><a href="#">Garantia</a></li>
                     <li><a href="#">Perguntas Frequentes</a></li>
@@ -310,39 +323,30 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="supportChatModal" aria-hidden="true">
+        <div class="modal-container modal-small support-chat-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-comments"></i> Chat de Suporte</h3>
+                <button class="modal-close" id="closeSupportChat" type="button" aria-label="Fechar chat">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="support-chat-window" id="supportChatWindow">
+                    <div class="support-chat-message support-chat-message--bot">
+                        Olá! Eu sou o assistente da TechTrade. Como posso ajudar você hoje?
+                    </div>
+                </div>
+                <form id="supportChatForm" class="support-chat-form">
+                    <input type="text" id="supportChatInput" placeholder="Digite sua dúvida..." maxlength="2000" autocomplete="off" required>
+                    <button type="submit" class="btn-modal-primary">
+                        <i class="fas fa-paper-plane"></i> Enviar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/home_produtos.js') }}"></script>
-    
-    <!-- Script para o acesso secreto do vendedor -->
-    <script>
-        function acessarPainelVendedor() {
-            // Você pode mudar essa URL para algo mais secreto se quiser
-            window.location.href = "{{ url_for('produto.vendedor_login') }}";
-        }
-        
-        // Acesso via tecla de atalho (Ctrl + Shift + A)
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-                e.preventDefault();
-                acessarPainelVendedor();
-            }
-        });
-        
-        // Acesso via clique duplo no logo (opcional)
-        let logo = document.querySelector('.logo');
-        if (logo) {
-            let clickCount = 0;
-            let timer;
-            logo.addEventListener('click', function(e) {
-                clickCount++;
-                if (clickCount === 5) {
-                    acessarPainelVendedor();
-                    clickCount = 0;
-                }
-                clearTimeout(timer);
-                timer = setTimeout(() => { clickCount = 0; }, 1000);
-            });
-        }
-    </script>
 </body>
 </html>
