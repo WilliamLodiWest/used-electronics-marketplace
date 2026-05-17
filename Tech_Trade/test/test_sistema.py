@@ -124,7 +124,7 @@ def test_consultar_categorias(client):
     response = client.get("/techtrade/categorias")
     assert response.status_code == 200
     assert isinstance(response.get_json(), list)
-
+    
 
 def test_consultar_produtos(client):
     response = client.get("/techtrade/produtos/registros")

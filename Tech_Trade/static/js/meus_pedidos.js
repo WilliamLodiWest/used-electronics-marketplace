@@ -6,12 +6,14 @@
     const elLista = document.getElementById('mpLista');
     const elAlertas = document.getElementById('mpAlertas');
 
+
     function iconTimeline(state) {
         if (state === 'done') return '<i class="fas fa-check-circle text-success"></i>';
         if (state === 'current') return '<i class="fas fa-dot-circle text-primary"></i>';
         if (state === 'cancelado') return '<i class="fas fa-times-circle text-danger"></i>';
         return '<i class="far fa-circle text-muted"></i>';
     }
+
 
     function badgeClass(status) {
         const s = (status || '').toLowerCase();
@@ -27,6 +29,7 @@
         return map[s] || 'bg-secondary';
     }
 
+
     function renderPedidos(pedidos) {
         if (!pedidos.length) {
             elVazio.classList.remove('d-none');
@@ -37,11 +40,11 @@
                 const steps = (p.timeline || [])
                     .map(
                         (step) =>
-                            <li>${iconTimeline(step.state)}<span>${escapeHtml(step.label)}</span></li>
+                            `<li>${iconTimeline(step.state)}<span>${escapeHtml(step.label)}</span></li>`
                     )
                     .join('');
                 const rastreio = p.codigo_rastreio
-                    ? <a href="${escapeAttr(p.rastreio_url)}" class="btn btn-sm btn-outline-primary mt-2">Abrir rastreio</a>
+                    ? `<a href="${escapeAttr(p.rastreio_url)}" class="btn btn-sm btn-outline-primary mt-2">Abrir rastreio</a>`
                     : '';
                 return `
 <div class="card mp-card mp-pedido-card">
@@ -69,7 +72,7 @@
                   )}</p>`
                 : ''
         }
-        ${p.codigo_rastreio ? <p class="mt-2 mb-0 font-monospace small"><strong>Rastreio:</strong> ${escapeHtml(p.codigo_rastreio)}</p> : ''}
+        ${p.codigo_rastreio ? `<p class="mt-2 mb-0 font-monospace small"><strong>Rastreio:</strong> ${escapeHtml(p.codigo_rastreio)}</p>` : ''}
         ${rastreio}
       </div>
     </div>
@@ -84,15 +87,18 @@
         elLista.classList.remove('d-none');
     }
 
+
     function escapeHtml(s) {
         const d = document.createElement('div');
         d.textContent = s == null ? '' : String(s);
         return d.innerHTML;
     }
 
+
     function escapeAttr(s) {
         return escapeHtml(s).replace(/"/g, '&quot;');
     }
+
 
     async function marcarLida(id) {
         const base = cfg.marcarLidaPrefix || '';
@@ -103,6 +109,7 @@
             /* ignore */
         }
     }
+
 
     function renderNotificacoes(data) {
         elAlertas.innerHTML = '';
@@ -133,6 +140,7 @@
         });
     }
 
+
     async function init() {
         try {
             const [resP, resN] = await Promise.all([
@@ -142,13 +150,16 @@
             const dataP = await resP.json().catch(() => ({}));
             const dataN = await resN.json().catch(() => ({}));
 
+
             elLoad.classList.add('d-none');
+
 
             if (!resP.ok) {
                 elErro.textContent = dataP.erro || 'Não foi possível carregar os pedidos.';
                 elErro.classList.remove('d-none');
                 return;
             }
+
 
             renderNotificacoes(dataN);
             renderPedidos(dataP.pedidos || []);
@@ -158,6 +169,7 @@
             elErro.classList.remove('d-none');
         }
     }
+
 
     init();
 })();
