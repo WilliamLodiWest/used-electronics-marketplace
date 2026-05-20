@@ -659,7 +659,9 @@ body[data-vendedor-login-url] .hero {
 .support-chat-modal.modal-container {
     display: flex;
     flex-direction: column;
-    max-height: min(540px, 88vh);
+    max-width: 560px;
+    width: min(560px, 94vw);
+    max-height: min(720px, 92vh);
     overflow: hidden;
     box-shadow: var(--shadow-medium);
 }
@@ -701,8 +703,8 @@ body[data-vendedor-login-url] .hero {
     flex-direction: column;
     gap: 0.75rem;
     flex: 1;
-    min-height: 200px;
-    max-height: 300px;
+    min-height: 320px;
+    max-height: 420px;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 1rem 1.1rem;
@@ -731,6 +733,33 @@ body[data-vendedor-login-url] .hero {
     font-size: 0.95rem;
     line-height: 1.5;
     color: var(--dark-text);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.support-chat-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.support-chat-quick-replies button {
+    border: 1px solid rgba(81, 130, 255, 0.35);
+    background: rgba(81, 130, 255, 0.08);
+    color: var(--primary-color);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.support-chat-quick-replies button:hover {
+    background: rgba(81, 130, 255, 0.18);
+    transform: translateY(-1px);
 }
 
 .support-chat-message--bot {

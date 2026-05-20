@@ -20,6 +20,7 @@ ADMIN_EMAIL = "giovanna.markxs@gmail.com"
 ADMIN_SENHA = "1234"
 BASE_APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _PERFIS_CLIENTES_DIR = os.path.join(BASE_APP_DIR, 'static', 'perfis_clientes')
+_IMAGENS_PRODUTOS_DIR = os.path.join(BASE_APP_DIR, 'static', 'tech_trade_imagens')
 _FOTO_EXTS = ('.webp', '.png', '.jpg', '.jpeg')
 
 
@@ -28,6 +29,75 @@ def _admin_autenticada():
         session.get('vendedor_logado')
         and session.get('is_admin')
         and session.get('vendedor_email') == ADMIN_EMAIL
+    )
+
+
+def _garantir_vendedor_admin(conexao):
+    """Garante id_vendedor válido em vendedores_tt (evita erro de FK ao inserir produto)."""
+    rows = conexao.select(
+        "SELECT id_vendedor FROM vendedores_tt WHERE email = %s LIMIT 1",
+        (ADMIN_EMAIL,),
+    )
+    if rows:
+        id_vendedor = int(rows[0][0])
+    else:
+        hash_senha = generate_password_hash(ADMIN_SENHA, method='pbkdf2:sha256')
+        id_vendedor = conexao.insert(
+            """
+            INSERT INTO vendedores_tt (nome, email, senha, telefone, documento, descricao, aprovado, data_cadastro)
+            VALUES (%s, %s, %s, %s, %s, %s, 1, NOW())
+            """,
+            (
+                "Administradora",
+                ADMIN_EMAIL,
+                hash_senha,
+                "",
+                "ADMIN",
+                "Conta administrativa TechTrade",
+            ),
+        )
+        if not id_vendedor:
+            rows = conexao.select(
+                "SELECT id_vendedor FROM vendedores_tt WHERE email = %s LIMIT 1",
+                (ADMIN_EMAIL,),
+            )
+            id_vendedor = int(rows[0][0]) if rows else 1
+
+    session['vendedor_id'] = id_vendedor
+    session['vendedor_nome'] = session.get('vendedor_nome') or "Administradora"
+    return id_vendedor
+
+
+def _categoria_existe(conexao, categoria_id):
+    rows = conexao.select(
+        "SELECT 1 FROM categorias_produtos_tt WHERE id_categoria = %s LIMIT 1",
+        (int(categoria_id),),
+    )
+    return bool(rows)
+
+
+def _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoque, imagem=None):
+    id_vendedor = _garantir_vendedor_admin(conexao)
+    if not _categoria_existe(conexao, categoria_id):
+        raise ValueError("Categoria inválida. Selecione uma categoria cadastrada.")
+
+    sql = """
+        INSERT INTO produtos_tt (nome, descricao, categoria_id, preco, estoque,
+                               criado_por, criado_por_id, imagem, verificado, criado_em)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, NOW())
+    """
+    return conexao.insert(
+        sql,
+        (
+            nome,
+            descricao,
+            int(categoria_id),
+            float(preco),
+            int(estoque),
+            session.get('vendedor_nome'),
+            id_vendedor,
+            imagem,
+        ),
     )
 
 
@@ -139,8 +209,10 @@ def vendedor_login():
                 session['vendedor_logado'] = True
                 session['vendedor_nome'] = "Administradora"
                 session['vendedor_email'] = ADMIN_EMAIL
-                session['vendedor_id'] = 1
                 session['is_admin'] = True
+                conexao = ConexaoBD()
+                _garantir_vendedor_admin(conexao)
+                conexao.close()
                 return redirect(url_for('produto.vendedor_dashboard'))
 
             return render_template(
@@ -223,7 +295,7 @@ def vendedor_dashboard():
     
     try:
         conexao = ConexaoBD()
-        id_vendedor = session.get('vendedor_id')
+        id_vendedor = _garantir_vendedor_admin(conexao)
         
         # Estatísticas do vendedor
         stats = {}
@@ -356,26 +428,22 @@ def vendedor_adicionar_produto():
         nome_imagem = None
         if imagem and imagem.filename:
             from werkzeug.utils import secure_filename
-            import os
             extensao = imagem.filename.rsplit('.', 1)[-1].lower()
             nome_imagem = secure_filename(f"prod_{id_vendedor}_{int(datetime.now().timestamp())}.{extensao}")
-            caminho = os.path.join('src/static/tech_trade_imagens', nome_imagem)
+            os.makedirs(_IMAGENS_PRODUTOS_DIR, exist_ok=True)
+            caminho = os.path.join(_IMAGENS_PRODUTOS_DIR, nome_imagem)
             imagem.save(caminho)
         
         conexao = ConexaoBD()
-        sql = """
-            INSERT INTO produtos_tt (nome, descricao, categoria_id, preco, estoque, 
-                                   criado_por, criado_por_id, imagem, verificado, criado_em)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, NOW())
-        """
-        conexao.insert(sql, (nome, descricao, categoria_id, preco, estoque, 
-                            vendedor_nome, id_vendedor, nome_imagem))
+        _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoque, nome_imagem)
         conexao.close()
         
-        return jsonify({"mensagem": "Produto adicionado com sucesso!"}), 200
+        return jsonify({"success": True, "mensagem": "Produto adicionado com sucesso!"}), 200
     
+    except ValueError as err:
+        return jsonify({"success": False, "erro": str(err)}), 400
     except Exception as err:
-        return jsonify({"erro": str(err)}), 500
+        return jsonify({"success": False, "erro": str(err)}), 500
 
 
 @rotas_produto.route('/vendedor/produto/buscar/<int:id_produto>')
@@ -827,7 +895,7 @@ def vendedor_api_dashboard():
 
     try:
         conexao = ConexaoBD()
-        id_vendedor = session.get('vendedor_id')
+        id_vendedor = _garantir_vendedor_admin(conexao)
 
         sql_totais = """
             SELECT
@@ -932,7 +1000,7 @@ def vendedor_api_produtos():
 
     try:
         conexao = ConexaoBD()
-        id_vendedor = session.get('vendedor_id')
+        id_vendedor = _garantir_vendedor_admin(conexao)
 
         sql = """
             SELECT p.id_produto, p.nome, p.descricao, p.categoria_id, p.preco, p.estoque, p.imagem, p.verificado,
@@ -1055,27 +1123,12 @@ def vendedor_api_novo_produto():
             return jsonify({"success": False, "erro": "Preencha todos os campos obrigatórios"}), 400
 
         conexao = ConexaoBD()
-        sql = """
-            INSERT INTO produtos_tt (nome, descricao, categoria_id, preco, estoque,
-                                   criado_por, criado_por_id, imagem, verificado, criado_em)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, NOW())
-        """
-        conexao.insert(
-            sql,
-            (
-                nome,
-                descricao,
-                int(categoria_id),
-                float(preco),
-                int(estoque),
-                session.get('vendedor_nome'),
-                session.get('vendedor_id'),
-                imagem
-            )
-        )
+        _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoque, imagem)
         conexao.close()
 
         return jsonify({"success": True, "mensagem": "Produto adicionado com sucesso!"}), 200
+    except ValueError as err:
+        return jsonify({"success": False, "erro": str(err)}), 400
     except Exception as err:
         return jsonify({"success": False, "erro": str(err)}), 500
 

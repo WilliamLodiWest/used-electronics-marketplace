@@ -407,8 +407,14 @@ async function salvarProduto() {
         imagem: document.getElementById('produto-imagem').value
     };
     
-    if (!dados.nome || !dados.descricao || !dados.preco || !dados.estoque || !dados.categoria_id) {
-        alert('Por favor, preencha todos os campos obrigatórios!');
+    if (
+        !dados.nome ||
+        !dados.descricao ||
+        Number.isNaN(dados.preco) ||
+        Number.isNaN(dados.estoque) ||
+        Number.isNaN(dados.categoria_id)
+    ) {
+        alert('Por favor, preencha todos os campos obrigatórios (incluindo a categoria).');
         return;
     }
     
@@ -430,13 +436,13 @@ async function salvarProduto() {
         
         const result = await response.json();
         
-        if (result.success) {
-            alert(result.mensagem);
+        if (response.ok && (result.success || result.mensagem)) {
+            alert(result.mensagem || 'Produto salvo com sucesso!');
             produtoModal.hide();
             carregarProdutos();
             carregarDashboard();
         } else {
-            alert('Erro: ' + (result.erro || 'Tente novamente'));
+            alert('Erro: ' + (result.erro || result.mensagem || 'Tente novamente'));
         }
     } catch (error) {
         console.error('Erro ao salvar produto:', error);

@@ -38,8 +38,17 @@ class FakeConexaoBD:
                 return [(1, "Cliente Teste")]
             return []
 
+        if "from categorias_produtos_tt" in query and "where id_categoria = %s" in query:
+            return [(1,)]
+
         if "from categorias_produtos_tt" in query:
             return [(1, "Celulares")]
+
+        if "from vendedores_tt where email = %s" in query:
+            return [(1,)]
+
+        if "insert into vendedores_tt" in query:
+            return 1
 
         if "from produtos_tt p left join categorias_produtos_tt" in query:
             return [

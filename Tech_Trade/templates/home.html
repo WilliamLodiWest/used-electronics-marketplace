@@ -324,7 +324,7 @@
     </div>
 
     <div class="modal-overlay" id="supportChatModal" aria-hidden="true">
-        <div class="modal-container modal-small support-chat-modal">
+        <div class="modal-container support-chat-modal">
             <div class="modal-header">
                 <h3><i class="fas fa-comments"></i> Chat de Suporte</h3>
                 <button class="modal-close" id="closeSupportChat" type="button" aria-label="Fechar chat">
@@ -332,10 +332,16 @@
                 </button>
             </div>
             <div class="modal-body">
+                <div class="support-chat-quick-replies" id="supportChatQuickReplies">
+                    <button type="button" data-pergunta="Como faço uma compra na TechTrade?">Como comprar</button>
+                    <button type="button" data-pergunta="Como verifico o status do meu pedido?">Ver pedido</button>
+                    <button type="button" data-pergunta="Quais formas de pagamento vocês aceitam?">Pagamentos</button>
+                    <button type="button" data-pergunta="Como entro em contato com o suporte?">Contato</button>
+                </div>
                 <div class="support-chat-window" id="supportChatWindow">
-                    <div class="support-chat-message support-chat-message--bot">
-                        Olá! Eu sou o assistente da TechTrade. Como posso ajudar você hoje?
-                    </div>
+                    <div class="support-chat-message support-chat-message--bot">Olá! Sou o assistente da TechTrade.
+
+Posso orientar sobre compras, pagamentos (Pix, cartão, boleto), rastreio de pedidos, garantia e contato com a equipe. Use os atalhos acima ou digite sua dúvida.</div>
                 </div>
                 <form id="supportChatForm" class="support-chat-form">
                     <input type="text" id="supportChatInput" placeholder="Digite sua dúvida..." maxlength="2000" autocomplete="off" required>
@@ -347,6 +353,6 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=2"></script>
 </body>
 </html>

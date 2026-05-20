@@ -106,9 +106,12 @@
 
                         <div class="form-check">
                             <label>
-                                <input type="radio" name="metodo" value="PIX" checked>
+                                <input type="radio" name="metodo" value="PIX" id="metodoPix" checked>
                                 <i class="fas fa-qrcode text-primary"></i> PIX
                             </label>
+                        </div>
+                        <div id="pixHint" class="pix-hint small text-muted mt-2">
+                            <i class="fas fa-info-circle"></i> Ao escolher PIX, exibimos o QR Code para você pagar com 10% de desconto.
                         </div>
 
                         <div class="form-check">
@@ -174,6 +177,42 @@
 </div>
 </main>
 
+<!-- Modal PIX (QR simulado) -->
+<div class="pix-modal-overlay" id="modalPix" aria-hidden="true" role="dialog" aria-labelledby="modalPixTitulo">
+    <div class="pix-modal card">
+        <div class="pix-modal-header">
+            <h5 class="mb-0" id="modalPixTitulo"><i class="fas fa-qrcode text-primary me-2"></i>Pagamento via PIX</h5>
+            <button type="button" class="btn-close" id="btnFecharPix" aria-label="Fechar"></button>
+        </div>
+        <div class="pix-modal-body text-center">
+            <p class="text-muted small mb-3">Escaneie o QR Code no app do seu banco ou copie o código abaixo.</p>
+            <div class="pix-qr-wrap">
+                <canvas id="pixQrCanvas" width="220" height="220" aria-label="QR Code PIX simulado"></canvas>
+            </div>
+            <p class="pix-valor-label mt-3 mb-1">Valor a pagar</p>
+            <p class="pix-valor" id="pixValorModal">R$ 0,00</p>
+            <div class="pix-copia-cola mt-3">
+                <label class="form-label small text-start w-100 mb-1">Pix Copia e Cola</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" id="pixCopiaCola" readonly>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnCopiarPix">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+            </div>
+            <div class="alert alert-warning small mt-3 mb-0 text-start">
+                <i class="fas fa-flask me-1"></i> Ambiente de demonstração: o QR é simulado. Após “pagar”, confirme para concluir o pedido.
+            </div>
+        </div>
+        <div class="pix-modal-footer">
+            <button type="button" class="btn btn-outline-secondary" id="btnCancelarPix">Voltar</button>
+            <button type="button" class="btn btn-success" id="btnConfirmarPix">
+                <i class="fas fa-check-circle me-1"></i> Já realizei o pagamento
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="footer">
     <div class="footer-content">
@@ -224,7 +263,7 @@
     </div>
 </footer>
 
-<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+<script src="{{ url_for('static', filename='js/checkout.js') }}?v=2"></script>
 
 </body>
 </html>

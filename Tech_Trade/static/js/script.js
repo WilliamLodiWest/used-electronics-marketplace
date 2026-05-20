@@ -261,20 +261,108 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function getSupportBotReplyLocal(userText) {
-        const normalized = userText.toLowerCase();
-        if (normalized.includes('entrega') || normalized.includes('frete') || normalized.includes('rastre')) {
-            return 'Fazemos entregas para todo o Brasil. Para rastrear, use sua conta ou escreva para suporte@techtrade.com com o número do pedido.';
+        const n = userText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        if (n.includes('compra') || n.includes('comprar') || n.includes('checkout') || n.includes('carrinho')) {
+            return (
+                'Para comprar na TechTrade:\n' +
+                '1) Faça login na sua conta.\n' +
+                '2) Acesse Produtos e escolha o item.\n' +
+                '3) Clique em Comprar e preencha endereço no checkout.\n' +
+                '4) Escolha Pix (10% off), cartão ou boleto e finalize.\n' +
+                'Com Pix, aparece um QR Code para pagar antes de confirmar o pedido.'
+            );
         }
-        if (normalized.includes('pagamento') || normalized.includes('cartao') || normalized.includes('pix') || normalized.includes('boleto')) {
-            return 'Aceitamos cartão, Pix e boleto, com processamento seguro. Dúvidas em cobrança: suporte@techtrade.com.';
+        if (n.includes('pedido') || n.includes('rastre') || n.includes('status') || n.includes('verificar') || n.includes('acompanh')) {
+            return (
+                'Para ver seus pedidos: entre logado e abra Meus Pedidos no menu.\n' +
+                'Lá você vê status, pagamento e entrega. Para ajuda com um pedido específico, envie o número do pedido para suporte@techtrade.com ou ligue (11) 96358-6157.'
+            );
         }
-        if (normalized.includes('garantia') || normalized.includes('troca') || normalized.includes('devolu')) {
-            return 'Há política de garantia e devolução. Para seu caso específico, use suporte@techtrade.com ou (11) 4004-1234.';
+        if (n.includes('pagamento') || n.includes('cartao') || n.includes('pix') || n.includes('boleto') || n.includes('pagar')) {
+            return (
+                'Formas de pagamento: Pix (10% de desconto no checkout), cartão de crédito e boleto.\n' +
+                'No Pix, escaneie o QR Code exibido na tela e confirme com "Já realizei o pagamento".\n' +
+                'Problemas na cobrança: suporte@techtrade.com com comprovante.'
+            );
         }
-        if (normalized.includes('produto') || normalized.includes('preco')) {
-            return 'Veja a seção Produtos no site. Se disser categoria e faixa de preço, ajudo nos próximos passos.';
+        if (n.includes('contato') || n.includes('falar') || n.includes('telefone') || n.includes('email') || n.includes('suporte')) {
+            return (
+                'Canais de contato:\n' +
+                '• E-mail: suporte@techtrade.com\n' +
+                '• Telefone: (11) 96358-6157\n' +
+                '• Chat no site (seg–sex, 8h–18h)\n' +
+                '• Seção Ajuda na página inicial'
+            );
         }
-        return 'Não consegui conectar ao assistente agora. Tente de novo ou use suporte@techtrade.com ou (11) 4004-1234.';
+        if (n.includes('login') || n.includes('conta') || n.includes('cadastr') || n.includes('senha')) {
+            return (
+                'Para acessar sua conta, use Login no topo do site. Esqueceu a senha? Use "Esqueci minha senha" na tela de login.\n' +
+                'Depois de logado, edite dados em Minha Conta e veja pedidos em Meus Pedidos.'
+            );
+        }
+        if (n.includes('entrega') || n.includes('frete')) {
+            return 'Entregamos para todo o Brasil. O prazo varia por região e transportadora. Após a compra, acompanhe em Meus Pedidos ou envie o número do pedido para suporte@techtrade.com.';
+        }
+        if (n.includes('garantia') || n.includes('troca') || n.includes('devolu')) {
+            return 'Temos política de garantia e devolução. Para abrir solicitação, informe o número do pedido em suporte@techtrade.com ou (11) 96358-6157.';
+        }
+        if (n.includes('produto') || n.includes('preco') || n.includes('catalogo')) {
+            return 'Navegue em Produtos no menu para ver o catálogo. Use busca e filtros por categoria. Produtos verificados pela administradora podem ser comprados com mais segurança fiscal.';
+        }
+        if (n.includes('horario') || n.includes('atendimento')) {
+            return 'Atendimento humano: segunda a sexta, 8h às 18h. Fora desse horário, use este chat ou suporte@techtrade.com.';
+        }
+        return (
+            'Posso ajudar com: como comprar, ver pedidos, pagamentos (Pix/cartão/boleto), entregas, garantia e contato.\n' +
+            'Ex.: "Como compro um produto?" ou "Como ver meu pedido?".\n' +
+            'Caso precise de atendimento humano: suporte@techtrade.com ou (11) 96358-6157.'
+        );
+    }
+
+    async function enviarMensagemSuporte(userMessage) {
+        if (!userMessage) return;
+
+        const submitBtn = supportChatForm ? supportChatForm.querySelector('button[type="submit"]') : null;
+        const prevBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+        appendSupportChatMessage(userMessage, 'user');
+        if (supportChatInput) supportChatInput.value = '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        }
+
+        try {
+            const response = await fetch('/techtrade/chat_suporte', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    message: userMessage,
+                    history: supportChatHistory,
+                }),
+            });
+            const data = await response.json().catch(() => ({}));
+            let reply = data.reply;
+            if (!response.ok || !reply) {
+                reply = data.erro || getSupportBotReplyLocal(userMessage);
+            }
+            appendSupportChatMessage(reply, 'bot');
+            supportChatHistory.push({ role: 'user', content: userMessage });
+            supportChatHistory.push({ role: 'assistant', content: reply });
+            if (supportChatHistory.length > 24) {
+                supportChatHistory = supportChatHistory.slice(-24);
+            }
+        } catch (err) {
+            console.error(err);
+            appendSupportChatMessage(getSupportBotReplyLocal(userMessage), 'bot');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = prevBtnHtml;
+            }
+            if (supportChatInput) supportChatInput.focus();
+        }
     }
 
     function abrirSupportChatModal() {
@@ -305,50 +393,19 @@ document.addEventListener('DOMContentLoaded', function () {
         supportChatForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             if (!supportChatInput) return;
-
             const userMessage = supportChatInput.value.trim();
             if (!userMessage) return;
+            await enviarMensagemSuporte(userMessage);
+        });
+    }
 
-            const submitBtn = supportChatForm.querySelector('button[type="submit"]');
-            const prevBtnHtml = submitBtn ? submitBtn.innerHTML : '';
-
-            appendSupportChatMessage(userMessage, 'user');
-            supportChatInput.value = '';
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            }
-
-            try {
-                const response = await fetch('/techtrade/chat_suporte', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({
-                        message: userMessage,
-                        history: supportChatHistory,
-                    }),
-                });
-                const data = await response.json().catch(() => ({}));
-                let reply = data.reply;
-                if (!response.ok || !reply) {
-                    reply = data.erro || getSupportBotReplyLocal(userMessage);
-                }
-                appendSupportChatMessage(reply, 'bot');
-                supportChatHistory.push({ role: 'user', content: userMessage });
-                supportChatHistory.push({ role: 'assistant', content: reply });
-                if (supportChatHistory.length > 24) {
-                    supportChatHistory = supportChatHistory.slice(-24);
-                }
-            } catch (err) {
-                console.error(err);
-                appendSupportChatMessage(getSupportBotReplyLocal(userMessage), 'bot');
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = prevBtnHtml;
-                }
-                supportChatInput.focus();
-            }
+    const quickReplies = document.getElementById('supportChatQuickReplies');
+    if (quickReplies) {
+        quickReplies.addEventListener('click', async function (event) {
+            const btn = event.target.closest('button[data-pergunta]');
+            if (!btn) return;
+            event.preventDefault();
+            await enviarMensagemSuporte(btn.getAttribute('data-pergunta'));
         });
     }
 

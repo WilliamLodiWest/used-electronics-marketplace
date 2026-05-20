@@ -1,6 +1,7 @@
 """Chat de suporte com respostas via OpenAI quando OPENAI_API_KEY está definida."""
 import json
 import os
+import unicodedata
 import urllib.error
 import urllib.request
 from typing import Any
@@ -18,54 +19,90 @@ except ImportError:
 _OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
 _SYSTEM_PROMPT = """Você é o assistente virtual da TechTrade, marketplace brasileiro de eletrônicos.
-Responda sempre em português do Brasil, de forma clara, cordial e objetiva (2 a 6 frases na maioria dos casos).
+Responda sempre em português do Brasil, de forma clara, cordial e objetiva. Use passos numerados quando explicar processos.
 
-Informações oficiais do site (use quando fizer sentido):
-- Missão: conectar clientes a tecnologia com preços justos; vendedores verificados.
-- Entregas para todo o Brasil; prazos dependem da transportadora e da região — não invente prazos exatos.
-- Pagamentos: cartão, Pix e boleto; transações protegidas.
-- Garantia e devolução: existe política da loja; para casos específicos oriente o cliente a falar com o suporte.
-- Suporte humano: e-mail suporte@techtrade.com; telefone (11) 4004-1234; chat no site seg–sex 8h–18h.
-- Endereço institucional: USCS, São Caetano do Sul (SP).
-- Para comprar, o cliente costuma precisar estar logado na conta.
+Informações oficiais do site:
+- Como comprar: (1) fazer login; (2) ir em Produtos; (3) escolher item e Comprar; (4) preencher endereço no checkout; (5) escolher Pix (10% desconto), cartão ou boleto; (6) finalizar. Com Pix, o cliente vê um QR Code simulado na tela, paga no app do banco e clica em "Já realizei o pagamento".
+- Ver pedidos: menu "Meus Pedidos" (usuário logado) — status, pagamento e entrega.
+- Pagamentos: Pix (10% off), cartão de crédito e boleto; ambiente seguro.
+- Entregas: todo o Brasil; prazos variam — não invente datas exatas.
+- Garantia/devolução: política da loja; casos específicos → suporte humano.
+- Contato: suporte@techtrade.com; telefone (11) 96358-6157; chat no site seg–sex 8h–18h; seção Ajuda na home.
+- Login/conta: tela Login; recuperar senha em "Esqueci minha senha"; perfil em Minha Conta.
+- Endereço: USCS, São Caetano do Sul (SP).
 
 Regras:
 - Não invente números de pedido, status de entrega ou dados de contas.
-- Se o usuário pedir status de um pedido específico que você não tem, diga que não tem acesso aos sistemas internos e que ele pode usar a área do cliente ou escrever para suporte@techtrade.com com o número do pedido.
-- Não finja ser humano; você é um assistente automatizado da TechTrade."""
+- Sem acesso a pedidos específicos: oriente Meus Pedidos ou e-mail com número do pedido.
+- Você é assistente automatizado, não humano."""
+
+
+def _normalize(text: str) -> str:
+    t = text.lower()
+    return "".join(c for c in unicodedata.normalize("NFD", t) if unicodedata.category(c) != "Mn")
 
 
 def _fallback_reply(user_text: str) -> str:
-    normalized = user_text.lower()
-    if "entrega" in normalized or "frete" in normalized or "rastre" in normalized:
+    n = _normalize(user_text)
+
+    if any(k in n for k in ("compra", "comprar", "checkout", "carrinho")):
         return (
-            "Fazemos entregas para todo o Brasil. O prazo varia conforme a região e a transportadora. "
-            "Para rastrear um pedido, use sua área logada no site ou envie o número do pedido para "
-            "suporte@techtrade.com."
+            "Para comprar na TechTrade:\n"
+            "1) Faça login na sua conta.\n"
+            "2) Acesse Produtos e escolha o item.\n"
+            "3) Clique em Comprar e preencha o endereço no checkout.\n"
+            "4) Escolha Pix (10% de desconto), cartão ou boleto.\n"
+            "5) Com Pix, escaneie o QR Code na tela e confirme com \"Já realizei o pagamento\"."
         )
-    if "pagamento" in normalized or "cartão" in normalized or "cartao" in normalized or "pix" in normalized or "boleto" in normalized:
+    if any(k in n for k in ("pedido", "rastre", "status", "verificar", "acompanh")):
         return (
-            "Aceitamos cartão, Pix e boleto. Os pagamentos são processados com segurança. "
-            "Se alguma cobrança parecer incorreta, fale com suporte@techtrade.com com o comprovante."
+            "Para ver seus pedidos: entre logado e abra Meus Pedidos no menu.\n"
+            "Lá você consulta status, pagamento e entrega. Para um pedido específico, envie o número para "
+            "suporte@techtrade.com ou ligue (11) 96358-6157."
         )
-    if "garantia" in normalized or "troca" in normalized or "devolu" in normalized:
+    if any(k in n for k in ("pagamento", "cartao", "cartão", "pix", "boleto", "pagar")):
         return (
-            "Nossos produtos seguem política de garantia e devolução da TechTrade. "
-            "Para abrir solicitação com seu pedido em mãos, use o suporte por e-mail ou telefone (11) 4004-1234."
+            "Aceitamos Pix (10% off no checkout), cartão e boleto.\n"
+            "No Pix, exibimos QR Code e código copia e cola; após pagar no banco, clique em "
+            "\"Já realizei o pagamento\". Dúvidas na cobrança: suporte@techtrade.com com comprovante."
         )
-    if "produto" in normalized or "preço" in normalized or "preco" in normalized:
+    if any(k in n for k in ("contato", "falar", "telefone", "email", "suporte", "whatsapp")):
         return (
-            "Você pode navegar em Produtos na TechTrade e filtrar por categoria ou busca. "
-            "Se quiser algo específico, diga categoria e faixa de preço que te oriento nos próximos passos."
+            "Canais de contato:\n"
+            "• E-mail: suporte@techtrade.com\n"
+            "• Telefone: (11) 96358-6157\n"
+            "• Chat no site (seg–sex, 8h–18h)\n"
+            "• Seção Ajuda na página inicial"
         )
-    if "horário" in normalized or "horario" in normalized or "atendimento" in normalized:
+    if any(k in n for k in ("login", "conta", "cadastr", "senha", "perfil")):
         return (
-            "O chat humano no site funciona de segunda a sexta, das 8h às 18h. "
-            "Fora desse horário você pode usar este assistente ou o e-mail suporte@techtrade.com."
+            "Use Login no topo do site. Esqueceu a senha? Clique em \"Esqueci minha senha\".\n"
+            "Depois de logado: Minha Conta (dados) e Meus Pedidos (compras)."
+        )
+    if "entrega" in n or "frete" in n:
+        return (
+            "Entregamos para todo o Brasil; o prazo varia por região e transportadora. "
+            "Acompanhe em Meus Pedidos ou envie o número do pedido para suporte@techtrade.com."
+        )
+    if any(k in n for k in ("garantia", "troca", "devolu")):
+        return (
+            "Há política de garantia e devolução. Para abrir solicitação, informe o número do pedido em "
+            "suporte@techtrade.com ou (11) 96358-6157."
+        )
+    if any(k in n for k in ("produto", "preco", "preço", "catalogo", "catálogo")):
+        return (
+            "Navegue em Produtos no menu. Use busca e filtros por categoria. "
+            "Itens verificados pela administradora estão liberados para compra com documentação fiscal conferida."
+        )
+    if "horario" in n or "horário" in n or "atendimento" in n:
+        return (
+            "Atendimento humano: segunda a sexta, 8h às 18h. "
+            "Fora desse horário, use este chat ou suporte@techtrade.com."
         )
     return (
-        "Obrigado pela mensagem! Posso ajudar com entregas, pagamentos, garantia, produtos ou uso do site. "
-        "Se precisar de algo muito específico (ex.: um pedido seu), envie os detalhes para suporte@techtrade.com."
+        "Posso ajudar com: como comprar, ver pedidos, pagamentos, entregas, garantia e contato.\n"
+        "Ex.: \"Como compro um produto?\" ou \"Como ver meu pedido?\".\n"
+        "Atendimento humano: suporte@techtrade.com ou (11) 96358-6157."
     )
 
 
