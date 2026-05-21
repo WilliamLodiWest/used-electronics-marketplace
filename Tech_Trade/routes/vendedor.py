@@ -4,9 +4,11 @@ from flask import flash, jsonify, redirect, render_template, request, session, u
 from werkzeug.security import generate_password_hash
 from src.utils.bd import ConexaoBD
 from src.utils.schema_compat import (
+    column_allows_null,
     compras_status_enum_values,
     extrair_codigo_rastreio_obs,
     pedido_aguarda_aprovacao_admin,
+    status_pedido_label,
     table_has_column,
 )
 
@@ -81,29 +83,40 @@ def _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoqu
     if not _categoria_existe(conexao, categoria_id):
         raise ValueError("Categoria inválida. Selecione uma categoria cadastrada.")
 
-    # Produto novo: pendente de verificação (verificado=0; data/autor preenchidos na aprovação).
+    admin_nome = session.get('vendedor_nome') or 'Sistema TechTrade'
+    # BD legado (verificado_em NOT NULL): cadastro pela admin já entra verificado, como os seeds.
+    # Com migração 003 (coluna nullable): produto fica pendente até aprovação fiscal explícita.
+    verificado_em_nullable = (
+        not table_has_column(conexao, "produtos_tt", "verificado_em")
+        or column_allows_null(conexao, "produtos_tt", "verificado_em")
+    )
+    if verificado_em_nullable:
+        verificado_sql, verificado_por_val, verificado_em_sql = "0", "", "NULL"
+    else:
+        verificado_sql, verificado_por_val, verificado_em_sql = "1", admin_nome, "NOW()"
+
     cols = [
         "nome", "descricao", "categoria_id", "preco", "estoque",
         "criado_por", "criado_por_id", "imagem", "verificado", "criado_em",
     ]
-    placeholders = ["%s"] * 8 + ["0", "NOW()"]
+    placeholders = ["%s"] * 8 + [verificado_sql, "NOW()"]
     params = [
         nome,
         descricao,
         int(categoria_id),
         float(preco),
         int(estoque),
-        session.get('vendedor_nome'),
+        admin_nome,
         id_vendedor,
         imagem,
     ]
     if table_has_column(conexao, "produtos_tt", "verificado_por"):
         cols.insert(-1, "verificado_por")
         placeholders.insert(-1, "%s")
-        params.append("")
+        params.append(verificado_por_val)
     if table_has_column(conexao, "produtos_tt", "verificado_em"):
         cols.insert(-1, "verificado_em")
-        placeholders.insert(-1, "NULL")
+        placeholders.insert(-1, verificado_em_sql)
     if table_has_column(conexao, "produtos_tt", "verificacao_obs"):
         cols.insert(-1, "verificacao_obs")
         placeholders.insert(-1, "%s")
@@ -188,10 +201,24 @@ def _tabela_notificacoes_cliente_existe(conexao):
         return False
 
 
+def _notificar_cliente_pedido(conexao, id_cliente, id_compra, mensagem):
+    """Grava alerta para o comprador (tabela opcional — ver sql/notificacoes_cliente_tt.sql)."""
+    if not id_cliente or not mensagem or not _tabela_notificacoes_cliente_existe(conexao):
+        return
+    try:
+        conexao.insert(
+            """
+            INSERT INTO notificacoes_cliente_tt (id_cliente, id_compra, mensagem, data_envio, lida)
+            VALUES (%s, %s, %s, NOW(), 0)
+            """,
+            (id_cliente, id_compra, mensagem),
+        )
+    except Exception:
+        pass
+
+
 def _notificar_cliente_pedido_confirmado(conexao, id_cliente, id_compra, nome_produto, codigo_rastreio):
     """Avisa o comprador que o pedido foi confirmado (tabela opcional — ver sql/notificacoes_cliente_tt.sql)."""
-    if not id_cliente or not _tabela_notificacoes_cliente_existe(conexao):
-        return
     nome_produto = (nome_produto or "seu produto").strip()
     msg = (
         f"Pedido #{id_compra} confirmado pela administradora. "
@@ -199,16 +226,7 @@ def _notificar_cliente_pedido_confirmado(conexao, id_cliente, id_compra, nome_pr
     )
     if codigo_rastreio:
         msg += f" Rastreio: {codigo_rastreio}."
-    try:
-        conexao.insert(
-            """
-            INSERT INTO notificacoes_cliente_tt (id_cliente, id_compra, mensagem, data_envio, lida)
-            VALUES (%s, %s, %s, NOW(), 0)
-            """,
-            (id_cliente, id_compra, msg),
-        )
-    except Exception:
-        pass
+    _notificar_cliente_pedido(conexao, id_cliente, id_compra, msg)
 
 
 @rotas_produto.route('/vendedor/login', methods=['GET', 'POST'])
@@ -307,273 +325,29 @@ def vendedor_cadastro():
 
 @rotas_produto.route('/vendedor/dashboard')
 def vendedor_dashboard():
-    """Dashboard principal do vendedor"""
+    """Shell do painel; dados carregados via /vendedor/api/* no frontend."""
     if not _admin_autenticada():
         return redirect(url_for('produto.vendedor_login'))
-    
+
+    vendedor_nome = session.get('vendedor_nome') or 'Administradora'
+    id_vendedor = session.get('vendedor_id')
     try:
-        conexao = ConexaoBD()
-        id_vendedor = _garantir_vendedor_admin(conexao)
-        
-        # Estatísticas do vendedor
-        stats = {}
-        
-        # Total de produtos
-        sql_produtos = "SELECT COUNT(*) FROM produtos_tt WHERE criado_por_id = %s"
-        result = conexao.select(sql_produtos, (id_vendedor,))
-        stats['total_produtos'] = result[0][0] if result else 0
-        
-        # Produtos com baixo estoque (< 10)
-        sql_baixo_estoque = "SELECT COUNT(*) FROM produtos_tt WHERE criado_por_id = %s AND estoque < 10"
-        result = conexao.select(sql_baixo_estoque, (id_vendedor,))
-        stats['baixo_estoque'] = result[0][0] if result else 0
-        
-        # Total de vendas concluídas
-        sql_vendas = """
-            SELECT COUNT(*), COALESCE(SUM(c.total), 0)
-            FROM compras_tt c
-            JOIN produtos_tt p ON c.id_produto = p.id_produto
-            WHERE p.criado_por_id = %s AND c.status = 'entregue'
-        """
-        result = conexao.select(sql_vendas, (id_vendedor,))
-        stats['total_vendas'] = result[0][0] if result else 0
-        stats['faturamento'] = float(result[0][1]) if result and result[0][1] else 0
-        
-        # Total de pedidos pendentes
-        sql_pedidos_pendentes = """
-            SELECT COUNT(*)
-            FROM compras_tt c
-            JOIN produtos_tt p ON c.id_produto = p.id_produto
-            WHERE p.criado_por_id = %s AND c.status IN ('pendente', 'pago', 'processando')
-        """
-        result = conexao.select(sql_pedidos_pendentes, (id_vendedor,))
-        stats['pedidos_pendentes'] = result[0][0] if result else 0
-        
-        # Total de notificações não lidas
-        sql_notificacoes = "SELECT COUNT(*) FROM notificacoes_tt WHERE id_vendedor = %s AND lida = 0"
-        result = conexao.select(sql_notificacoes, (id_vendedor,))
-        stats['notificacoes'] = result[0][0] if result else 0
-        
-        # Últimas vendas
-        sql_ultimas_vendas = """
-            SELECT c.id_compra, p.nome, c.quantidade, c.total, c.data_compra, c.status, c.metodo_pagamento,
-                   cl.nome as cliente_nome
-            FROM compras_tt c
-            JOIN produtos_tt p ON c.id_produto = p.id_produto
-            JOIN clientes_tt cl ON c.id_cliente = cl.id_cliente
-            WHERE p.criado_por_id = %s
-            ORDER BY c.data_compra DESC
-            LIMIT 10
-        """
-        ultimas_vendas = conexao.select(sql_ultimas_vendas, (id_vendedor,))
-        
-        # Notificações recentes
-        sql_notificacoes_recentes = """
-            SELECT id_notificacao, mensagem, data_envio, lida
-            FROM notificacoes_tt
-            WHERE id_vendedor = %s
-            ORDER BY data_envio DESC
-            LIMIT 10
-        """
-        notificacoes = conexao.select(sql_notificacoes_recentes, (id_vendedor,))
-        
-        # Lista de produtos para o dashboard
-        sql_produtos_lista = """
-            SELECT p.id_produto, p.nome, p.preco, p.estoque, p.imagem, p.verificado,
-                   c.nome as categoria
-            FROM produtos_tt p
-            LEFT JOIN categorias_produtos_tt c ON p.categoria_id = c.id_categoria
-            WHERE p.criado_por_id = %s
-            ORDER BY p.criado_em DESC
-            LIMIT 6
-        """
-        produtos = conexao.select(sql_produtos_lista, (id_vendedor,))
-        
-        # Categorias para os formulários
-        categorias = conexao.select("SELECT id_categoria, nome FROM categorias_produtos_tt ORDER BY nome")
-        
-        conexao.close()
-        
-        vendedor_nome = session.get('vendedor_nome')
-        vendedor_foto_url = _foto_url_admin(id_vendedor)
-        vendedor_iniciais = _iniciais_nome(vendedor_nome)
-
-        return render_template('vendedor_painel.html', 
-                             stats=stats,
-                             produtos=produtos,
-                             ultimas_vendas=ultimas_vendas, 
-                             notificacoes=notificacoes,
-                             categorias=categorias,
-                             vendedor_nome=vendedor_nome,
-                             vendedor_foto_url=vendedor_foto_url,
-                             vendedor_iniciais=vendedor_iniciais)
-    
-    except Exception as err:
-        vendedor_nome = session.get('vendedor_nome')
-        return render_template(
-            'vendedor_painel.html',
-            erro=str(err),
-            vendedor_nome=vendedor_nome,
-            vendedor_foto_url=None,
-            vendedor_iniciais=_iniciais_nome(vendedor_nome),
-        )
-
-
-@rotas_produto.route('/vendedor/produtos/adicionar', methods=['POST'])
-def vendedor_adicionar_produto():
-    """Adicionar novo produto"""
-    if not _admin_autenticada():
-        return jsonify({"erro": "Não autorizado"}), 401
-    
-    try:
-        nome = request.form.get('nome')
-        descricao = request.form.get('descricao')
-        categoria_id = request.form.get('categoria_id')
-        preco = request.form.get('preco')
-        estoque = request.form.get('estoque')
-        imagem = request.files.get('imagem')
-        
-        if not all([nome, descricao, categoria_id, preco, estoque]):
-            return jsonify({"erro": "Preencha todos os campos obrigatórios"}), 400
-        
-        # Converter valores
-        preco = float(preco.replace(',', '.')) if isinstance(preco, str) else float(preco)
-        estoque = int(estoque)
-        id_vendedor = session.get('vendedor_id')
-        vendedor_nome = session.get('vendedor_nome')
-        
-        # Processar imagem
-        nome_imagem = None
-        if imagem and imagem.filename:
-            from werkzeug.utils import secure_filename
-            extensao = imagem.filename.rsplit('.', 1)[-1].lower()
-            nome_imagem = secure_filename(f"prod_{id_vendedor}_{int(datetime.now().timestamp())}.{extensao}")
-            os.makedirs(_IMAGENS_PRODUTOS_DIR, exist_ok=True)
-            caminho = os.path.join(_IMAGENS_PRODUTOS_DIR, nome_imagem)
-            imagem.save(caminho)
-        
-        conexao = ConexaoBD()
-        _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoque, nome_imagem)
-        conexao.close()
-        
-        return jsonify({"success": True, "mensagem": "Produto adicionado com sucesso!"}), 200
-    
-    except ValueError as err:
-        return jsonify({"success": False, "erro": str(err)}), 400
-    except Exception as err:
-        return jsonify({"success": False, "erro": str(err)}), 500
-
-
-@rotas_produto.route('/vendedor/produto/buscar/<int:id_produto>')
-def vendedor_buscar_produto(id_produto):
-    """Buscar dados de um produto para edição"""
-    if not _admin_autenticada():
-        return jsonify({"erro": "Não autorizado"}), 401
-    
-    try:
-        conexao = ConexaoBD()
-        id_vendedor = session.get('vendedor_id')
-        
-        sql = """
-            SELECT id_produto, nome, descricao, categoria_id, preco, estoque
-            FROM produtos_tt
-            WHERE id_produto = %s AND criado_por_id = %s
-        """
-        produto = conexao.select(sql, (id_produto, id_vendedor))
-        conexao.close()
-        
-        if not produto:
-            return jsonify({"erro": "Produto não encontrado"}), 404
-        
-        p = produto[0]
-        return jsonify({
-            "id_produto": p[0],
-            "nome": p[1],
-            "descricao": p[2],
-            "categoria_id": p[3],
-            "preco": float(p[4]),
-            "estoque": p[5]
-        })
-    
-    except Exception as err:
-        return jsonify({"erro": str(err)}), 500
-
-
-@rotas_produto.route('/vendedor/produtos/editar/<int:id_produto>', methods=['POST'])
-def vendedor_editar_produto(id_produto):
-    """Editar produto existente"""
-    if not _admin_autenticada():
-        return jsonify({"erro": "Não autorizado"}), 401
-    
-    try:
-        nome = request.form.get('nome')
-        descricao = request.form.get('descricao')
-        categoria_id = request.form.get('categoria_id')
-        preco = request.form.get('preco')
-        estoque = request.form.get('estoque')
-        
-        if not all([nome, descricao, categoria_id, preco, estoque]):
-            return jsonify({"erro": "Preencha todos os campos"}), 400
-        
-        preco = float(preco.replace(',', '.')) if isinstance(preco, str) else float(preco)
-        estoque = int(estoque)
-        id_vendedor = session.get('vendedor_id')
-        
-        conexao = ConexaoBD()
-        
-        # Verificar se o produto pertence ao vendedor
-        verifica = conexao.select("SELECT id_produto FROM produtos_tt WHERE id_produto = %s AND criado_por_id = %s", 
-                                 (id_produto, id_vendedor))
-        if not verifica:
+        if id_vendedor:
+            vendedor_foto_url = _foto_url_admin(id_vendedor)
+        else:
+            conexao = ConexaoBD()
+            id_vendedor = _garantir_vendedor_admin(conexao)
             conexao.close()
-            return jsonify({"erro": "Produto não encontrado"}), 404
-        
-        sql = """
-            UPDATE produtos_tt 
-            SET nome = %s, descricao = %s, categoria_id = %s, preco = %s, estoque = %s
-            WHERE id_produto = %s AND criado_por_id = %s
-        """
-        conexao.update(sql, (nome, descricao, categoria_id, preco, estoque, id_produto, id_vendedor))
-        conexao.close()
-        
-        return jsonify({"mensagem": "Produto atualizado com sucesso!"}), 200
-    
-    except Exception as err:
-        return jsonify({"erro": str(err)}), 500
+            vendedor_foto_url = _foto_url_admin(id_vendedor)
+    except Exception:
+        vendedor_foto_url = None
 
-
-@rotas_produto.route('/vendedor/produtos/excluir/<int:id_produto>', methods=['DELETE'])
-def vendedor_excluir_produto(id_produto):
-    """Excluir produto"""
-    if not _admin_autenticada():
-        return jsonify({"erro": "Não autorizado"}), 401
-    
-    try:
-        id_vendedor = session.get('vendedor_id')
-        
-        conexao = ConexaoBD()
-        
-        # Verificar se o produto pertence ao vendedor
-        verifica = conexao.select("SELECT id_produto FROM produtos_tt WHERE id_produto = %s AND criado_por_id = %s", 
-                                 (id_produto, id_vendedor))
-        if not verifica:
-            conexao.close()
-            return jsonify({"erro": "Produto não encontrado"}), 404
-        
-        # Verificar se o produto tem vendas
-        tem_vendas = conexao.select("SELECT id_compra FROM compras_tt WHERE id_produto = %s AND status != 'cancelado' LIMIT 1", (id_produto,))
-        if tem_vendas:
-            conexao.close()
-            return jsonify({"erro": "Não é possível excluir um produto que já possui vendas"}), 400
-        
-        sql = "DELETE FROM produtos_tt WHERE id_produto = %s AND criado_por_id = %s"
-        conexao.delete(sql, (id_produto, id_vendedor))
-        conexao.close()
-        
-        return jsonify({"mensagem": "Produto excluído com sucesso!"}), 200
-    
-    except Exception as err:
-        return jsonify({"erro": str(err)}), 500
+    return render_template(
+        'vendedor_painel.html',
+        vendedor_nome=vendedor_nome,
+        vendedor_foto_url=vendedor_foto_url,
+        vendedor_iniciais=_iniciais_nome(vendedor_nome),
+    )
 
 
 @rotas_produto.route('/vendedor/pedidos/json')
@@ -620,6 +394,7 @@ def vendedor_pedidos_json():
                 "cliente_telefone": p[10] or 'Não informado',
                 "codigo_rastreio": codigo_exibir,
                 "aguarda_aprovacao_admin": aguarda,
+                "status_label": status_pedido_label(p[5]),
             })
         
         return jsonify(pedidos_json)
@@ -645,12 +420,12 @@ def vendedor_atualizar_status_pedido(id_pedido):
         
         conexao = ConexaoBD()
         
-        # Verificar se o pedido pertence ao vendedor
-        verifica = """
-            SELECT c.id_compra, p.nome, cl.nome as cliente_nome, cl.email as cliente_email
+        has_cr = table_has_column(conexao, "compras_tt", "codigo_rastreio")
+        extra_col = "c.codigo_rastreio" if has_cr else "c.observacoes"
+        verifica = f"""
+            SELECT c.status, c.id_cliente, p.nome, {extra_col}
             FROM compras_tt c
             JOIN produtos_tt p ON c.id_produto = p.id_produto
-            JOIN clientes_tt cl ON c.id_cliente = cl.id_cliente
             WHERE c.id_compra = %s AND p.criado_por_id = %s
         """
         pedido = conexao.select(verifica, (id_pedido, id_vendedor))
@@ -658,6 +433,12 @@ def vendedor_atualizar_status_pedido(id_pedido):
         if not pedido:
             conexao.close()
             return jsonify({"erro": "Pedido não encontrado"}), 404
+
+        status_atual = (pedido[0][0] or "").strip().lower()
+        id_cliente = int(pedido[0][1] or 0)
+        nome_produto = (pedido[0][2] or "").strip()
+        codigo_extra = pedido[0][3] or ""
+        codigo_rastreio = (codigo_extra or "").strip() if has_cr else extrair_codigo_rastreio_obs(codigo_extra or "")
         
         status_validos = [
             'aguardando_aprovacao',
@@ -674,12 +455,45 @@ def vendedor_atualizar_status_pedido(id_pedido):
         if status not in status_validos:
             conexao.close()
             return jsonify({"erro": "Status inválido"}), 400
+
+        transicoes = {
+            'enviado': {'processando', 'pago', 'pendente'},
+            'entregue': {'enviado'},
+            'cancelado': {'aguardando_aprovacao', 'pendente', 'pago', 'processando', 'enviado'},
+        }
+        permitidos = transicoes.get(status)
+        if permitidos is not None and status_atual not in permitidos:
+            conexao.close()
+            return jsonify({
+                "erro": f"Não é possível marcar como «{status_pedido_label(status)}» a partir do status atual.",
+            }), 400
         
         sql = "UPDATE compras_tt SET status = %s WHERE id_compra = %s"
         conexao.update(sql, (status, id_pedido))
+
+        if status == 'enviado':
+            msg = (
+                f"Pedido #{id_pedido} despachado e em transporte. "
+                f"Produto: \"{nome_produto or 'seu produto'}\"."
+            )
+            if codigo_rastreio:
+                msg += f" Rastreio: {codigo_rastreio}."
+            _notificar_cliente_pedido(conexao, id_cliente, id_pedido, msg)
+        elif status == 'entregue':
+            _notificar_cliente_pedido(
+                conexao,
+                id_cliente,
+                id_pedido,
+                f"Pedido #{id_pedido} entregue. Obrigado por comprar na TechTrade!",
+            )
+
         conexao.close()
         
-        return jsonify({"mensagem": f"Status do pedido atualizado para {status} com sucesso!"}), 200
+        return jsonify({
+            "mensagem": f"Status atualizado: {status_pedido_label(status)}.",
+            "status": status,
+            "status_label": status_pedido_label(status),
+        }), 200
     
     except Exception as err:
         return jsonify({"erro": str(err)}), 500
@@ -783,124 +597,6 @@ def vendedor_reprovar_pedido(id_pedido):
         )
         conexao.close()
         return jsonify({"mensagem": "Pedido cancelado."}), 200
-    except Exception as err:
-        return jsonify({"erro": str(err)}), 500
-
-
-@rotas_produto.route('/vendedor/notificacoes/marcar_lida/<int:id_notificacao>', methods=['POST'])
-def vendedor_marcar_notificacao_lida(id_notificacao):
-    """Marcar notificação como lida"""
-    if not _admin_autenticada():
-        return jsonify({"erro": "Não autorizado"}), 401
-    
-    try:
-        id_vendedor = session.get('vendedor_id')
-        
-        conexao = ConexaoBD()
-        sql = "UPDATE notificacoes_tt SET lida = 1 WHERE id_notificacao = %s AND id_vendedor = %s"
-        conexao.update(sql, (id_notificacao, id_vendedor))
-        conexao.close()
-        
-        return jsonify({"mensagem": "Notificação marcada como lida"}), 200
-    
-    except Exception as err:
-        return jsonify({"erro": str(err)}), 500
-
-
-@rotas_produto.route('/vendedor/relatorios/json')
-def vendedor_relatorios_json():
-    """Retorna dados de relatórios em JSON para AJAX"""
-    if not _admin_autenticada():
-        return jsonify({"erro": "Não autorizado"}), 401
-    
-    try:
-        conexao = ConexaoBD()
-        id_vendedor = session.get('vendedor_id')
-        
-        # Vendas do mês atual
-        sql_vendas_mes = """
-            SELECT COUNT(*), COALESCE(SUM(c.total), 0)
-            FROM compras_tt c
-            JOIN produtos_tt p ON c.id_produto = p.id_produto
-            WHERE p.criado_por_id = %s 
-            AND c.status = 'entregue'
-            AND MONTH(c.data_compra) = MONTH(CURRENT_DATE())
-            AND YEAR(c.data_compra) = YEAR(CURRENT_DATE())
-        """
-        vendas_mes = conexao.select(sql_vendas_mes, (id_vendedor,))
-        
-        # Vendas do mês anterior para comparação
-        sql_vendas_mes_anterior = """
-            SELECT COUNT(*), COALESCE(SUM(c.total), 0)
-            FROM compras_tt c
-            JOIN produtos_tt p ON c.id_produto = p.id_produto
-            WHERE p.criado_por_id = %s 
-            AND c.status = 'entregue'
-            AND MONTH(c.data_compra) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH)
-            AND YEAR(c.data_compra) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH)
-        """
-        vendas_mes_anterior = conexao.select(sql_vendas_mes_anterior, (id_vendedor,))
-        
-        # Vendas por mês (últimos 6 meses)
-        sql_vendas_ultimos_meses = """
-            SELECT DATE_FORMAT(c.data_compra, '%Y-%m') as mes, 
-                   COUNT(*) as total_vendas, 
-                   COALESCE(SUM(c.total), 0) as faturamento
-            FROM compras_tt c
-            JOIN produtos_tt p ON c.id_produto = p.id_produto
-            WHERE p.criado_por_id = %s AND c.status = 'entregue'
-            AND c.data_compra >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(c.data_compra, '%Y-%m')
-            ORDER BY mes ASC
-        """
-        vendas_ultimos_meses = conexao.select(sql_vendas_ultimos_meses, (id_vendedor,))
-        
-        # Top 5 produtos mais vendidos
-        sql_top_produtos = """
-            SELECT p.nome, COUNT(c.id_compra) as total_vendas, SUM(c.quantidade) as quantidade_vendida,
-                   COALESCE(SUM(c.total), 0) as faturamento
-            FROM produtos_tt p
-            JOIN compras_tt c ON p.id_produto = c.id_produto
-            WHERE p.criado_por_id = %s AND c.status = 'entregue'
-            GROUP BY p.id_produto
-            ORDER BY total_vendas DESC
-            LIMIT 5
-        """
-        top_produtos = conexao.select(sql_top_produtos, (id_vendedor,))
-        
-        conexao.close()
-        
-        total_vendas_mes = int(vendas_mes[0][0]) if vendas_mes and vendas_mes[0][0] else 0
-        faturamento_mes = float(vendas_mes[0][1]) if vendas_mes and vendas_mes[0][1] else 0
-        total_vendas_anterior = int(vendas_mes_anterior[0][0]) if vendas_mes_anterior and vendas_mes_anterior[0][0] else 0
-        
-        # Calcular variação percentual
-        variacao = 0
-        if total_vendas_anterior > 0:
-            variacao = ((total_vendas_mes - total_vendas_anterior) / total_vendas_anterior) * 100
-        
-        return jsonify({
-            "vendas_mes": total_vendas_mes,
-            "faturamento_mes": faturamento_mes,
-            "faturamento_mes_formatado": f"{faturamento_mes:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
-            "variacao_percentual": round(variacao, 1),
-            "vendas_ultimos_meses": [
-                {
-                    "mes": vm[0],
-                    "total_vendas": vm[1],
-                    "faturamento": float(vm[2])
-                } for vm in vendas_ultimos_meses
-            ],
-            "top_produtos": [
-                {
-                    "nome": tp[0],
-                    "total_vendas": tp[1],
-                    "quantidade_vendida": tp[2],
-                    "faturamento": float(tp[3])
-                } for tp in top_produtos
-            ]
-        })
-    
     except Exception as err:
         return jsonify({"erro": str(err)}), 500
 

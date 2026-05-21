@@ -3,10 +3,51 @@ let produtoModal;
 let currentPage = 'dashboard';
 let categorias = [];
 
+function initSidebarMobile() {
+    const app = document.getElementById('vendedor-app');
+    const toggle = document.getElementById('sidebar-toggle');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const sidebar = document.getElementById('vendedor-sidebar');
+    if (!app || !toggle || !sidebar) return;
+
+    const fechar = () => {
+        app.classList.remove('sidebar-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        if (backdrop) backdrop.hidden = true;
+        document.body.style.overflow = '';
+    };
+
+    const abrir = () => {
+        app.classList.add('sidebar-open');
+        toggle.setAttribute('aria-expanded', 'true');
+        if (backdrop) backdrop.hidden = false;
+        document.body.style.overflow = 'hidden';
+    };
+
+    toggle.addEventListener('click', () => {
+        if (app.classList.contains('sidebar-open')) fechar();
+        else abrir();
+    });
+    backdrop?.addEventListener('click', fechar);
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) fechar();
+    });
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach((link) => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) fechar();
+        });
+    });
+}
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    produtoModal = new bootstrap.Modal(document.getElementById('produtoModal'));
-    
+    const modalEl = document.getElementById('produtoModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+        produtoModal = new bootstrap.Modal(modalEl);
+    }
+
+    initSidebarMobile();
+
     // Navegação
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -206,10 +247,8 @@ async function carregarVendas() {
         }
 
         const vendasHtml = pedidos.map((p) => {
-            const acoes = p.aguarda_aprovacao_admin
-                    ? `<button type="button" class="btn btn-sm btn-success me-1" onclick="aprovarPedido(${p.id_compra})">Aprovar</button>
-                       <button type="button" class="btn btn-sm btn-outline-danger" onclick="reprovarPedido(${p.id_compra})">Reprovar</button>`
-                    : `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="mudarStatusPedido(${p.id_compra})">Alterar status…</button>`;
+            const acoes = buildAcoesVenda(p);
+            const statusTxt = p.status_label || formatStatusLabel(p.status);
             const rastreio = p.codigo_rastreio
                 ? `<span class="font-monospace small">${p.codigo_rastreio}</span>`
                 : '—';
@@ -221,9 +260,9 @@ async function carregarVendas() {
                     <td>R$ ${p.total.toLocaleString('pt-BR')}</td>
                     <td>${p.metodo_pagamento}</td>
                     <td>${rastreio}</td>
-                    <td><span class="badge bg-${getStatusColor(p.status)}">${p.status}</span></td>
+                    <td><span class="badge bg-${getStatusColor(p.status)}">${statusTxt}</span></td>
                     <td>${p.data_compra}</td>
-                    <td class="text-nowrap">${acoes}</td>
+                    <td class="text-nowrap vendas-acoes">${acoes}</td>
                 </tr>
             `;
         }).join('');
@@ -267,29 +306,80 @@ async function reprovarPedido(id) {
     }
 }
 
-async function mudarStatusPedido(id) {
-    const opcoes = ['pago', 'processando', 'enviado', 'entregue', 'cancelado'];
-    const novo = prompt(`Novo status (${opcoes.join(', ')}):`);
-    if (!novo || !opcoes.includes(novo.trim())) {
-        if (novo) window.TTNotify?.warning('Status inválido.');
-        return;
+function formatStatusLabel(status) {
+    const map = {
+        aguardando_aprovacao: 'Aguardando aprovação',
+        pendente: 'Aguardando aprovação',
+        pago: 'Aprovado — em preparação',
+        processando: 'Aprovado — em preparação',
+        enviado: 'Despachado / em transporte',
+        entregue: 'Entregue',
+        cancelado: 'Cancelado',
+    };
+    return map[(status || '').toLowerCase()] || status;
+}
+
+function buildAcoesVenda(p) {
+    const s = (p.status || '').toLowerCase();
+    if (p.aguarda_aprovacao_admin) {
+        return `<button type="button" class="btn btn-sm btn-success me-1" onclick="aprovarPedido(${p.id_compra})">Aprovar</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="reprovarPedido(${p.id_compra})">Reprovar</button>`;
     }
+    if (s === 'cancelado' || s === 'entregue') {
+        return '<span class="text-muted small">—</span>';
+    }
+    const botoes = [];
+    if (s === 'processando' || s === 'pago' || (s === 'pendente' && !p.aguarda_aprovacao_admin)) {
+        botoes.push(
+            `<button type="button" class="btn btn-sm btn-primary me-1" onclick="marcarDespachado(${p.id_compra})">Despachado / em transporte</button>`
+        );
+    }
+    if (s === 'enviado') {
+        botoes.push(
+            `<button type="button" class="btn btn-sm btn-success" onclick="marcarEntregue(${p.id_compra})">Entregue</button>`
+        );
+    }
+    if (!botoes.length) {
+        return '<span class="text-muted small">—</span>';
+    }
+    return botoes.join('');
+}
+
+async function atualizarStatusPedido(id, status, confirmMsg) {
+    if (confirmMsg && !confirm(confirmMsg)) return;
     try {
         const response = await fetch(`/vendedor/pedidos/atualizar_status/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: novo.trim() }),
+            body: JSON.stringify({ status }),
         });
         const data = await response.json();
         if (!response.ok) {
             window.TTNotify?.error(data.erro || 'Erro ao atualizar');
             return;
         }
+        window.TTNotify?.success(data.mensagem || 'Status atualizado.');
         carregarVendas();
         carregarDashboard();
     } catch (e) {
         window.TTNotify?.error('Erro ao atualizar status.');
     }
+}
+
+async function marcarDespachado(id) {
+    await atualizarStatusPedido(
+        id,
+        'enviado',
+        'Marcar como despachado / em transporte? O cliente verá essa etapa no rastreio e em Meus Pedidos.'
+    );
+}
+
+async function marcarEntregue(id) {
+    await atualizarStatusPedido(
+        id,
+        'entregue',
+        'Confirmar entrega? O cliente verá o pedido como entregue.'
+    );
 }
 
 // Carregar Notificações
@@ -387,7 +477,7 @@ function abrirModalProduto(id = null) {
             });
     }
     
-    produtoModal.show();
+    produtoModal?.show();
 }
 
 // Editar produto
@@ -438,7 +528,7 @@ async function salvarProduto() {
         
         if (response.ok && (result.success || result.mensagem)) {
             window.TTNotify?.success(result.mensagem || 'Produto salvo com sucesso!');
-            produtoModal.hide();
+            produtoModal?.hide();
             carregarProdutos();
             carregarDashboard();
         } else {

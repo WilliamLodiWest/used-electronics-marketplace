@@ -34,6 +34,25 @@ def table_has_column(conexao, table: str, column: str) -> bool:
     return ok
 
 
+def column_allows_null(conexao, table: str, column: str) -> bool:
+    """True se a coluna aceita NULL (information_schema)."""
+    key = ("nullable", table.lower(), column.lower())
+    hit = _cache_get(key)
+    if hit is not None:
+        return hit
+    rows = conexao.select(
+        """
+        SELECT IS_NULLABLE FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s
+        LIMIT 1
+        """,
+        (table, column),
+    )
+    ok = bool(rows and str(rows[0][0]).upper() == "YES")
+    _cache_set(key, ok)
+    return ok
+
+
 def compras_status_enum_values(conexao) -> Optional[Set[str]]:
     """Retorna os valores do ENUM de compras_tt.status, ou None se não for ENUM."""
     key = ("compras_status_enum",)
@@ -85,3 +104,18 @@ def embutir_codigo_em_observacoes(codigo_rastreio: str, observacoes_usuario: str
 def extrair_codigo_rastreio_obs(observacoes: str) -> str:
     m = re.search(r"\|COD:(TT-[A-Za-z0-9]+)\|", observacoes or "")
     return m.group(1) if m else ""
+
+
+def status_pedido_label(status: str) -> str:
+    """Rótulo amigável alinhado à linha do tempo do cliente."""
+    s = (status or "").strip().lower()
+    labels = {
+        "aguardando_aprovacao": "Aguardando aprovação",
+        "pendente": "Aguardando aprovação",
+        "pago": "Aprovado — em preparação",
+        "processando": "Aprovado — em preparação",
+        "enviado": "Despachado / em transporte",
+        "entregue": "Entregue",
+        "cancelado": "Cancelado",
+    }
+    return labels.get(s, (status or "").replace("_", " ").title())

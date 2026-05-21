@@ -191,16 +191,10 @@ def test_confirmacao_com_produto_na_sessao(client):
         ("post", "/vendedor/produto/novo"),
         ("put", "/vendedor/produto/editar/1"),
         ("delete", "/vendedor/produto/deletar/1"),
-        ("post", "/vendedor/produtos/adicionar"),
-        ("get", "/vendedor/produto/buscar/1"),
-        ("post", "/vendedor/produtos/editar/1"),
-        ("delete", "/vendedor/produtos/excluir/1"),
         ("get", "/vendedor/pedidos/json"),
         ("post", "/vendedor/pedidos/atualizar_status/1"),
         ("post", "/vendedor/pedidos/aprovar/1"),
         ("post", "/vendedor/pedidos/reprovar/1"),
-        ("post", "/vendedor/notificacoes/marcar_lida/1"),
-        ("get", "/vendedor/relatorios/json"),
     ],
 )
 def test_rotas_vendedor_bloqueadas_sem_login(client, metodo, rota):

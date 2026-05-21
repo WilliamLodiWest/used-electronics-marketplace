@@ -1311,6 +1311,19 @@ body.page-vendedor-login > .footer {
     color: #334155;
 }
 
+.vendas-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    max-width: 280px;
+}
+
+.vendas-acoes .btn {
+    white-space: normal;
+    line-height: 1.25;
+}
+
 .badge {
     display: inline-block;
     padding: 4px 12px;
@@ -1550,13 +1563,104 @@ body.page-vendedor-login > .footer {
     }
 }
 
-/* ========== Normalizacao final de responsividade ========== */
-@media (max-width: 992px) {
+/* ========== Menu mobile (painel) ========== */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 1100;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+}
+
+.vendedor-container.sidebar-open .sidebar-backdrop {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .sidebar-toggle {
+        display: inline-flex;
+    }
+
     .vendedor-container .sidebar {
-        width: 80px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: min(280px, 88vw);
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+    }
+
+    .vendedor-container.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .vendedor-container .sidebar-header h3,
+    .vendedor-container .sidebar-header p,
+    .vendedor-container .nav-link span:not(.badge) {
+        display: block;
+    }
+
+    .vendedor-container .admin-profile-info {
+        display: block;
     }
 
     .vendedor-container .main-content {
+        margin-left: 0;
+        padding: 68px 16px 24px;
+        width: 100%;
+    }
+
+    .vendedor-container .page-header {
+        flex-wrap: wrap;
+    }
+
+    .vendedor-container .table-responsive {
+        margin: 0 -4px;
+    }
+
+    .vendedor-container .table {
+        min-width: 720px;
+    }
+
+    .vendas-acoes {
+        max-width: none;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .vendas-acoes .btn {
+        width: 100%;
+    }
+}
+
+/* ========== Normalizacao final de responsividade ========== */
+@media (max-width: 992px) {
+    .vendedor-container:not(.sidebar-open) .sidebar {
+        width: 80px;
+    }
+
+    .vendedor-container:not(.sidebar-open) .main-content {
         margin-left: 80px;
     }
 }
@@ -1565,5 +1669,9 @@ body.page-vendedor-login > .footer {
     .vendedor-container .products-grid,
     .vendedor-container .produtos-grid {
         grid-template-columns: 1fr;
+    }
+
+    .vendedor-container:not(.sidebar-open) .main-content {
+        margin-left: 0;
     }
 }

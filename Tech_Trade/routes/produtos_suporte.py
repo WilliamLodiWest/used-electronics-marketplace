@@ -7,6 +7,7 @@ from src.utils.schema_compat import (
     compras_status_enum_values,
     embutir_codigo_em_observacoes,
     extrair_codigo_rastreio_obs,
+    status_pedido_label,
     table_has_column,
 )
 
@@ -643,7 +644,7 @@ def cliente_pedidos_json():
                 {
                     "id_compra": id_c,
                     "status": status or "",
-                    "status_label": (status or "").replace("_", " ").title(),
+                    "status_label": status_pedido_label(st),
                     "data_compra": _formatar_data_pedido(data_c),
                     "quantidade": int(qtd or 0),
                     "total": float(total or 0),
