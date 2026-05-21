@@ -81,25 +81,42 @@ def _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoqu
     if not _categoria_existe(conexao, categoria_id):
         raise ValueError("Categoria inválida. Selecione uma categoria cadastrada.")
 
-    sql = """
-        INSERT INTO produtos_tt (nome, descricao, categoria_id, preco, estoque,
-                               criado_por, criado_por_id, imagem, verificado, verificado_por, criado_em)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, NOW())
+    # Produto novo: pendente de verificação (verificado=0; data/autor preenchidos na aprovação).
+    cols = [
+        "nome", "descricao", "categoria_id", "preco", "estoque",
+        "criado_por", "criado_por_id", "imagem", "verificado", "criado_em",
+    ]
+    placeholders = ["%s"] * 8 + ["0", "NOW()"]
+    params = [
+        nome,
+        descricao,
+        int(categoria_id),
+        float(preco),
+        int(estoque),
+        session.get('vendedor_nome'),
+        id_vendedor,
+        imagem,
+    ]
+    if table_has_column(conexao, "produtos_tt", "verificado_por"):
+        cols.insert(-1, "verificado_por")
+        placeholders.insert(-1, "%s")
+        params.append("")
+    if table_has_column(conexao, "produtos_tt", "verificado_em"):
+        cols.insert(-1, "verificado_em")
+        placeholders.insert(-1, "NULL")
+    if table_has_column(conexao, "produtos_tt", "verificacao_obs"):
+        cols.insert(-1, "verificacao_obs")
+        placeholders.insert(-1, "%s")
+        params.append("")
+    if table_has_column(conexao, "produtos_tt", "chave_nfe"):
+        cols.insert(-1, "chave_nfe")
+        placeholders.insert(-1, "NULL")
+
+    sql = f"""
+        INSERT INTO produtos_tt ({", ".join(cols)})
+        VALUES ({", ".join(placeholders)})
     """
-    return conexao.insert(
-        sql,
-        (
-            nome,
-            descricao,
-            int(categoria_id),
-            float(preco),
-            int(estoque),
-            session.get('vendedor_nome'),
-            id_vendedor,
-            imagem,
-            "",
-        ),
-    )
+    return conexao.insert(sql, tuple(params))
 
 
 def _foto_url_admin(id_admin):

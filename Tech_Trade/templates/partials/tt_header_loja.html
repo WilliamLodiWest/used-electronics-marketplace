@@ -1,0 +1,56 @@
+<header>
+    <nav class="navbar-custom">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="{{ url_for('produto.home') }}" class="text-decoration-none">
+                    <h2>TechTrade</h2>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('produto.home') }}">Home</a></li>
+                <li><a href="{{ url_for('produto.home') }}#sobre">Sobre</a></li>
+                <li><a href="{{ url_for('produto.suporte_comprador') }}">Suporte</a></li>
+                {% if session.get('usuario_logado') %}
+                    <li>
+                        <a href="{{ url_for('produto.meus_pedidos') }}"
+                           {% if header_active == 'meus_pedidos' %}class="nav-link-active"{% endif %}>
+                            Meus pedidos
+                        </a>
+                    </li>
+                    <li><a href="#" class="btn-login">{{ session.get('usuario_nome') }}</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('produto.login') }}" class="btn-login">Login</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <section class="produtos-header">
+        <div class="container text-center">
+            <div class="hero-content">
+                {% if header_badge_text %}
+                <div class="hero-badge">
+                    <i class="fa-solid {{ header_badge_icon or 'fa-shield-halved' }} me-2"></i>
+                    <span>{{ header_badge_text }}</span>
+                </div>
+                {% endif %}
+                <h1>{{ header_title }}</h1>
+                {% if header_description %}
+                <p>{{ header_description }}</p>
+                {% endif %}
+                <div class="hero-actions">
+                    <a class="hero-btn hero-btn-primary" href="{{ url_for('produto.renderizar_produtos') }}">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Voltar para produtos
+                    </a>
+                    {% if header_secondary_url and header_secondary_label %}
+                    <a class="hero-btn hero-btn-ghost" href="{{ header_secondary_url }}">
+                        <i class="fa-solid {{ header_secondary_icon or 'fa-circle-question' }}"></i>
+                        {{ header_secondary_label }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</header>
