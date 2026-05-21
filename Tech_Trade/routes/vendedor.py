@@ -7,8 +7,10 @@ from src.utils.schema_compat import (
     column_allows_null,
     compras_status_enum_values,
     extrair_codigo_rastreio_obs,
+    limpar_tag_aprovacao_obs,
     pedido_aguarda_aprovacao_admin,
     status_pedido_label,
+    status_pos_aprovacao_admin,
     table_has_column,
 )
 
@@ -541,10 +543,18 @@ def vendedor_aprovar_pedido(id_pedido):
             conexao.close()
             return jsonify({"erro": "Estoque insuficiente para aprovar este pedido."}), 400
 
-        conexao.update(
-            "UPDATE compras_tt SET status = %s WHERE id_compra = %s",
-            ('processando', id_pedido),
-        )
+        status_novo = status_pos_aprovacao_admin(conexao)
+        obs_limpa = limpar_tag_aprovacao_obs(obs)
+        if obs_limpa != (obs or ""):
+            conexao.update(
+                "UPDATE compras_tt SET status = %s, observacoes = %s WHERE id_compra = %s",
+                (status_novo, obs_limpa or None, id_pedido),
+            )
+        else:
+            conexao.update(
+                "UPDATE compras_tt SET status = %s WHERE id_compra = %s",
+                (status_novo, id_pedido),
+            )
         conexao.update(
             "UPDATE produtos_tt SET estoque = estoque - %s WHERE id_produto = %s",
             (quantidade, id_produto),
@@ -814,6 +824,29 @@ def vendedor_api_marcar_todas_notificacoes_lidas():
         conexao.close()
 
         return jsonify({"success": True, "mensagem": "Notificações atualizadas"})
+    except Exception as err:
+        return jsonify({"erro": str(err)}), 500
+
+
+@rotas_produto.route('/vendedor/api/notificacoes/excluir', methods=['POST'])
+def vendedor_api_excluir_notificacao():
+    """Remove uma notificação do vendedor logado."""
+    if not _admin_autenticada():
+        return jsonify({"erro": "Não autorizado"}), 401
+
+    try:
+        data = request.get_json(silent=True) or {}
+        id_notificacao = data.get('id_notificacao')
+        if not id_notificacao:
+            return jsonify({"erro": "id_notificacao é obrigatório"}), 400
+
+        id_vendedor = session.get('vendedor_id')
+        conexao = ConexaoBD()
+        sql = "DELETE FROM notificacoes_tt WHERE id_notificacao = %s AND id_vendedor = %s"
+        conexao.delete(sql, (id_notificacao, id_vendedor))
+        conexao.close()
+
+        return jsonify({"success": True, "mensagem": "Notificação excluída"})
     except Exception as err:
         return jsonify({"erro": str(err)}), 500
 

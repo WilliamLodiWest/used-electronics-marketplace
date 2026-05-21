@@ -1,12 +1,12 @@
 {# Mensagens do servidor exibidas como Toast ao carregar a página #}
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages %}
-  <span class="tt-flash-pending d-none" data-tt-type="{{ category }}" data-tt-msg="{{ message }}"></span>
+  <span class="tt-flash-pending d-none" data-tt-type="{{ category }}" data-tt-msg="{{ message | e }}"></span>
   {% endfor %}
 {% endwith %}
 {% if erro is defined and erro %}
-<span class="tt-flash-pending d-none" data-tt-type="erro" data-tt-msg="{{ erro }}"></span>
+<span class="tt-flash-pending d-none" data-tt-type="erro" data-tt-msg="{{ erro | e }}"></span>
 {% endif %}
 {% if sucesso is defined and sucesso %}
-<span class="tt-flash-pending d-none" data-tt-type="sucesso" data-tt-msg="{{ sucesso }}"></span>
+<span class="tt-flash-pending d-none" data-tt-type="sucesso" data-tt-msg="{{ sucesso | e }}"></span>
 {% endif %}

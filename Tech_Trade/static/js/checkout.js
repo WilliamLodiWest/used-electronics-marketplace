@@ -209,6 +209,16 @@ function configurarModalPix() {
 // ==========================
 function executarFinalizarCompra() {
 
+    const form = document.getElementById("formCheckout");
+    if (form?.dataset.bloqueadoEstoque === "1") {
+        window.TTNotify?.error("Produto fora de estoque.");
+        return;
+    }
+    if (form?.dataset.bloqueadoVerificacao === "1") {
+        window.TTNotify?.error("Produto ainda não verificado pela administradora.");
+        return;
+    }
+
     const endereco = document.getElementById("endereco")?.value;
     const metodoSelecionado = document.querySelector('input[name="metodo"]:checked');
     const metodo = metodoSelecionado ? metodoSelecionado.value : "";
@@ -256,6 +266,15 @@ function configurarSubmit() {
     form.addEventListener("submit", function (e) {
 
         e.preventDefault();
+
+        if (form.dataset.bloqueadoEstoque === "1") {
+            window.TTNotify?.error("Produto fora de estoque.");
+            return;
+        }
+        if (form.dataset.bloqueadoVerificacao === "1") {
+            window.TTNotify?.error("Produto ainda não verificado pela administradora.");
+            return;
+        }
 
         const endereco = document.getElementById("endereco")?.value;
 

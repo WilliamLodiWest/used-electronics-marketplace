@@ -1,18 +1,30 @@
-/* Bootstrap 5 Toast — TechTrade */
+/* Bootstrap 5 Toast — TechTrade (simple-notif.js) */
 .tt-toast-root .toast-container {
     z-index: 10900;
     max-width: min(420px, calc(100vw - 1.5rem));
 }
 
-.tt-toast-root .toast {
-    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+.tt-toast-root .toast.tt-toast-item {
+    width: 100%;
+    min-width: 280px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.12);
+    background-color: #fff;
+    overflow: hidden;
+}
+
+.tt-toast-root .toast-header {
+    font-size: 0.875rem;
+    font-weight: 600;
+    background-color: rgba(248, 250, 252, 0.98);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    color: #0f172a;
 }
 
 .tt-toast-root .toast-body {
     font-size: 0.9rem;
     line-height: 1.45;
-}
-
-.tt-toast-root .toast-header {
-    font-size: 0.85rem;
+    color: #334155;
+    padding: 0.75rem;
 }

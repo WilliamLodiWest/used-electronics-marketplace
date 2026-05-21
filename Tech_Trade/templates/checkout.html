@@ -57,7 +57,11 @@
                             {% else %}
                             <p class="small text-warning mb-1"><i class="fas fa-hourglass-half"></i> Verificação fiscal pendente — finalize a compra somente após liberação.</p>
                             {% endif %}
-                            {% if bloqueado_verificacao %}
+                            {% if bloqueado_sem_estoque %}
+                            <div class="alert alert-danger py-2 px-3 mb-0 mt-2">
+                                <i class="fas fa-box-open"></i> Produto fora de estoque. Não é possível finalizar a compra no momento.
+                            </div>
+                            {% elif bloqueado_verificacao %}
                             <div class="alert alert-warning py-2 px-3 mb-0 mt-2">
                                 Este item ainda não pode ser comprado. A administradora precisa verificar a NF-e/comprovante.
                                 Você pode conferir notas no
@@ -73,7 +77,9 @@
             <form id="formCheckout"
                   data-id-produto="{{ produto.id_produto }}"
                   data-preco-produto="{{ produto.preco }}"
-                  data-confirmacao-url="{{ url_for('produto.confirmacao_compra') }}">
+                  data-confirmacao-url="{{ url_for('produto.confirmacao_compra') }}"
+                  data-bloqueado-estoque="{{ '1' if bloqueado_sem_estoque else '0' }}"
+                  data-bloqueado-verificacao="{{ '1' if bloqueado_verificacao else '0' }}">
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="mb-3">Dados do Cliente</h5>
@@ -130,8 +136,10 @@
                         </div>
 
                         <button type="submit" class="btn btn-success w-100 mt-3" id="btnFinalizar"
-                                {% if bloqueado_verificacao %}disabled aria-disabled="true"{% endif %}>
-                            {% if bloqueado_verificacao %}Indisponível até verificação{% else %}Finalizar Compra{% endif %}
+                                {% if bloqueado_sem_estoque or bloqueado_verificacao %}disabled aria-disabled="true"{% endif %}>
+                            {% if bloqueado_sem_estoque %}Fora de estoque
+                            {% elif bloqueado_verificacao %}Indisponível até verificação
+                            {% else %}Finalizar Compra{% endif %}
                         </button>
                     </div>
                 </div>

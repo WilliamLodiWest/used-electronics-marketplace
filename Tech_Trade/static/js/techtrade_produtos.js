@@ -50,6 +50,7 @@ function configurarEventos() {
         }
 
         if (e.target.classList.contains("btn-comprar-direto")) {
+            if (e.target.disabled) return;
             const id = e.target.getAttribute("data-id");
             if (id) verificarLoginAntesCompra(id);
         }
@@ -88,6 +89,8 @@ async function carregarProdutos() {
             categoria: p.categoria || "Outros",
             vendedor: p.criado_por || "TechTrade",
             verificado: p.verificado,
+            estoque: Number(p.estoque) || 0,
+            disponivel: p.disponivel !== false && (Number(p.estoque) || 0) > 0,
             chave_nfe: (p.chave_nfe || "").trim(),
             consulta_nfe_url: p.consulta_nfe_url || ""
         }));
@@ -204,12 +207,19 @@ function renderizarProdutos() {
         const selo = p.verificado
             ? `<span class="badge bg-success">Verificado</span>`
             : `<span class="badge bg-secondary">Pendente</span>`;
+        const estoqueBadge = p.disponivel
+            ? ''
+            : `<span class="badge-estoque-indisponivel">Fora de estoque</span>`;
+        const btnComprar = p.disponivel
+            ? `<button class="btn-comprar-direto" data-id="${p.id}">Comprar</button>`
+            : `<button class="btn-comprar-direto btn-comprar-indisponivel" type="button" disabled aria-disabled="true">Fora de estoque</button>`;
 
         return `
-            <div class="produto-card">
+            <div class="produto-card${p.disponivel ? '' : ' produto-card--esgotado'}">
                 <img src="${p.imagem}" onerror="this.src='https://via.placeholder.com/300x200'">
                 <h3>${p.nome}</h3>
                 ${selo}
+                ${estoqueBadge}
                 <p>${p.descricao}</p>
                 <strong>R$ ${p.preco_formatado}</strong>
 
@@ -218,10 +228,7 @@ function renderizarProdutos() {
                     Detalhes
                 </button>
 
-                <button class="btn-comprar-direto"
-                    data-id="${p.id}">
-                    Comprar
-                </button>
+                ${btnComprar}
             </div>
         `;
     }).join("");

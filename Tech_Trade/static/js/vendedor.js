@@ -1,5 +1,8 @@
 // Variáveis globais
 let produtoModal;
+let notificacaoModal;
+let notificacaoModalId = null;
+let notificacoesCache = [];
 let currentPage = 'dashboard';
 let categorias = [];
 
@@ -45,6 +48,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalEl && typeof bootstrap !== 'undefined') {
         produtoModal = new bootstrap.Modal(modalEl);
     }
+    const notifModalEl = document.getElementById('notificacaoModal');
+    if (notifModalEl && typeof bootstrap !== 'undefined') {
+        notificacaoModal = new bootstrap.Modal(notifModalEl);
+    }
+    document.getElementById('notif-modal-excluir')?.addEventListener('click', () => {
+        if (notificacaoModalId) excluirNotificacao(notificacaoModalId, true);
+    });
 
     initSidebarMobile();
 
@@ -321,9 +331,10 @@ function formatStatusLabel(status) {
 
 function buildAcoesVenda(p) {
     const s = (p.status || '').toLowerCase();
+    const statusAposAprovacao = ['processando', 'pago', 'enviado', 'entregue', 'cancelado'];
 
-    // Aguardando aprovação
-    if (p.aguarda_aprovacao_admin) {
+    // Aguardando aprovação (não exibir botões se o status já avançou)
+    if (p.aguarda_aprovacao_admin && !statusAposAprovacao.includes(s)) {
         return `
             <button type="button"
                 class="btn btn-sm btn-success me-1"
@@ -408,25 +419,46 @@ async function marcarEntregue(id) {
     );
 }
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text == null ? '' : String(text);
+    return div.innerHTML;
+}
+
+function truncarMensagem(texto, max = 140) {
+    const t = (texto || '').trim();
+    if (t.length <= max) return t;
+    return t.slice(0, max).trimEnd() + '…';
+}
+
 // Carregar Notificações
 async function carregarNotificacoes() {
     try {
         const response = await fetch('/vendedor/api/notificacoes');
         const notificacoes = await response.json();
+        notificacoesCache = Array.isArray(notificacoes) ? notificacoes : [];
         
-        if (notificacoes.length > 0) {
-            const notifHtml = notificacoes.map(notif => `
-                <div class="notification-item ${notif.lida ? '' : 'unread'}" onclick="marcarLida(${notif.id})">
-                    <div class="notification-content">
-                        <div class="notification-title">
-                            ${notif.titulo || 'Notificação'}
-                            ${!notif.lida ? '<span class="badge bg-primary ms-2">Nova</span>' : ''}
+        if (notificacoesCache.length > 0) {
+            const notifHtml = notificacoesCache.map(notif => `
+                <div class="notification-item ${notif.lida ? '' : 'unread'}" data-notif-id="${notif.id}">
+                    <button type="button" class="notification-main" onclick="abrirNotificacao(${notif.id})" aria-label="Ver notificação completa">
+                        <div class="notification-content">
+                            <div class="notification-title">
+                                ${escapeHtml(notif.titulo || 'Notificação')}
+                                ${!notif.lida ? '<span class="badge bg-primary ms-2">Nova</span>' : ''}
+                            </div>
+                            <div class="notification-message">${escapeHtml(truncarMensagem(notif.mensagem))}</div>
+                            <div class="notification-date">${escapeHtml(notif.data)}</div>
+                            <div class="notification-hint"><i class="fas fa-expand-alt"></i> Clique para ver a mensagem completa</div>
                         </div>
-                        <div class="notification-message">${notif.mensagem}</div>
-                        <div class="notification-date">${notif.data}</div>
-                    </div>
-                    <div class="notification-status">
-                        ${!notif.lida ? '<i class="fas fa-circle text-primary"></i>' : '<i class="far fa-circle text-muted"></i>'}
+                        <div class="notification-status" aria-hidden="true">
+                            ${!notif.lida ? '<i class="fas fa-circle text-primary"></i>' : '<i class="far fa-circle text-muted"></i>'}
+                        </div>
+                    </button>
+                    <div class="notification-actions">
+                        <button type="button" class="btn-notif-delete" title="Excluir notificação" aria-label="Excluir notificação" onclick="event.stopPropagation(); excluirNotificacao(${notif.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -590,19 +622,77 @@ async function deletarProduto(id) {
     }
 }
 
+// Abrir modal com mensagem completa
+async function abrirNotificacao(id) {
+    const notif = notificacoesCache.find((n) => n.id === id);
+    if (!notif) return;
+
+    notificacaoModalId = id;
+    document.getElementById('notif-modal-titulo').textContent = notif.titulo || 'Notificação';
+    document.getElementById('notif-modal-data').textContent = notif.data || '';
+    document.getElementById('notif-modal-mensagem').textContent = notif.mensagem || '';
+
+    const badge = document.getElementById('notif-modal-badge');
+    if (!notif.lida) {
+        badge.classList.remove('d-none');
+    } else {
+        badge.classList.add('d-none');
+    }
+
+    notificacaoModal?.show();
+
+    if (!notif.lida) {
+        await marcarLida(id, true);
+        const badge = document.getElementById('notif-modal-badge');
+        badge?.classList.add('d-none');
+    }
+}
+
 // Marcar notificação como lida
-async function marcarLida(id) {
+async function marcarLida(id, recarregar = true) {
     try {
         await fetch('/vendedor/api/notificacoes/marcar_lida', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id_notificacao: id })
         });
-        
+
+        const item = notificacoesCache.find((n) => n.id === id);
+        if (item) item.lida = true;
+
+        if (recarregar) {
+            carregarNotificacoes();
+            carregarDashboard();
+        } else {
+            carregarDashboard();
+        }
+    } catch (error) {
+        console.error('Erro ao marcar notificação:', error);
+    }
+}
+
+// Excluir notificação
+async function excluirNotificacao(id, fromModal = false) {
+    if (!confirm('Excluir esta notificação? Esta ação não pode ser desfeita.')) return;
+    try {
+        const response = await fetch('/vendedor/api/notificacoes/excluir', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_notificacao: id }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            window.TTNotify?.error(data.erro || 'Erro ao excluir notificação');
+            return;
+        }
+        window.TTNotify?.success(data.mensagem || 'Notificação excluída.');
+        if (fromModal) notificacaoModal?.hide();
+        notificacaoModalId = null;
         carregarNotificacoes();
         carregarDashboard();
     } catch (error) {
-        console.error('Erro ao marcar notificação:', error);
+        console.error('Erro ao excluir notificação:', error);
+        window.TTNotify?.error('Erro ao excluir notificação. Tente novamente.');
     }
 }
 

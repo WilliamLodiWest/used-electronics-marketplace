@@ -211,11 +211,13 @@ def checkout(id_produto):
                 return f"Erro: {erro}", 400
 
         conexao.close()
-        bloqueado = not produto["verificado"]
+        bloqueado_verificacao = not produto["verificado"]
+        bloqueado_sem_estoque = produto["estoque"] <= 0
         return render_template(
             "checkout.html",
             produto=produto,
-            bloqueado_verificacao=bloqueado,
+            bloqueado_verificacao=bloqueado_verificacao,
+            bloqueado_sem_estoque=bloqueado_sem_estoque,
             consulta_nfe_url=URL_CONSULTA_NFE,
         )
     except Exception:
@@ -303,6 +305,9 @@ def finalizar_compra_completa():
                 "erro": "Produto não verificado. Aguarde a administradora confirmar a documentação fiscal antes da compra.",
             }), 400
 
+        if estoque_atual is None or int(estoque_atual) <= 0:
+            conexao.close()
+            return jsonify({"erro": "Produto fora de estoque"}), 400
         if estoque_atual < quantidade:
             conexao.close()
             return jsonify({"erro": "Estoque insuficiente"}), 400

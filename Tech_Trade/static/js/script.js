@@ -203,10 +203,15 @@ document.addEventListener('DOMContentLoaded', function () {
         imagem.onerror = () => { imagem.src = 'https://via.placeholder.com/300x200?text=Sem+Imagem'; };
         
         const comprarBtn = document.getElementById('modalComprarBtn');
-        comprarBtn.onclick = () => {
-            fecharModalDetalhes();
-            abrirModalCompra(produto);
-        };
+        const disponivel = produto.disponivel !== false && (Number(produto.estoque) || 0) > 0;
+        if (comprarBtn) {
+            comprarBtn.disabled = !disponivel;
+            comprarBtn.textContent = disponivel ? 'Comprar Agora' : 'Fora de estoque';
+            comprarBtn.onclick = disponivel ? () => {
+                fecharModalDetalhes();
+                abrirModalCompra(produto);
+            } : null;
+        }
         
         produtoSelecionado = produto;
         modal.classList.add('active');
@@ -218,6 +223,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function abrirModalCompra(produto) {
+        if (produto && produto.disponivel === false) {
+            window.TTNotify?.warning('Este produto está fora de estoque.');
+            return;
+        }
         const modal = document.getElementById('modalCompra');
         if (!modal) return;
         
@@ -430,7 +439,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 imagem: p.imagem || 'https://via.placeholder.com/300x200?text=Sem+Imagem',
                 descricao: p.descricao || "Produto de alta qualidade",
                 categoria: p.categoria || "Outros",
-                vendedor: p.criado_por || "TechTrade"
+                vendedor: p.criado_por || "TechTrade",
+                estoque: Number(p.estoque) || 0,
+                disponivel: p.disponivel !== false && (Number(p.estoque) || 0) > 0,
             }));
             
             produtosFiltrados = [...todosProdutos];
@@ -483,12 +494,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const produtosParaExibir = produtosFiltrados.slice(0, 3);
     if (productCount) productCount.textContent = produtosParaExibir.length;
         
-    grid.innerHTML = produtosParaExibir.map(produto => `
-            <div class="produto-card" data-id="${produto.id}">
+    grid.innerHTML = produtosParaExibir.map(produto => {
+            const compraBtn = produto.disponivel
+                ? `<button class="btn-comprar" onclick='abrirModalCompra(${JSON.stringify(produto).replace(/'/g, "&#39;")})'>Comprar</button>`
+                : `<button class="btn-comprar btn-comprar-indisponivel" type="button" disabled>Fora de estoque</button>`;
+            const estoqueTag = produto.disponivel
+                ? ''
+                : `<span class="produto-esgotado-tag">Fora de estoque</span>`;
+            return `
+            <div class="produto-card${produto.disponivel ? '' : ' produto-card--esgotado'}" data-id="${produto.id}">
                 <img src="${produto.imagem}" alt="${produto.nome}" class="produto-imagem" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=Sem+Imagem'">
                 <div class="produto-info">
                     <span class="produto-categoria">${produto.categoria}</span>
                     <h3 class="produto-nome">${produto.nome}</h3>
+                    ${estoqueTag}
                     <p class="produto-descricao">${produto.descricao.substring(0, 80)}${produto.descricao.length > 80 ? '...' : ''}</p>
                     <div class="produto-preco">
                         R$ ${typeof produto.preco === 'number' ? produto.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : produto.preco_formatado}
@@ -497,13 +516,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button class="btn-detalhes" onclick='verDetalhesProdutoHome(${JSON.stringify(produto).replace(/'/g, "&#39;")})'>
                             Ver detalhes
                         </button>
-                        <button class="btn-comprar" onclick='abrirModalCompra(${JSON.stringify(produto).replace(/'/g, "&#39;")})'>
-                            Comprar
-                        </button>
+                        ${compraBtn}
                     </div>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     window.verDetalhesProdutoHome = function(produto) {

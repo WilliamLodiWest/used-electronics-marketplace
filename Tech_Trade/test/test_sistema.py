@@ -2,6 +2,11 @@ import pytest
 
 import produto as produto_mod
 import vendedor as vendedor_mod
+from src.utils.schema_compat import (
+    TAG_AGUARDA_APROVACAO,
+    limpar_tag_aprovacao_obs,
+    pedido_aguarda_aprovacao_admin,
+)
 
 
 # -----------------------------
@@ -188,6 +193,7 @@ def test_confirmacao_com_produto_na_sessao(client):
         ("get", "/vendedor/api/notificacoes"),
         ("post", "/vendedor/api/notificacoes/marcar_lida"),
         ("post", "/vendedor/api/notificacoes/marcar_todas_lidas"),
+        ("post", "/vendedor/api/notificacoes/excluir"),
         ("post", "/vendedor/produto/novo"),
         ("put", "/vendedor/produto/editar/1"),
         ("delete", "/vendedor/produto/deletar/1"),
@@ -274,6 +280,26 @@ def test_integracao_cada_rota_registrada(app, client):
 
         response = client.open(path, **kwargs)
         assert response.status_code < 500, f"Falha em {method} {path} ({rule.endpoint})"
+
+
+@pytest.mark.parametrize(
+    ("status", "obs", "codigo", "esperado"),
+    [
+        ("aguardando_aprovacao", "", "", True),
+        ("pendente", f"{TAG_AGUARDA_APROVACAO}|COD:TT-ABC123|", "", True),
+        ("pendente", "", "TT-XYZ", True),
+        ("processando", f"{TAG_AGUARDA_APROVACAO}|COD:TT-ABC123|", "TT-ABC123", False),
+        ("pago", "", "TT-ABC123", False),
+        ("entregue", "", "TT-ABC123", False),
+    ],
+)
+def test_pedido_aguarda_aprovacao_admin(status, obs, codigo, esperado):
+    assert pedido_aguarda_aprovacao_admin(status, obs, codigo) is esperado
+
+
+def test_limpar_tag_aprovacao_obs():
+    obs = f"{TAG_AGUARDA_APROVACAO}|COD:TT-1|\nObservação do cliente"
+    assert limpar_tag_aprovacao_obs(obs) == "Observação do cliente"
 
 
 def test_unitario_cada_view_de_rota(app):

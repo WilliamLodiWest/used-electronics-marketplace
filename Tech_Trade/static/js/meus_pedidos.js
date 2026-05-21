@@ -1,7 +1,6 @@
 (function () {
     const cfg = window.TECHTRADE_MEUS_PEDIDOS || {};
     const elLoad = document.getElementById('mpLoading');
-    const elErro = document.getElementById('mpErro');
     const elVazio = document.getElementById('mpVazio');
     const elLista = document.getElementById('mpLista');
     const elAlertas = document.getElementById('mpAlertas');

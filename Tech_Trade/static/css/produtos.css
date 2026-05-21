@@ -710,6 +710,34 @@ body {
     transform: translateY(-1px);
 }
 
+.produto-card--esgotado {
+    opacity: 0.88;
+}
+
+.badge-estoque-indisponivel,
+.produto-esgotado-tag {
+    display: inline-block;
+    margin: 6px 0 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    background: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.btn-comprar-indisponivel,
+.btn-comprar-direto.btn-comprar-indisponivel {
+    background: #94a3b8 !important;
+    color: #f8fafc !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
 /* PAGINAÇÃO */
 #paginacao {
     margin-top: 30px;

@@ -1,6 +1,6 @@
 /**
- * Bootstrap 5 Toast notifications (simple-notif.js pattern)
- * https://www.jqueryscript.net/other/easy-toast-notification-bootstrap.html
+ * Bootstrap 5 Toast — padrão simple-notif.js (jqueryscript.net)
+ * Toast branco com cabeçalho e ícone contextual (sem text-bg-* no card inteiro).
  */
 (function ($) {
     'use strict';
@@ -10,42 +10,50 @@
         '<div class="toast-container position-fixed top-0 end-0 p-3"></div></div>';
 
     function ensureContainer() {
-        if (!$('.toast-container').length) {
+        if (!$('.tt-toast-root .toast-container').length) {
             $('body').append(toastContainerHtml);
         }
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
     function getType(name) {
         switch (name) {
             case 'success':
                 return {
-                    class: 'text-bg-success',
-                    icon: '<i class="fa-solid fa-check-circle me-1"></i>',
+                    icon: '<i class="fas fa-check-circle text-success me-2" aria-hidden="true"></i>',
+                    titleClass: 'text-success',
                     type: 'Sucesso',
                 };
             case 'error':
                 return {
-                    class: 'text-bg-danger',
-                    icon: '<i class="fa-solid fa-xmark-circle me-1"></i>',
+                    icon: '<i class="fas fa-times-circle text-danger me-2" aria-hidden="true"></i>',
+                    titleClass: 'text-danger',
                     type: 'Erro',
                 };
             case 'warning':
                 return {
-                    class: 'text-bg-warning',
-                    icon: '<i class="fa-solid fa-triangle-exclamation me-1"></i>',
+                    icon: '<i class="fas fa-triangle-exclamation text-warning me-2" aria-hidden="true"></i>',
+                    titleClass: 'text-warning',
                     type: 'Atenção',
                 };
             case 'question':
                 return {
-                    class: 'text-bg-secondary',
-                    icon: '<i class="fa-solid fa-circle-question me-1"></i>',
+                    icon: '<i class="fas fa-question-circle text-secondary me-2" aria-hidden="true"></i>',
+                    titleClass: 'text-secondary',
                     type: 'Confirmação',
                 };
             case 'info':
             default:
                 return {
-                    class: 'text-bg-primary',
-                    icon: '<i class="fa-solid fa-info-circle me-1"></i>',
+                    icon: '<i class="fas fa-info-circle text-primary me-2" aria-hidden="true"></i>',
+                    titleClass: 'text-primary',
                     type: 'Informação',
                 };
         }
@@ -62,22 +70,24 @@
         const type = icon || 'info';
         const delayMs = delay == null ? 5000 : Number(delay);
         const data = getType(type);
-        const toastElm = $('.toast-container');
+        const toastElm = $('.tt-toast-root .toast-container');
+        const safeMsg = escapeHtml(msg);
 
         const elm =
-            '<div class="toast align-items-center border-0 ' +
-            data.class +
-            '" role="alert" aria-live="assertive" aria-atomic="true">' +
+            '<div class="toast tt-toast-item" role="alert" aria-live="assertive" aria-atomic="true">' +
             '<div class="toast-header">' +
             data.icon +
-            '<strong class="me-auto">' +
+            '<strong class="me-auto ' +
+            data.titleClass +
+            '">' +
             data.type +
             '</strong>' +
             '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Fechar"></button>' +
             '</div>' +
-            '<div class="d-flex"><div class="toast-body">' +
-            msg +
-            '</div></div></div>';
+            '<div class="toast-body">' +
+            safeMsg +
+            '</div>' +
+            '</div>';
 
         toastElm.append(elm);
 
@@ -86,6 +96,15 @@
             delay: delayMs,
             autohide: delayMs !== 0,
         });
+
+        toastEl.addEventListener(
+            'hidden.bs.toast',
+            function () {
+                toastEl.remove();
+            },
+            { once: true }
+        );
+
         toast.show();
         return true;
     };

@@ -79,18 +79,48 @@ def compras_status_enum_values(conexao) -> Optional[Set[str]]:
     return vals
 
 
+_STATUS_POS_APROVACAO = frozenset({"pago", "processando", "enviado", "entregue", "cancelado"})
+
+
 def pedido_aguarda_aprovacao_admin(status, observacoes, codigo_rastreio_db) -> bool:
     """Pedido criado pelo fluxo novo (estoque só após aprovar), e não legado pendente."""
     s = (status or "").strip().lower()
+    if s in _STATUS_POS_APROVACAO:
+        return False
     if s == "aguardando_aprovacao":
         return True
+    if s != "pendente":
+        return False
     obs = observacoes or ""
     if TAG_AGUARDA_APROVACAO in obs and "|COD:" in obs:
         return True
     cr = (codigo_rastreio_db or "").strip()
-    if s == "pendente" and cr.upper().startswith("TT-"):
+    if cr.upper().startswith("TT-"):
         return True
     return False
+
+
+def status_pos_aprovacao_admin(conexao) -> str:
+    """Status gravado após aprovação, respeitando o ENUM do banco."""
+    enum_vals = compras_status_enum_values(conexao)
+    if enum_vals:
+        if "processando" in enum_vals:
+            return "processando"
+        if "pago" in enum_vals:
+            return "pago"
+    return "processando"
+
+
+def limpar_tag_aprovacao_obs(observacoes: str) -> str:
+    """Remove marcador legado de aguardando aprovação das observações."""
+    if not observacoes:
+        return ""
+    lines = []
+    for line in (observacoes or "").splitlines():
+        if TAG_AGUARDA_APROVACAO in line and "|COD:" in line:
+            continue
+        lines.append(line)
+    return "\n".join(lines).strip()
 
 
 def embutir_codigo_em_observacoes(codigo_rastreio: str, observacoes_usuario: str) -> str:
