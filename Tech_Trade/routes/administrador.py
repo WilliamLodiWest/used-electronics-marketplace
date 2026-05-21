@@ -18,7 +18,7 @@ def verificar_produto():
         dados = request.get_json() or {}
         id_produto = dados.get('id_produto')
         verificado = dados.get('verificado', True)
-        verificado_por = dados.get('verificado_por', 'Sistema')
+        verificado = dados.get('verificado', 'Sistema')
         verificacao_obs = dados.get('verificacao_obs', '')
         chave_raw = dados.get('chave_nfe') or ''
         chave_nfe = ''.join(c for c in str(chave_raw) if c.isdigit())
@@ -34,24 +34,24 @@ def verificar_produto():
             sql = """
                 UPDATE produtos_tt
                 SET verificado = %s,
-                    verificado_por = %s,
+                    verificado = %s,
                     verificado_em = NOW(),
                     verificacao_obs = %s,
                     chave_nfe = %s
                 WHERE id_produto = %s
             """
             chave_val = chave_nfe if chave_nfe else None
-            conexao.insert(sql, (1 if verificado else 0, verificado_por, verificacao_obs, chave_val, id_produto))
+            conexao.insert(sql, (1 if verificado else 0, verificado, verificacao_obs, chave_val, id_produto))
         else:
             sql = """
                 UPDATE produtos_tt
                 SET verificado = %s,
-                    verificado_por = %s,
+                    verificado = %s,
                     verificado_em = NOW(),
                     verificacao_obs = %s
                 WHERE id_produto = %s
             """
-            conexao.insert(sql, (1 if verificado else 0, verificado_por, verificacao_obs, id_produto))
+            conexao.insert(sql, (1 if verificado else 0, verificado, verificacao_obs, id_produto))
         conexao.close()
 
         return jsonify({"mensagem": "Produto verificado com sucesso!"}), 200
