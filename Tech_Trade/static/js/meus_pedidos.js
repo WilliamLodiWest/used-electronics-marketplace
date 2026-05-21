@@ -114,11 +114,6 @@
     function renderNotificacoes(data) {
         elAlertas.innerHTML = '';
         if (!data || !data.notificacoes || !data.notificacoes.length) {
-            if (data && data.aviso_tabela) {
-                elAlertas.innerHTML =
-                    '<div class="alert alert-light border small mb-3">Para receber avisos automáticos quando um pedido for confirmado, execute o script SQL <code>sql/notificacoes_cliente_tt.sql</code> no banco de dados.</div>';
-            }
-            return;
         }
         const naoLidas = data.notificacoes.filter((n) => !n.lida);
         naoLidas.forEach((n) => {

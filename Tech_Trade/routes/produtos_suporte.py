@@ -73,7 +73,7 @@ def consultar_produtos():
                 p.criado_por,
                 p.imagem,
                 p.verificado,
-                p.verificado_por,
+                p.verificado,
                 p.verificado_em
         """
         if has_chave_nfe:
@@ -134,7 +134,7 @@ def consultar_produtos():
                 "criado_por": row[7] or "",
                 "imagem": imagem,
                 "verificado": bool(row[9]) if len(row) > 9 else True,
-                "verificado_por": row[10] or "",
+                "verificado": row[10] or "",
                 "verificado_em": formata_data(row[11]) if len(row) > 11 and row[11] else "",
                 "chave_nfe": chave,
                 "consulta_nfe_url": URL_CONSULTA_NFE,
