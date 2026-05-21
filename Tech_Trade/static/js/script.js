@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (invalido) {
                 e.preventDefault();
-                alert('Preencha todos os campos!');
+                window.TTNotify?.warning('Preencha todos os campos!');
             }
         });
     });
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const email = document.getElementById('resetEmail').value;
             
             if (!email) {
-                alert('Por favor, informe seu e-mail.');
+                window.TTNotify?.warning('Por favor, informe seu e-mail.');
                 return;
             }
 
@@ -75,45 +75,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Mostrar mensagem de sucesso
-                    successDiv.style.display = 'block';
-                    successDiv.style.backgroundColor = '#d4edda';
-                    successDiv.style.color = '#155724';
-                    successDiv.innerHTML = `
-                        <p>${data.message}</p>
-                        ${data.link ? `<p style="margin-top: 10px; word-break: break-all;">
-                            <strong>Link de teste:</strong><br>
-                            <a href="${data.link}" target="_blank" style="color: #155724;">${data.link}</a>
-                        </p>` : ''}
-                        <p style="margin-top: 10px; font-size: 12px;">Em produção, o link seria enviado por e-mail.</p>
-                    `;
-                    
-                    // Limpar o campo de email
+                    let toastMsg = data.message || 'Instruções enviadas para o seu e-mail.';
+                    if (data.link) {
+                        toastMsg += ' Link de teste disponível na tela.';
+                    }
+                    window.TTNotify?.success(toastMsg, 7000);
+
+                    if (successDiv && data.link) {
+                        successDiv.style.display = 'block';
+                        successDiv.className = 'alert alert-success';
+                        successDiv.innerHTML = `
+                            <p><strong>Link de teste:</strong></p>
+                            <a href="${data.link}" target="_blank" rel="noopener">${data.link}</a>
+                            <p class="small mt-2 mb-0">Em produção, o link seria enviado por e-mail.</p>
+                        `;
+                    } else if (successDiv) {
+                        successDiv.style.display = 'none';
+                    }
+
                     document.getElementById('resetEmail').value = '';
-                    
-                    // Resetar botão
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
-                    
-                    // Opcional: voltar para o login após 5 segundos
+
                     setTimeout(() => {
                         showLogin();
-                        successDiv.style.display = 'none';
+                        if (successDiv) successDiv.style.display = 'none';
                     }, 5000);
                 } else if (data.erro) {
-                    successDiv.style.display = 'block';
-                    successDiv.style.backgroundColor = '#f8d7da';
-                    successDiv.style.color = '#721c24';
-                    successDiv.innerHTML = `<p>${data.erro}</p>`;
+                    window.TTNotify?.error(data.erro);
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                successDiv.style.display = 'block';
-                successDiv.style.backgroundColor = '#f8d7da';
-                successDiv.style.color = '#721c24';
-                successDiv.innerHTML = `<p>Erro ao processar solicitação. Tente novamente.</p>`;
+                window.TTNotify?.error('Erro ao processar solicitação. Tente novamente.');
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
             }
@@ -129,13 +124,13 @@ document.addEventListener('DOMContentLoaded', function () {
             
             if (novaSenha.value.length < 6) {
                 e.preventDefault();
-                alert('A senha deve ter no mínimo 6 caracteres');
+                window.TTNotify?.warning('A senha deve ter no mínimo 6 caracteres');
                 return;
             }
-            
+
             if (novaSenha.value !== confirmarSenha.value) {
                 e.preventDefault();
-                alert('As senhas não conferem');
+                window.TTNotify?.warning('As senhas não conferem');
                 return;
             }
         });

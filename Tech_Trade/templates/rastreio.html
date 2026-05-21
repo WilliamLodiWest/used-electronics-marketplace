@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
 </head>
 <body>
+{% include 'partials/tt_toast_flash.html' %}
 <nav class="navbar checkout-navbar">
     <a href="{{ url_for('produto.home') }}" class="logo">Tech<span>Trade</span></a>
     <ul class="nav-links checkout-nav-links">
@@ -39,10 +40,6 @@
             <button type="submit" class="btn btn-primary btn-lg">Consultar</button>
         </div>
     </form>
-
-    {% if erro %}
-    <div class="alert alert-warning">{{ erro }}</div>
-    {% endif %}
 
     {% if pedido %}
     <div class="card mb-4">
@@ -82,5 +79,6 @@
     </ul>
     {% endif %}
 </main>
+{% include 'partials/tt_toast_assets.html' %}
 </body>
 </html>

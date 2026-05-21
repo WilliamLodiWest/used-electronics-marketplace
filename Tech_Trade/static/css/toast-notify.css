@@ -1,0 +1,18 @@
+/* Bootstrap 5 Toast — TechTrade */
+.tt-toast-root .toast-container {
+    z-index: 10900;
+    max-width: min(420px, calc(100vw - 1.5rem));
+}
+
+.tt-toast-root .toast {
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+}
+
+.tt-toast-root .toast-body {
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.tt-toast-root .toast-header {
+    font-size: 0.85rem;
+}

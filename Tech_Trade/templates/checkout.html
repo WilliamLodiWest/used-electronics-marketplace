@@ -7,11 +7,12 @@
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}?v=3">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
+{% include 'partials/tt_toast_flash.html' %}
 
 <!-- NAVBAR -->
 <nav class="navbar checkout-navbar">
@@ -181,33 +182,32 @@
 <div class="pix-modal-overlay" id="modalPix" aria-hidden="true" role="dialog" aria-labelledby="modalPixTitulo">
     <div class="pix-modal card">
         <div class="pix-modal-header">
-            <h5 class="mb-0" id="modalPixTitulo"><i class="fas fa-qrcode text-primary me-2"></i>Pagamento via PIX</h5>
+            <h5 class="mb-0" id="modalPixTitulo"><i class="fas fa-qrcode me-2"></i>Pagamento via PIX</h5>
             <button type="button" class="btn-close" id="btnFecharPix" aria-label="Fechar"></button>
         </div>
-        <div class="pix-modal-body text-center">
-            <p class="text-muted small mb-3">Escaneie o QR Code no app do seu banco ou copie o código abaixo.</p>
+        <div class="pix-modal-body">
+            <p class="pix-modal-lead">Escaneie o QR Code no app do seu banco ou copie o código abaixo.</p>
             <div class="pix-qr-wrap">
-                <canvas id="pixQrCanvas" width="220" height="220" aria-label="QR Code PIX simulado"></canvas>
+                <canvas id="pixQrCanvas" width="200" height="200" aria-label="QR Code PIX"></canvas>
             </div>
-            <p class="pix-valor-label mt-3 mb-1">Valor a pagar</p>
-            <p class="pix-valor" id="pixValorModal">R$ 0,00</p>
-            <div class="pix-copia-cola mt-3">
-                <label class="form-label small text-start w-100 mb-1">Pix Copia e Cola</label>
-                <div class="input-group">
-                    <input type="text" class="form-control form-control-sm" id="pixCopiaCola" readonly>
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnCopiarPix">
-                        <i class="fas fa-copy"></i> Copiar
+            <div class="pix-valor-box">
+                <span class="pix-valor-label">Valor a pagar</span>
+                <span class="pix-valor" id="pixValorModal">R$ 0,00</span>
+            </div>
+            <div class="pix-copia-cola">
+                <label class="pix-copia-label" for="pixCopiaCola">Pix Copia e Cola</label>
+                <div class="pix-copia-row">
+                    <input type="text" class="pix-copia-input" id="pixCopiaCola" readonly>
+                    <button type="button" class="pix-btn-copiar" id="btnCopiarPix" title="Copiar código">
+                        <i class="fas fa-copy"></i><span>Copiar</span>
                     </button>
                 </div>
             </div>
-            <div class="alert alert-warning small mt-3 mb-0 text-start">
-                <i class="fas fa-flask me-1"></i> Ambiente de demonstração: o QR é simulado. Após “pagar”, confirme para concluir o pedido.
-            </div>
         </div>
         <div class="pix-modal-footer">
-            <button type="button" class="btn btn-outline-secondary" id="btnCancelarPix">Voltar</button>
-            <button type="button" class="btn btn-success" id="btnConfirmarPix">
-                <i class="fas fa-check-circle me-1"></i> Já realizei o pagamento
+            <button type="button" class="pix-btn-footer pix-btn-footer--secondary" id="btnCancelarPix">Voltar</button>
+            <button type="button" class="pix-btn-footer pix-btn-footer--primary" id="btnConfirmarPix">
+                <i class="fas fa-check"></i> Já realizei o pagamento
             </button>
         </div>
     </div>
@@ -263,7 +263,8 @@
     </div>
 </footer>
 
-<script src="{{ url_for('static', filename='js/checkout.js') }}?v=2"></script>
+{% include 'partials/tt_toast_assets.html' %}
+<script src="{{ url_for('static', filename='js/checkout.js') }}?v=3"></script>
 
 </body>
 </html>

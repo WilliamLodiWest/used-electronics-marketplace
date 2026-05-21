@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="page-comprador-auth">
+{% include 'partials/tt_toast_flash.html' %}
     <div class="login-page login-page--comprador">
         <aside class="login-brand-panel login-brand-panel--comprador">
             <div class="login-brand-glow"></div>
@@ -40,10 +41,6 @@
                 <h1>Comprador</h1>
                 <p>Faça login para continuar</p>
             </div>
-
-            {% if erro %}
-            <div id="loginError" class="alert alert-danger">{{ erro }}</div>
-            {% endif %}
 
             <div class="flex-column">
                 <label>Email</label>
@@ -94,10 +91,6 @@
                 <h1>Comprador</h1>
                 <p>Crie sua conta para começar a comprar</p>
             </div>
-
-            {% if erro %}
-            <div class="alert alert-danger">{{ erro }}</div>
-            {% endif %}
 
             <!-- Campo de Nome -->
             <div class="flex-column">
@@ -191,10 +184,6 @@
             {% endif %}
         </div>
 
-        {% if erro %}
-        <div class="alert alert-danger">{{ erro }}</div>
-        {% endif %}
-
         <div class="flex-column">
             <label>Nova Senha</label>
         </div>
@@ -255,6 +244,7 @@
             </div>
         </div>
     </footer>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% include 'partials/tt_toast_assets.html' %}
+<script src="{{ url_for('static', filename='js/script.js') }}?v=3"></script>
 </body>
 </html>

@@ -96,15 +96,10 @@ async function carregarProdutos() {
         renderizarProdutos();
 
     } catch (erro) {
-
         console.error(erro);
-
-        grid.innerHTML = `
-            <div class="alert-error">
-                Erro ao carregar produtos: ${erro.message}
-            </div>
-        `;
-
+        const msg = `Erro ao carregar produtos: ${erro.message}`;
+        window.TTNotify?.error(msg);
+        grid.innerHTML = `<div class="alert-error">${msg}</div>`;
         if (totalDiv) totalDiv.innerHTML = "Erro ao carregar produtos";
     }
 }

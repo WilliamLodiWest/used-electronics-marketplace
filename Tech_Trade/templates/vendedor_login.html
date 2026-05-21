@@ -14,6 +14,7 @@
 </head>
 
 <body class="page-vendedor-login">
+{% include 'partials/tt_toast_flash.html' %}
 
 <!-- ==================== LOGIN ==================== -->
 <div class="login-page">
@@ -47,22 +48,6 @@
             <h1>Área Restrita</h1>
             <p>Acesso exclusivo para vendedores aprovados</p>
         </div>
-
-        <!-- ALERTAS -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        {% if erro %}
-            <div class="alert alert-danger">
-                {{ erro }}
-            </div>
-        {% endif %}
 
         <!-- EMAIL -->
         <div class="inputForm">
@@ -153,7 +138,8 @@
     </footer>
 
 <!-- ==================== JS ==================== -->
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% include 'partials/tt_toast_assets.html' %}
+<script src="{{ url_for('static', filename='js/script.js') }}?v=3"></script>
 
 </body>
 </html>

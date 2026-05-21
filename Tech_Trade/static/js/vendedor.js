@@ -239,14 +239,14 @@ async function aprovarPedido(id) {
         const response = await fetch(`/vendedor/pedidos/aprovar/${id}`, { method: 'POST' });
         const data = await response.json();
         if (!response.ok) {
-            alert(data.erro || 'Erro ao aprovar');
+            window.TTNotify?.error(data.erro || 'Erro ao aprovar');
             return;
         }
-        alert(data.mensagem || 'Pedido aprovado.');
+        window.TTNotify?.success(data.mensagem || 'Pedido aprovado.');
         carregarVendas();
         carregarDashboard();
     } catch (e) {
-        alert('Erro ao aprovar pedido.');
+        window.TTNotify?.error('Erro ao aprovar pedido.');
     }
 }
 
@@ -256,14 +256,14 @@ async function reprovarPedido(id) {
         const response = await fetch(`/vendedor/pedidos/reprovar/${id}`, { method: 'POST' });
         const data = await response.json();
         if (!response.ok) {
-            alert(data.erro || 'Erro ao reprovar');
+            window.TTNotify?.error(data.erro || 'Erro ao reprovar');
             return;
         }
-        alert(data.mensagem || 'Pedido cancelado.');
+        window.TTNotify?.success(data.mensagem || 'Pedido cancelado.');
         carregarVendas();
         carregarDashboard();
     } catch (e) {
-        alert('Erro ao reprovar pedido.');
+        window.TTNotify?.error('Erro ao reprovar pedido.');
     }
 }
 
@@ -271,7 +271,7 @@ async function mudarStatusPedido(id) {
     const opcoes = ['pago', 'processando', 'enviado', 'entregue', 'cancelado'];
     const novo = prompt(`Novo status (${opcoes.join(', ')}):`);
     if (!novo || !opcoes.includes(novo.trim())) {
-        if (novo) alert('Status inválido.');
+        if (novo) window.TTNotify?.warning('Status inválido.');
         return;
     }
     try {
@@ -282,13 +282,13 @@ async function mudarStatusPedido(id) {
         });
         const data = await response.json();
         if (!response.ok) {
-            alert(data.erro || 'Erro ao atualizar');
+            window.TTNotify?.error(data.erro || 'Erro ao atualizar');
             return;
         }
         carregarVendas();
         carregarDashboard();
     } catch (e) {
-        alert('Erro ao atualizar status.');
+        window.TTNotify?.error('Erro ao atualizar status.');
     }
 }
 
@@ -414,7 +414,7 @@ async function salvarProduto() {
         Number.isNaN(dados.estoque) ||
         Number.isNaN(dados.categoria_id)
     ) {
-        alert('Por favor, preencha todos os campos obrigatórios (incluindo a categoria).');
+        window.TTNotify?.warning('Por favor, preencha todos os campos obrigatórios (incluindo a categoria).');
         return;
     }
     
@@ -437,16 +437,16 @@ async function salvarProduto() {
         const result = await response.json();
         
         if (response.ok && (result.success || result.mensagem)) {
-            alert(result.mensagem || 'Produto salvo com sucesso!');
+            window.TTNotify?.success(result.mensagem || 'Produto salvo com sucesso!');
             produtoModal.hide();
             carregarProdutos();
             carregarDashboard();
         } else {
-            alert('Erro: ' + (result.erro || result.mensagem || 'Tente novamente'));
+            window.TTNotify?.error('Erro: ' + (result.erro || result.mensagem || 'Tente novamente'));
         }
     } catch (error) {
         console.error('Erro ao salvar produto:', error);
-        alert('Erro ao salvar produto. Tente novamente.');
+        window.TTNotify?.error('Erro ao salvar produto. Tente novamente.');
     }
 }
 
@@ -461,15 +461,15 @@ async function deletarProduto(id) {
             const result = await response.json();
             
             if (result.success) {
-                alert(result.mensagem);
+                window.TTNotify?.success(result.mensagem);
                 carregarProdutos();
                 carregarDashboard();
             } else {
-                alert('Erro ao deletar produto');
+                window.TTNotify?.error('Erro ao deletar produto');
             }
         } catch (error) {
             console.error('Erro ao deletar produto:', error);
-            alert('Erro ao deletar produto. Tente novamente.');
+            window.TTNotify?.error('Erro ao deletar produto. Tente novamente.');
         }
     }
 }

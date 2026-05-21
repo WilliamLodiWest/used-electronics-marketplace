@@ -150,13 +150,13 @@ function copiarCodigoPix() {
     navigator.clipboard.writeText(texto).then(() => {
         if (btn) {
             const original = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+            btn.innerHTML = '<i class="fas fa-check"></i><span>Copiado</span>';
             setTimeout(() => { btn.innerHTML = original; }, 2000);
         }
     }).catch(() => {
         copiaEl.select();
         document.execCommand("copy");
-        alert("Código PIX copiado!");
+        window.TTNotify?.success("Código PIX copiado!", 3000);
     });
 }
 
@@ -228,7 +228,7 @@ function executarFinalizarCompra() {
     .then(data => {
 
         if (data.erro) {
-            alert(data.erro);
+            window.TTNotify?.error(data.erro);
             return;
         }
 
@@ -241,7 +241,7 @@ function executarFinalizarCompra() {
     })
     .catch(erro => {
         console.error("Erro:", erro);
-        alert("Erro ao finalizar compra");
+        window.TTNotify?.error("Erro ao finalizar compra");
     });
 }
 
@@ -260,14 +260,14 @@ function configurarSubmit() {
         const endereco = document.getElementById("endereco")?.value;
 
         if (!endereco) {
-            alert("Preencha o endereço");
+            window.TTNotify?.warning("Preencha o endereço");
             return;
         }
 
         const metodoSelecionado = document.querySelector('input[name="metodo"]:checked');
 
         if (!metodoSelecionado) {
-            alert("Selecione um método de pagamento");
+            window.TTNotify?.warning("Selecione um método de pagamento");
             return;
         }
 
