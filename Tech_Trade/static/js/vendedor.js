@@ -321,28 +321,54 @@ function formatStatusLabel(status) {
 
 function buildAcoesVenda(p) {
     const s = (p.status || '').toLowerCase();
+
+    // Aguardando aprovação
     if (p.aguarda_aprovacao_admin) {
-        return `<button type="button" class="btn btn-sm btn-success me-1" onclick="aprovarPedido(${p.id_compra})">Aprovar</button>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="reprovarPedido(${p.id_compra})">Reprovar</button>`;
+        return `
+            <button type="button"
+                class="btn btn-sm btn-success me-1"
+                onclick="aprovarPedido(${p.id_compra})">
+                Aprovar
+            </button>
+
+            <button type="button"
+                class="btn btn-sm btn-danger"
+                onclick="reprovarPedido(${p.id_compra})">
+                Reprovar
+            </button>
+        `;
     }
+
+    // Pedido cancelado ou entregue
     if (s === 'cancelado' || s === 'entregue') {
-        return '<span class="text-muted small">—</span>';
+        return `<span class="text-success fw-bold">
+            ${s === 'entregue' ? '✓ Pedido entregue' : '✕ Pedido cancelado'}
+        </span>`;
     }
-    const botoes = [];
-    if (s === 'processando' || s === 'pago' || (s === 'pendente' && !p.aguarda_aprovacao_admin)) {
-        botoes.push(
-            `<button type="button" class="btn btn-sm btn-primary me-1" onclick="marcarDespachado(${p.id_compra})">Despachado / em transporte</button>`
-        );
+
+    // Pedido aprovado -> mostrar botão despachar
+    if (s === 'processando' || s === 'pago') {
+        return `
+            <button type="button"
+                class="btn btn-sm btn-primary"
+                onclick="marcarDespachado(${p.id_compra})">
+                🚚 Despachado / em transporte
+            </button>
+        `;
     }
+
+    // Pedido enviado -> mostrar botão entregue
     if (s === 'enviado') {
-        botoes.push(
-            `<button type="button" class="btn btn-sm btn-success" onclick="marcarEntregue(${p.id_compra})">Entregue</button>`
-        );
+        return `
+            <button type="button"
+                class="btn btn-sm btn-success"
+                onclick="marcarEntregue(${p.id_compra})">
+                📦 Entregue
+            </button>
+        `;
     }
-    if (!botoes.length) {
-        return '<span class="text-muted small">—</span>';
-    }
-    return botoes.join('');
+
+    return `<span class="text-muted">—</span>`;
 }
 
 async function atualizarStatusPedido(id, status, confirmMsg) {
