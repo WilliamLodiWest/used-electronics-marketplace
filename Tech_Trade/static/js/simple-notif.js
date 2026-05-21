@@ -1,13 +1,12 @@
 /**
- * Bootstrap 5 Toast — padrão simple-notif.js (jqueryscript.net)
- * Toast branco com cabeçalho e ícone contextual (sem text-bg-* no card inteiro).
+ * TechTrade — toasts escuros (estilo card com ícone + título + mensagem).
  */
 (function ($) {
     'use strict';
 
     const toastContainerHtml =
         '<div aria-live="polite" aria-atomic="true" class="position-relative tt-toast-root">' +
-        '<div class="toast-container position-fixed top-0 end-0 p-3"></div></div>';
+        '<div class="toast-container position-fixed top-0 end-0 p-3 d-flex flex-column"></div></div>';
 
     function ensureContainer() {
         if (!$('.tt-toast-root .toast-container').length) {
@@ -26,36 +25,16 @@
     function getType(name) {
         switch (name) {
             case 'success':
-                return {
-                    icon: '<i class="fas fa-check-circle text-success me-2" aria-hidden="true"></i>',
-                    titleClass: 'text-success',
-                    type: 'Sucesso',
-                };
+                return { mod: 'success', glyph: 'OK', title: 'Sucesso' };
             case 'error':
-                return {
-                    icon: '<i class="fas fa-times-circle text-danger me-2" aria-hidden="true"></i>',
-                    titleClass: 'text-danger',
-                    type: 'Erro',
-                };
+                return { mod: 'error', glyph: 'X', title: 'Erro' };
             case 'warning':
-                return {
-                    icon: '<i class="fas fa-triangle-exclamation text-warning me-2" aria-hidden="true"></i>',
-                    titleClass: 'text-warning',
-                    type: 'Atenção',
-                };
+                return { mod: 'warning', glyph: '!', title: 'Atenção' };
             case 'question':
-                return {
-                    icon: '<i class="fas fa-question-circle text-secondary me-2" aria-hidden="true"></i>',
-                    titleClass: 'text-secondary',
-                    type: 'Confirmação',
-                };
+                return { mod: 'question', glyph: '?', title: 'Confirmação' };
             case 'info':
             default:
-                return {
-                    icon: '<i class="fas fa-info-circle text-primary me-2" aria-hidden="true"></i>',
-                    titleClass: 'text-primary',
-                    type: 'Informação',
-                };
+                return { mod: 'info', glyph: 'i', title: 'Informação' };
         }
     }
 
@@ -74,20 +53,24 @@
         const safeMsg = escapeHtml(msg);
 
         const elm =
-            '<div class="toast tt-toast-item" role="alert" aria-live="assertive" aria-atomic="true">' +
-            '<div class="toast-header">' +
-            data.icon +
-            '<strong class="me-auto ' +
-            data.titleClass +
-            '">' +
-            data.type +
-            '</strong>' +
-            '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Fechar"></button>' +
-            '</div>' +
+            '<div class="toast tt-toast-item tt-toast--' +
+            data.mod +
+            '" role="alert" aria-live="assertive" aria-atomic="true">' +
             '<div class="toast-body">' +
-            safeMsg +
+            '<div class="tt-toast-inner">' +
+            '<div class="tt-toast-icon" aria-hidden="true">' +
+            data.glyph +
             '</div>' +
-            '</div>';
+            '<div class="tt-toast-content">' +
+            '<strong class="tt-toast-title">' +
+            data.title +
+            '</strong>' +
+            '<p class="tt-toast-message">' +
+            safeMsg +
+            '</p>' +
+            '</div>' +
+            '<button type="button" class="tt-toast-close" data-bs-dismiss="toast" aria-label="Fechar">×</button>' +
+            '</div></div></div>';
 
         toastElm.append(elm);
 

@@ -180,7 +180,7 @@ async function carregarDashboard() {
                     <div>
                         <strong>${produto.nome}</strong>
                         <div>Estoque: ${produto.estoque} unidades</div>
-                        <small class="text-danger">⚠️ Estoque baixo!</small>
+                        <small class="text-danger"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Estoque baixo!</small>
                     </div>
                 </div>
             `).join('');
@@ -208,9 +208,9 @@ async function carregarProdutos() {
                     <div class="product-info">
                         <h3 class="product-title">${produto.nome}</h3>
                         <p class="product-price">R$ ${produto.preco.toLocaleString('pt-BR')}</p>
-                        <p class="product-stock">📦 Estoque: ${produto.estoque} unidades</p>
-                        <p class="product-category">🏷️ ${produto.categoria || 'Sem categoria'}</p>
-                        ${produto.verificado ? '<span class="badge bg-success">✓ Verificado</span>' : '<span class="badge bg-warning">⏳ Pendente</span>'}
+                        <p class="product-stock">Estoque: ${produto.estoque} unidades</p>
+                        <p class="product-category">${produto.categoria || 'Sem categoria'}</p>
+                        ${produto.verificado ? '<span class="badge bg-success">Verificado</span>' : '<span class="badge bg-warning">Pendente</span>'}
                     </div>
                     <div class="product-actions">
                         <button class="btn-edit" onclick="editarProduto(${produto.id})">
@@ -283,7 +283,10 @@ async function carregarVendas() {
 }
 
 async function aprovarPedido(id) {
-    if (!confirm('Aprovar este pedido? O estoque será baixado e a separação ficará liberada.')) return;
+    const ok = await window.TTNotify?.confirm(
+        'Aprovar este pedido? O estoque será baixado e a separação ficará liberada.'
+    );
+    if (!ok) return;
     try {
         const response = await fetch(`/vendedor/pedidos/aprovar/${id}`, { method: 'POST' });
         const data = await response.json();
@@ -300,7 +303,11 @@ async function aprovarPedido(id) {
 }
 
 async function reprovarPedido(id) {
-    if (!confirm('Reprovar e cancelar este pedido? (Sem baixa de estoque.)')) return;
+    const ok = await window.TTNotify?.confirm(
+        'Reprovar e cancelar este pedido? (Sem baixa de estoque.)',
+        { danger: true, okText: 'Reprovar' }
+    );
+    if (!ok) return;
     try {
         const response = await fetch(`/vendedor/pedidos/reprovar/${id}`, { method: 'POST' });
         const data = await response.json();
@@ -353,7 +360,7 @@ function buildAcoesVenda(p) {
     // Pedido cancelado ou entregue
     if (s === 'cancelado' || s === 'entregue') {
         return `<span class="text-success fw-bold">
-            ${s === 'entregue' ? '✓ Pedido entregue' : '✕ Pedido cancelado'}
+            ${s === 'entregue' ? 'Pedido entregue' : 'Pedido cancelado'}
         </span>`;
     }
 
@@ -363,7 +370,7 @@ function buildAcoesVenda(p) {
             <button type="button"
                 class="btn btn-sm btn-primary"
                 onclick="marcarDespachado(${p.id_compra})">
-                🚚 Despachado / em transporte
+                <i class="fas fa-truck" aria-hidden="true"></i> Despachado / em transporte
             </button>
         `;
     }
@@ -374,7 +381,7 @@ function buildAcoesVenda(p) {
             <button type="button"
                 class="btn btn-sm btn-success"
                 onclick="marcarEntregue(${p.id_compra})">
-                📦 Entregue
+                <i class="fas fa-box-open" aria-hidden="true"></i> Entregue
             </button>
         `;
     }
@@ -383,7 +390,10 @@ function buildAcoesVenda(p) {
 }
 
 async function atualizarStatusPedido(id, status, confirmMsg) {
-    if (confirmMsg && !confirm(confirmMsg)) return;
+    if (confirmMsg) {
+        const ok = await window.TTNotify?.confirm(confirmMsg);
+        if (!ok) return;
+    }
     try {
         const response = await fetch(`/vendedor/pedidos/atualizar_status/${id}`, {
             method: 'POST',
@@ -600,7 +610,11 @@ async function salvarProduto() {
 
 // Deletar produto
 async function deletarProduto(id) {
-    if (confirm('Tem certeza que deseja remover este produto? Esta ação pode ser irreversível.')) {
+    const ok = await window.TTNotify?.confirm(
+        'Tem certeza que deseja remover este produto? Esta ação pode ser irreversível.',
+        { danger: true, okText: 'Remover' }
+    );
+    if (ok) {
         try {
             const response = await fetch(`/vendedor/produto/deletar/${id}`, {
                 method: 'DELETE'
@@ -673,7 +687,11 @@ async function marcarLida(id, recarregar = true) {
 
 // Excluir notificação
 async function excluirNotificacao(id, fromModal = false) {
-    if (!confirm('Excluir esta notificação? Esta ação não pode ser desfeita.')) return;
+    const ok = await window.TTNotify?.confirm(
+        'Excluir esta notificação? Esta ação não pode ser desfeita.',
+        { danger: true, okText: 'Excluir' }
+    );
+    if (!ok) return;
     try {
         const response = await fetch('/vendedor/api/notificacoes/excluir', {
             method: 'POST',

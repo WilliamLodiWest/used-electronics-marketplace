@@ -2199,7 +2199,14 @@ body[data-vendedor-login-url] .hero {
 }
 .user-menu {
     position: relative;
-    cursor: pointer;
+    list-style: none;
+}
+
+.user-menu-panel {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
 }
 
 /* trigger de perfil no topo */
@@ -2215,10 +2222,13 @@ body[data-vendedor-login-url] .hero {
 }
 
 .user-trigger:hover,
-.user-menu:hover .user-trigger {
+.user-menu--open .user-trigger {
     background: rgba(59, 130, 246, 0.08);
     border-color: rgba(59, 130, 246, 0.22);
-    transform: translateY(-1px);
+}
+
+.user-menu--open .user-trigger {
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
 }
 
 .user-avatar-ring {
@@ -2293,55 +2303,75 @@ body[data-vendedor-login-url] .hero {
     transition: transform 0.2s ease;
 }
 
-.user-menu:hover .user-trigger-arrow,
 .user-trigger[aria-expanded="true"] .user-trigger-arrow {
     transform: rotate(225deg);
     margin-top: 3px;
 }
 
-/* dropdown escondido */
 .dropdown {
     position: absolute;
-    top: 120%;
+    top: calc(100% + 0.45rem);
+    left: 0;
     right: 0;
+    min-width: 100%;
     background: #fff;
     border-radius: 12px;
-    min-width: 180px;
     border: 1px solid rgba(15, 23, 42, 0.08);
     box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
     display: none;
-    z-index: 1000;
+    z-index: 1300;
     padding: 0.35rem;
+    overflow: hidden;
 }
 
-/* link dentro */
 .dropdown a {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 0.7rem;
+    gap: 0.65rem;
+    padding: 0.6rem 0.75rem;
     border-radius: 8px;
     text-decoration: none;
     color: #334155;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 600;
-    transition: 0.3s;
+    transition: background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
 }
 
-.dropdown a:hover {
+.dropdown a i {
+    width: 1.15rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.dropdown a:hover,
+.dropdown a:focus-visible {
     background: rgba(59, 130, 246, 0.1);
+    color: #1e40af;
+    outline: none;
 }
 
-/* MOSTRAR ao passar o mouse */
-.user-menu:hover .dropdown {
-    display: block;
-}
-.dropdown {
-    display: none;
+.dropdown a:hover i,
+.dropdown a:focus-visible i {
+    color: #3b82f6;
 }
 
 .dropdown.active {
     display: block;
+    animation: userDropdownIn 0.18s ease-out;
+}
+
+@keyframes userDropdownIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 992px) {

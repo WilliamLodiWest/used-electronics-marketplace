@@ -167,14 +167,31 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ================= MENU DROPDOWN DO USUÁRIO =================
+    const userMenu = document.getElementById('userMenu');
     const userTrigger = document.getElementById('userTrigger');
     const dropdown = document.getElementById('dropdownMenu');
+
+    function setUserDropdownOpen(open) {
+        if (!userTrigger || !dropdown) return;
+        dropdown.classList.toggle('active', open);
+        userTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (userMenu) userMenu.classList.toggle('user-menu--open', open);
+    }
 
     if (userTrigger && dropdown) {
         userTrigger.addEventListener('click', function (e) {
             e.stopPropagation();
-            dropdown.classList.toggle('active');
-            userTrigger.setAttribute('aria-expanded', dropdown.classList.contains('active'));
+            setUserDropdownOpen(!dropdown.classList.contains('active'));
+        });
+
+        userTrigger.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setUserDropdownOpen(!dropdown.classList.contains('active'));
+            }
+            if (e.key === 'Escape') {
+                setUserDropdownOpen(false);
+            }
         });
 
         dropdown.addEventListener('click', function (e) {
@@ -182,8 +199,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         document.addEventListener('click', function () {
-            dropdown.classList.remove('active');
-            userTrigger.setAttribute('aria-expanded', 'false');
+            setUserDropdownOpen(false);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') setUserDropdownOpen(false);
         });
     }
 

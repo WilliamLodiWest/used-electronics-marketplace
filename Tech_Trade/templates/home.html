@@ -21,34 +21,35 @@
         
         {% if session.get('usuario_logado') %}
         <li class="user-menu" id="userMenu">
-
-            <div class="user-trigger user-trigger--profile" id="userTrigger" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true" aria-label="Menu da conta">
-                <div class="user-avatar-ring" aria-hidden="true">
-                    {% if usuario_foto_url %}
-                    <img class="user-avatar-img" src="{{ usuario_foto_url }}" width="48" height="48" alt="">
-                    {% else %}
-                    <span class="user-avatar-fallback{% if usuario_iniciais %} has-initials{% endif %}">
-                        <i class="fas fa-user" aria-hidden="true"></i>
-                        <span class="user-avatar-initials">{{ usuario_iniciais }}</span>
-                    </span>
-                    {% endif %}
+            <div class="user-menu-panel">
+                <div class="user-trigger user-trigger--profile" id="userTrigger" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true" aria-controls="dropdownMenu" aria-label="Menu da conta">
+                    <div class="user-avatar-ring" aria-hidden="true">
+                        {% if usuario_foto_url %}
+                        <img class="user-avatar-img" src="{{ usuario_foto_url }}" width="48" height="48" alt="">
+                        {% else %}
+                        <span class="user-avatar-fallback{% if usuario_iniciais %} has-initials{% endif %}">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                            <span class="user-avatar-initials">{{ usuario_iniciais }}</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="user-trigger-row">
+                        <span class="user-name-label">{{ session.get('usuario_nome') }}</span>
+                        <i class="arrow-down user-trigger-arrow" aria-hidden="true"></i>
+                    </div>
                 </div>
-                <div class="user-trigger-row">
-                    <span class="user-name-label">{{ session.get('usuario_nome') }}</span>
-                    <i class="arrow-down user-trigger-arrow" aria-hidden="true"></i>
+
+                <div class="dropdown" id="dropdownMenu" role="menu" aria-label="Opções da conta">
+                    <a href="{{ url_for('produto.editar_perfil') }}" role="menuitem">
+                        <i class="fas fa-user-circle" aria-hidden="true"></i>
+                        <span>Meu perfil</span>
+                    </a>
+                    <a href="{{ url_for('produto.logout') }}" role="menuitem">
+                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                        <span>Sair</span>
+                    </a>
                 </div>
             </div>
-
-            <!-- DROPDOWN -->
-            <div class="dropdown" id="dropdownMenu">
-                <a href="{{ url_for('produto.editar_perfil') }}">
-                    <i class="fas fa-user-circle"></i> Meu perfil
-                </a>
-                <a href="{{ url_for('produto.logout') }}">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </a>
-            </div>
-
         </li>
         {% else %}
         <li>

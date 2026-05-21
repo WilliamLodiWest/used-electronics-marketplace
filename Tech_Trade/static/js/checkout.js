@@ -331,17 +331,6 @@ function fecharComprovante() {
 }
 
 // ==========================
-// IMPRESSÃO
-// ==========================
-window.onbeforeprint = function () {
-    console.log("Preparando impressão...");
-};
-
-window.onafterprint = function () {
-    console.log("Impressão finalizada");
-};
-
-// ==========================
 // CONFETE (OPCIONAL)
 // ==========================
 function animacaoConfete() {

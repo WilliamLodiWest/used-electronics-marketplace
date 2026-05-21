@@ -1,5 +1,5 @@
 /**
- * TechTrade — integração de toasts (Bootstrap 5 + simple-notif.js)
+ * TechTrade — toasts + confirmação customizada (sem alert/confirm nativos).
  */
 (function () {
     'use strict';
@@ -18,6 +18,12 @@
         primary: 'info',
         question: 'question',
     };
+
+    let confirmOverlay = null;
+    let confirmMessageEl = null;
+    let confirmOkBtn = null;
+    let confirmCancelBtn = null;
+    let confirmResolve = null;
 
     function normalizeType(type) {
         if (!type) return 'info';
@@ -72,6 +78,90 @@
         return false;
     }
 
+    function ensureConfirmUi() {
+        if (confirmOverlay) return;
+
+        confirmOverlay = document.createElement('div');
+        confirmOverlay.className = 'tt-confirm-overlay';
+        confirmOverlay.hidden = true;
+        confirmOverlay.setAttribute('role', 'presentation');
+        confirmOverlay.innerHTML =
+            '<div class="tt-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="tt-confirm-msg">' +
+            '<p class="tt-confirm-message" id="tt-confirm-msg"></p>' +
+            '<div class="tt-confirm-actions">' +
+            '<button type="button" class="tt-confirm-btn tt-confirm-btn--cancel">Cancelar</button>' +
+            '<button type="button" class="tt-confirm-btn tt-confirm-btn--ok">Confirmar</button>' +
+            '</div></div>';
+
+        document.body.appendChild(confirmOverlay);
+
+        const dialog = confirmOverlay.querySelector('.tt-confirm-dialog');
+        confirmMessageEl = confirmOverlay.querySelector('.tt-confirm-message');
+        confirmOkBtn = confirmOverlay.querySelector('.tt-confirm-btn--ok');
+        confirmCancelBtn = confirmOverlay.querySelector('.tt-confirm-btn--cancel');
+
+        function finish(result) {
+            if (!confirmResolve) return;
+            const resolve = confirmResolve;
+            confirmResolve = null;
+            confirmOverlay.hidden = true;
+            document.body.style.overflow = '';
+            resolve(result);
+        }
+
+        confirmOkBtn.addEventListener('click', function () {
+            finish(true);
+        });
+
+        confirmCancelBtn.addEventListener('click', function () {
+            finish(false);
+        });
+
+        confirmOverlay.addEventListener('click', function (e) {
+            if (e.target === confirmOverlay) finish(false);
+        });
+
+        dialog.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (confirmOverlay.hidden || !confirmResolve) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                finish(false);
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                finish(true);
+            }
+        });
+    }
+
+    function confirm(message, options) {
+        const opts = options || {};
+        const msg = message == null ? '' : String(message).trim();
+        if (!msg) return Promise.resolve(false);
+
+        ensureConfirmUi();
+
+        return new Promise(function (resolve) {
+            if (confirmResolve) {
+                confirmResolve(false);
+            }
+            confirmResolve = resolve;
+
+            confirmMessageEl.textContent = msg;
+            confirmOkBtn.textContent = opts.okText || 'Confirmar';
+            confirmCancelBtn.textContent = opts.cancelText || 'Cancelar';
+
+            confirmOkBtn.classList.toggle('tt-confirm-btn--danger', !!opts.danger);
+            confirmOverlay.hidden = false;
+            document.body.style.overflow = 'hidden';
+            confirmCancelBtn.focus();
+        });
+    }
+
     function flushPending() {
         document.querySelectorAll('.tt-flash-pending[data-tt-msg]').forEach(function (el) {
             const msg = el.getAttribute('data-tt-msg');
@@ -104,6 +194,7 @@
         info: function (m, d) {
             return show(m, 'info', d);
         },
+        confirm: confirm,
         flush: flushPending,
     };
 
