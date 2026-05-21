@@ -83,8 +83,8 @@ def _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoqu
 
     sql = """
         INSERT INTO produtos_tt (nome, descricao, categoria_id, preco, estoque,
-                               criado_por, criado_por_id, imagem, verificado, criado_em)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, NOW())
+                               criado_por, criado_por_id, imagem, verificado, verificado_por, criado_em)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, NOW())
     """
     return conexao.insert(
         sql,
@@ -97,6 +97,7 @@ def _inserir_produto_admin(conexao, nome, descricao, categoria_id, preco, estoqu
             session.get('vendedor_nome'),
             id_vendedor,
             imagem,
+            "",
         ),
     )
 

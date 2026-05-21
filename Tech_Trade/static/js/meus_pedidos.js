@@ -150,8 +150,8 @@
 
 
             if (!resP.ok) {
-                elErro.textContent = dataP.erro || 'Não foi possível carregar os pedidos.';
-                elErro.classList.remove('d-none');
+                const msg = dataP.erro || 'Não foi possível carregar os pedidos.';
+                window.TTNotify?.error(msg);
                 return;
             }
 
@@ -160,8 +160,7 @@
             renderPedidos(dataP.pedidos || []);
         } catch (e) {
             elLoad.classList.add('d-none');
-            elErro.textContent = 'Erro de conexão. Tente novamente.';
-            elErro.classList.remove('d-none');
+            window.TTNotify?.error('Erro de conexão. Tente novamente.');
         }
     }
 

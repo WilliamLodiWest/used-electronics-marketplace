@@ -14,6 +14,7 @@
 </head>
 
 <body>
+{% include 'partials/tt_toast_flash.html' %}
 
 {% set produto = produto if produto else {} %}
 
@@ -242,7 +243,8 @@
 </main>
 
 <!-- ================= SCRIPT ================= -->
-<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+{% include 'partials/tt_toast_assets.html' %}
+<script src="{{ url_for('static', filename='js/checkout.js') }}?v=3"></script>
 
 </body>
 </html>

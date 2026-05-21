@@ -21,6 +21,7 @@
     </style>
 </head>
 <body class="page-meus-pedidos">
+{% include 'partials/tt_toast_flash.html' %}
 <nav class="navbar checkout-navbar flex-wrap gap-2">
     <a href="{{ url_for('produto.home') }}" class="logo">Tech<span>Trade</span></a>
     <ul class="nav-links checkout-nav-links">
@@ -84,6 +85,7 @@ window.TECHTRADE_MEUS_PEDIDOS = {
     marcarLidaPrefix: {{ marcar_lida_prefix | tojson }}
 } ;
 </script>
-<script src="{{ static_js_meus_pedidos }}?v=4"></script>
+{% include 'partials/tt_toast_assets.html' %}
+<script src="{{ static_js_meus_pedidos }}?v=5"></script>
 </body>
 </html>
