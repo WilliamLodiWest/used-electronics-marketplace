@@ -10,56 +10,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/produtos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="produtos.css">
+    {% include 'partials/tt_responsive_assets.html' %}
 </head>
 
 <body>
 {% include 'partials/tt_toast_flash.html' %}
 
-<header>
-    <!-- NAVBAR -->
-    <nav class="navbar-custom">
-        <div class="container nav-container">
-
-            <div class="logo">
-                <h2>TechTrade</h2>
-            </div>
-
-            <ul class="nav-links">
-                <li><a href="{{ url_for('produto.home') }}">Home</a></li>
-                <li><a href="{{ url_for('produto.suporte_comprador') }}">Suporte</a></li>
-
-                {% if session.get('usuario_logado') %}
-                    <li><a href="{{ url_for('produto.meus_pedidos') }}">Meus pedidos</a></li>
-                    <li><a href="#" class="btn-login">{{ session.get('usuario_nome') }}</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('produto.login') }}" class="btn-login">Login</a></li>
-                {% endif %}
-            </ul>
-
-        </div>
-    </nav>
-
-    <!-- HEADER -->
-    <section class="produtos-header">
-        <div class="container text-center">
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    <span>Compra segura • Entrega rápida</span>
-                </div>
-                <h1>Nossos Produtos</h1>
-                <p>Encontre os melhores eletrônicos com segurança e escolha por categoria, condição e preço.</p>
-                <div class="hero-actions">
-                    <a class="hero-btn hero-btn-ghost" href="{{ url_for('produto.suporte_comprador') }}">
-                        <i class="fa-regular fa-circle-question"></i>
-                        Falar com suporte
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-</header>
+{% set header_title = 'Nossos Produtos' %}
+{% set header_badge_text = 'Compra segura • Entrega rápida' %}
+{% set header_badge_icon = 'fa-shield-halved' %}
+{% set header_description = 'Encontre os melhores eletrônicos com segurança e escolha por categoria, condição e preço.' %}
+{% set header_active = 'produtos' %}
+{% set header_show_back = false %}
+{% set header_secondary_url = url_for('produto.suporte_comprador') %}
+{% set header_secondary_label = 'Falar com suporte' %}
+{% set header_secondary_icon = 'fa-regular fa-circle-question' %}
+{% include 'partials/tt_header_loja.html' %}
 
 <main class="produtos-main">
     <div class="container">

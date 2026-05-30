@@ -6,9 +6,11 @@
                     <h2>TechTrade</h2>
                 </a>
             </div>
-            <ul class="nav-links">
+            <ul class="nav-links" id="navLinksLoja">
                 <li><a href="{{ url_for('produto.home') }}">Home</a></li>
                 <li><a href="{{ url_for('produto.home') }}#sobre">Sobre</a></li>
+                <li><a href="{{ url_for('produto.renderizar_produtos') }}"
+                       {% if header_active == 'produtos' %}class="nav-link-active"{% endif %}>Produtos</a></li>
                 <li><a href="{{ url_for('produto.suporte_comprador') }}">Suporte</a></li>
                 {% if session.get('usuario_logado') %}
                     <li>
@@ -22,6 +24,11 @@
                     <li><a href="{{ url_for('produto.login') }}" class="btn-login">Login</a></li>
                 {% endif %}
             </ul>
+            <button type="button" class="menu-mobile" id="menuMobile" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="navLinksLoja">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
@@ -39,10 +46,12 @@
                 <p>{{ header_description }}</p>
                 {% endif %}
                 <div class="hero-actions">
+                    {% if header_show_back | default(true) %}
                     <a class="hero-btn hero-btn-primary" href="{{ url_for('produto.renderizar_produtos') }}">
                         <i class="fa-solid fa-arrow-left"></i>
                         Voltar para produtos
                     </a>
+                    {% endif %}
                     {% if header_secondary_url and header_secondary_label %}
                     <a class="hero-btn hero-btn-ghost" href="{{ header_secondary_url }}">
                         <i class="fa-solid {{ header_secondary_icon or 'fa-circle-question' }}"></i>

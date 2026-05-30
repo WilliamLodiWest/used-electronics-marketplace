@@ -254,10 +254,6 @@
 
 /* ---------- Responsivo ---------- */
 @media (max-width: 768px) {
-    .page-meus-pedidos .checkout-navbar {
-        align-items: flex-start;
-    }
-
     .mp-hero {
         padding: 1.15rem 1.1rem;
     }
@@ -274,12 +270,12 @@
 }
 
 @media (max-width: 576px) {
-    .page-meus-pedidos .checkout-nav-links {
-        gap: 0.5rem 0.85rem;
+    .mp-pedido-card .card-header .row {
+        row-gap: 0.75rem;
     }
 
-    .page-meus-pedidos .checkout-nav-links a {
-        font-size: 0.74rem;
-        letter-spacing: 0.03em;
+    .mp-pedido-card .card-header,
+    .mp-pedido-card .card-body {
+        padding: 0.85rem;
     }
 }

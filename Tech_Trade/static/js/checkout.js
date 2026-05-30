@@ -331,7 +331,7 @@ function fecharComprovante() {
 }
 
 // ==========================
-// CONFETE (OPCIONAL)
+    zX// CONFETE (OPCIONAL)
 // ==========================
 function animacaoConfete() {
 

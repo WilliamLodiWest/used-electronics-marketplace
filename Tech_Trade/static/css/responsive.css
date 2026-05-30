@@ -1,0 +1,80 @@
+/* TechTrade — ajustes globais para telas móveis */
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+img,
+video,
+svg,
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+main,
+.container,
+.container-fluid {
+    max-width: 100%;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+li,
+td,
+th {
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    input,
+    select,
+    textarea,
+    .form-control,
+    .form-select {
+        font-size: 16px;
+    }
+
+    .display-5 {
+        font-size: clamp(1.45rem, 5.5vw, 2rem);
+    }
+
+    .lead {
+        font-size: 1rem;
+    }
+
+    .suporte-container .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .produtos-header .hero-actions,
+    .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .produtos-header .hero-btn,
+    .hero-actions .hero-btn,
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

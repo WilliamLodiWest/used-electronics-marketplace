@@ -624,16 +624,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (clearBtn) {
         clearBtn.addEventListener('click', limparFiltrosHome);
     }
-    
-    const menuMobile = document.getElementById('menuMobile');
-    const navLinks = document.querySelector('.nav-links');
-    
-    if (menuMobile && navLinks) {
-        menuMobile.addEventListener('click', () => {
-            menuMobile.classList.toggle('active');
-            navLinks.classList.toggle('active');
-        });
-    }
 });
 
 // ================= VENDEDOR LOGIN / ACESSO SECRETO =================
