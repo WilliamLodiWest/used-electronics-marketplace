@@ -1,0 +1,24 @@
+# Blueprint opcional: no Render, "New" → "Blueprint" e conecte o repositório.
+# Ou crie o Web Service manualmente com os mesmos valores abaixo.
+services:
+  - type: web
+    name: tech-trade
+    runtime: python
+    rootDir: Tech_Trade
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false

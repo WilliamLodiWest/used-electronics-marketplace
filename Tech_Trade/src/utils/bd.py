@@ -17,14 +17,20 @@ class ConexaoBD:
 		user = environ.get("DB_USER", "root")
 		password = environ.get("DB_PASSWORD", "")
 		database = environ.get("DB_NAME", "tech_trade_db")
+		port = int(environ.get("DB_PORT", "3306"))
+
+		connect_kw = dict(
+			host=host,
+			user=user,
+			password=password,
+			database=database,
+			port=port,
+		)
+		if environ.get("DB_SSL", "").lower() in ("1", "true", "yes"):
+			connect_kw["ssl_disabled"] = False
 
 		try:
-			self.con = mysql.connector.connect(
-				host=host,
-				user=user,
-				password=password,
-				database=database
-			)
+			self.con = mysql.connector.connect(**connect_kw)
 			self.cursor = self.con.cursor()
 		except Error as err:
 			# Re-raise a exceção para que o chamador trate (por exemplo, rota Flask)

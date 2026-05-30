@@ -1,6 +1,61 @@
 # Tech-Trade
 PIM
 
+## Deploy no Render
+
+O app é **Flask** com **MySQL** — use um **Web Service** no [Render](https://render.com/), não site estático.
+
+### 1. Banco MySQL na nuvem
+
+Crie um MySQL (Render PostgreSQL não serve; use por exemplo [Aiven](https://aiven.io/), [PlanetScale](https://planetscale.com/) ou MySQL em outro provedor). Execute os scripts em `migrations/` no banco.
+
+### 2. Web Service no Render
+
+1. **New** → **Web Service** → conecte o repositório `Projeto-Extensao`.
+2. Branch: `main` ou `feature/ajustes`.
+3. Configuração:
+
+| Campo | Valor |
+|--------|--------|
+| **Root Directory** | `Tech_Trade` |
+| **Runtime** | Python 3 |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `gunicorn wsgi:app --bind 0.0.0.0:$PORT` |
+
+4. **Environment** (obrigatório para o site funcionar):
+
+| Variável | Exemplo |
+|----------|---------|
+| `SECRET_KEY` | string longa aleatória (Render pode gerar) |
+| `DB_HOST` | host do MySQL na nuvem |
+| `DB_PORT` | `3306` (ou a porta do provedor) |
+| `DB_USER` | usuário do banco |
+| `DB_PASSWORD` | senha |
+| `DB_NAME` | `tech_trade_db` |
+| `DB_SSL` | `true` se o provedor exigir SSL |
+| `OPENAI_API_KEY` | opcional — chat com IA |
+
+5. **Deploy**. A URL será algo como `https://tech-trade-xxxx.onrender.com`.
+
+Alternativa: importar o blueprint `render.yaml` (pasta `Tech_Trade`) em **New** → **Blueprint**.
+
+### 3. Testar localmente como produção
+
+```powershell
+cd Tech_Trade
+pip install -r requirements.txt
+$env:SECRET_KEY = "teste-local"
+$env:DB_HOST = "127.0.0.1"
+$env:DB_USER = "root"
+$env:DB_PASSWORD = "sua_senha"
+$env:DB_NAME = "tech_trade_db"
+gunicorn wsgi:app --bind 127.0.0.1:8000
+```
+
+Abra `http://127.0.0.1:8000`.
+
+---
+
 ## Usando MySQL (MySQL Workbench)
 
 Este projeto por padrão usa SQLite local (`tech_trade.db`) quando não há variáveis de ambiente de conexão com MySQL.
