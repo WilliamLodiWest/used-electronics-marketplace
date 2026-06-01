@@ -1,7 +1,13 @@
-/* TechTrade — ajustes globais para telas móveis */
+/* TechTrade — responsividade global (mobile, tablet, safe areas) */
 
 html {
     -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
+    max-width: 100%;
 }
 
 img,
@@ -36,10 +42,52 @@ th {
     overflow-wrap: break-word;
 }
 
+/* ---------- Tablet (iPad em retrato, telas médias) ---------- */
+@media (max-width: 1024px) {
+    .hero-content {
+        gap: 2rem;
+    }
+
+    .hero-visual {
+        height: auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+        padding: 0.5rem 0;
+    }
+
+    .floating-card {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        animation: none !important;
+        width: min(220px, 42vw);
+    }
+
+    .floating-card img {
+        width: 100%;
+        height: auto;
+        max-height: 110px;
+    }
+
+    .contact-channels {
+        padding: 2rem 1.5rem;
+    }
+
+    .channels-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ---------- Mobile e tablet pequeno ---------- */
 @media (max-width: 768px) {
     .container {
-        padding-left: 15px;
-        padding-right: 15px;
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
     }
 
     input,
@@ -62,19 +110,251 @@ th {
         padding-left: 12px;
         padding-right: 12px;
     }
+
+    /* Navbar — menu lateral deslizante */
+    .nav-links.active {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: auto;
+        width: min(320px, 88vw);
+        max-width: 100%;
+        margin: 0;
+        padding: calc(var(--home-navbar-height, 72px) + 1rem) 1.25rem 1.5rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        background: #fff;
+        box-shadow: -8px 0 32px rgba(15, 23, 42, 0.18);
+        z-index: 1250;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-links.active a,
+    .nav-links.active .btn-login {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+    }
+
+    .nav-links.active .btn-login {
+        text-align: center;
+        justify-content: center;
+    }
+
+    /* Overlay ao abrir menu */
+    body.nav-drawer-open {
+        overflow: hidden;
+    }
+
+    body.nav-drawer-open::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 1240;
+        pointer-events: auto;
+    }
+
+    /* Hero */
+    .hero {
+        min-height: auto;
+        padding-top: 0;
+    }
+
+    .hero-text {
+        max-width: 100%;
+    }
+
+    .hero-actions .btn-primary {
+        width: 100%;
+        max-width: 320px;
+        justify-content: center;
+    }
+
+    .hero-visual {
+        height: auto;
+        min-height: 0;
+        width: 100%;
+    }
+
+    /* Cards flutuantes viram lista no mobile */
+    .hero-visual {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .floating-card {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        animation: none !important;
+        width: min(300px, 100%);
+    }
+
+    .floating-card:hover {
+        transform: none;
+    }
+
+    /* Seções */
+    .sobre,
+    .ajuda,
+    .produtos-section {
+        padding-left: max(4%, env(safe-area-inset-left));
+        padding-right: max(4%, env(safe-area-inset-right));
+    }
+
+    .section-title {
+        font-size: clamp(1.35rem, 5vw, 1.8rem);
+        margin-bottom: 1.5rem;
+    }
+
+    .sobre-content {
+        gap: 1.5rem;
+    }
+
+    .sobre-features li {
+        text-align: left;
+        justify-content: flex-start;
+    }
+
+    .contact-channels {
+        padding: 1.5rem 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .channels-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .channel {
+        padding: 1.25rem 1rem;
+    }
+
+    /* Footer */
+    .footer {
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+
+    .footer-content {
+        padding: 1rem;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
+
+    /* Modais */
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal-container {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 20px 20px 0 0;
+        margin: 0;
+    }
+
+    .modal-body .modal-produto-imagem + .modal-produto-info,
+    .modal-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-produto-imagem img {
+        max-height: 200px;
+    }
+
+    .support-chat-modal.modal-container {
+        width: 100%;
+        max-height: 95dvh;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .support-chat-window {
+        min-height: 200px;
+        max-height: 50dvh;
+    }
+
+    /* Botão vendedor — safe area */
+    .vendedor-secret-access {
+        bottom: max(15px, env(safe-area-inset-bottom));
+        right: max(15px, env(safe-area-inset-right));
+    }
 }
 
+/* ---------- Smartphone ---------- */
 @media (max-width: 576px) {
     .produtos-header .hero-actions,
     .hero-actions {
         flex-direction: column;
         align-items: stretch;
+        width: 100%;
     }
 
     .produtos-header .hero-btn,
     .hero-actions .hero-btn,
-    .hero-actions .btn {
+    .hero-actions .btn,
+    .hero-actions .btn-primary {
         width: 100%;
+        max-width: none;
         justify-content: center;
+    }
+
+    .search-filter-bar {
+        padding: 0;
+    }
+
+    .products-counter {
+        font-size: 0.85rem;
+    }
+
+    .produto-actions {
+        gap: 0.5rem;
+    }
+
+    .btn-detalhes,
+    .btn-comprar {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-name-label {
+        max-width: 120px;
+    }
+
+    .footer-bottom {
+        gap: 0.75rem;
+    }
+
+    .footer-links {
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+    }
+}
+
+/* ---------- Telas muito estreitas ---------- */
+@media (max-width: 380px) {
+    .logo {
+        font-size: 1.25rem;
+    }
+
+    .nav-links.active {
+        width: 100%;
+        border-radius: 0;
     }
 }
